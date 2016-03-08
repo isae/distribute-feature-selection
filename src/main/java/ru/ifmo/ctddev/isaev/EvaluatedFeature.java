@@ -3,8 +3,9 @@ package ru.ifmo.ctddev.isaev;
 /**
  * @author iisaev
  */
-public class EvaluatedFeature {
+public class EvaluatedFeature implements Comparable<EvaluatedFeature> {
     private Feature feature;
+
     private double measure;
 
     public EvaluatedFeature(Feature feature, double measure) {
@@ -18,5 +19,10 @@ public class EvaluatedFeature {
 
     public double getMeasure() {
         return measure;
+    }
+
+    @Override
+    public int compareTo(EvaluatedFeature o) {
+        return (int) Math.signum(measure - o.getMeasure());
     }
 }
