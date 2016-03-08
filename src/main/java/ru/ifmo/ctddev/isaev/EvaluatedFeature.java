@@ -1,5 +1,8 @@
 package ru.ifmo.ctddev.isaev;
 
+import ru.ifmo.ctddev.isaev.dataset.Feature;
+
+
 /**
  * @author iisaev
  */

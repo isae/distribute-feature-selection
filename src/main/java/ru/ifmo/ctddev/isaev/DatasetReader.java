@@ -1,5 +1,8 @@
 package ru.ifmo.ctddev.isaev;
 
+import ru.ifmo.ctddev.isaev.dataset.Feature;
+import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
+
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -13,11 +16,11 @@ import java.util.stream.Collectors;
  * @author iisaev
  */
 public class DatasetReader {
-    public Dataset readCsv(String path) {
+    public FeatureDataSet readCsv(String path) {
         return readDataset(path, ",");
     }
 
-    private Dataset readDataset(String path, String delimiter) {
+    private FeatureDataSet readDataset(String path, String delimiter) {
         try {
             BufferedReader reader = new BufferedReader(new FileReader(path));
             final boolean[] firstLine = {true};
@@ -35,7 +38,7 @@ public class DatasetReader {
                     features.add(new Feature(parsedRow));
                 }
             });
-            return new Dataset(features, classes);
+            return new FeatureDataSet(features, classes, path);
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException("File not found", e);
         }

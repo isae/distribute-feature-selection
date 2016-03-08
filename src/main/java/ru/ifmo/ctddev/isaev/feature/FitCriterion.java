@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.feature;
 
-import ru.ifmo.ctddev.isaev.Feature;
+import ru.ifmo.ctddev.isaev.dataset.Feature;
 
 import java.util.List;
 import java.util.stream.IntStream;
