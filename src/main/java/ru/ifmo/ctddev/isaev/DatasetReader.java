@@ -22,22 +22,17 @@ public class DatasetReader {
             BufferedReader reader = new BufferedReader(new FileReader(path));
             final boolean[] firstLine = {true};
             List<Integer> classes = new ArrayList<>();
-            List<List<Double>> features = new ArrayList<>();
+            List<Feature> features = new ArrayList<>();
             reader.lines().forEach(line -> {
+                List<Integer> parsedRow = Arrays.stream(line.split(delimiter))
+                        .mapToInt(Integer::valueOf)
+                        .boxed()
+                        .collect(Collectors.toList());
                 if (firstLine[0]) {
                     firstLine[0] = false;
-                    classes.addAll(
-                            Arrays.stream(line.split(delimiter))
-                                    .mapToInt(Integer::valueOf)
-                                    .boxed()
-                                    .collect(Collectors.toList())
-                    );
+                    classes.addAll(parsedRow);
                 } else {
-                    List<Double> feature = Arrays.stream(line.split(delimiter))
-                            .mapToDouble(Double::valueOf)
-                            .boxed()
-                            .collect(Collectors.toList());
-                    features.add(feature);
+                    features.add(new Feature(parsedRow));
                 }
             });
             return new Dataset(features, classes);

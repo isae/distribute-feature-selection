@@ -8,14 +8,19 @@ import java.util.List;
  * @author iisaev
  */
 public class Dataset {
-    private List<List<Double>> features;
+    private List<Feature> features;
 
     private List<Integer> classes;
 
-    public Dataset(List<List<Double>> features, List<Integer> classes) {
+    public Dataset(List<Feature> features, List<Integer> classes) {
         if (!classes.stream().allMatch(i -> i == 0 || i == 1)) {
             throw new IllegalArgumentException("All classes values should be 0 or 1");
         }
+        features.forEach(f -> {
+            if (f.getValues().size() != classes.size()) {
+                throw new IllegalArgumentException(String.format("Feature %s has wrong number of values", f.getName()));
+            }
+        });
         this.features = Collections.unmodifiableList(features);
         this.classes = Collections.unmodifiableList(classes);
     }
@@ -24,7 +29,7 @@ public class Dataset {
         return classes;
     }
 
-    public List<List<Double>> getFeatures() {
+    public List<Feature> getFeatures() {
         return features;
     }
 }
