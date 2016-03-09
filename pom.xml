@@ -4,7 +4,7 @@
 
     <groupId>ru.ifmo.ctddev.isaev</groupId>
     <artifactId>distributed-feature-selection</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <build>
         <plugins>
             <plugin>
@@ -34,8 +34,8 @@
         </dependency>
         <dependency>
             <groupId>nz.ac.waikato.cms.weka</groupId>
-            <artifactId>weka-stable</artifactId>
-            <version>3.6.13</version>
+            <artifactId>weka-dev</artifactId>
+            <version>3.7.5</version>
         </dependency>
         <dependency>
             <groupId>tw.edu.ntu.csie</groupId>

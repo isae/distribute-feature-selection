@@ -10,15 +10,13 @@ import java.util.stream.IntStream;
 /**
  * @author iisaev
  */
-public class FeatureDataSet implements DataSet {
-    private final String name;
-
+public class FeatureDataSet extends DataSet {
     private final List<Feature> features;
 
     private final List<Integer> classes;
 
     public FeatureDataSet(List<Feature> features, List<Integer> classes, String name) {
-        this.name = name;
+        super(name);
         if (!classes.stream().allMatch(i -> i == 0 || i == 1)) {
             throw new IllegalArgumentException("All classes values should be 0 or 1");
         }
@@ -39,10 +37,6 @@ public class FeatureDataSet implements DataSet {
         return features;
     }
 
-    public String getName() {
-        return name;
-    }
-
     @Override
     public FeatureDataSet toFeatureSet() {
         return this;
@@ -58,5 +52,15 @@ public class FeatureDataSet implements DataSet {
             return new DataInstance(classes.get(i), values);
         }).collect(Collectors.toList());
         return new InstanceDataSet(instances);
+    }
+
+    @Override
+    public int getFeatureCount() {
+        return features.size();
+    }
+
+    @Override
+    public int getInstanceCount() {
+        return classes.size();
     }
 }

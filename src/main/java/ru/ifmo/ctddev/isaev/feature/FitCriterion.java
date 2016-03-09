@@ -22,7 +22,7 @@ public class FitCriterion implements RelevanceMeasure {
                 .filter(i -> {
                     return calculateFCP(values.get(i), mean0, mean1, var0, var1).equals(classes.get(i));
                 }).count();
-        return fcpSum / classes.size();
+        return (double) fcpSum / classes.size();
     }
 
     private Double calculateVariance(int clazz, Double mean0, List<Integer> values, List<Integer> classes) {

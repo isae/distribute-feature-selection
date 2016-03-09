@@ -21,7 +21,10 @@ public class DatasetFilter {
         List<Feature> filteredFeatures = measureEvaluator.evaluateFeatureMeasures(original.getFeatures().stream(), original.getClasses(), measureCosts, measures)
                 .sorted(Comparator.comparingDouble(EvaluatedFeature::getMeasure))
                 .limit(preferredSize)
-                .map(EvaluatedFeature::getFeature).collect(Collectors.toList());
+                .map((evaluatedFeature) -> {
+                    System.out.println("Measure value: "+evaluatedFeature.getMeasure());
+                    return evaluatedFeature.getFeature();
+                }).collect(Collectors.toList());
         return new FeatureDataSet(filteredFeatures, original.getClasses(), original.getName());
     }
 

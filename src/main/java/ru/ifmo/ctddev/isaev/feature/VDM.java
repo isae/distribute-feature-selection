@@ -16,7 +16,7 @@ public class VDM implements RelevanceMeasure {
     private class Distribution {
         int sum;
 
-        Map<Integer, Integer> distribution; //value -> number of instances having it
+        Map<Integer, Integer> distribution = new HashMap<>(); //value -> number of instances having it
     }
 
     @Override
@@ -36,8 +36,8 @@ public class VDM implements RelevanceMeasure {
         final double[] result = {0};
         distinctValues.forEach(dv -> {
             Distribution db0 = distributions.get(0);
-            Distribution db1 = distributions.get(0);
-            result[0] += (db0.distribution.get(dv) / db0.sum - db1.distribution.get(dv) / db1.sum);
+            Distribution db1 = distributions.get(1);
+            result[0] += ((double) db0.distribution.get(dv) / db0.sum - (double) db1.distribution.get(dv) / db1.sum);
         });
 
         return result[0] / 2;

@@ -15,13 +15,15 @@ public class SVM implements Classifier {
 
     private SMO svm = new SMO();
 
+    private Instances instances;
+
     @Override
     public void train(DataSet trainDs) {
         try {
-            Instances data = datasetTransformer.toInstances(trainDs.toFeatureSet());
+            instances = datasetTransformer.toInstances(trainDs.toInstanceSet());
             svm = new SMO();
             svm.setBuildLogisticModels(true);
-            svm.buildClassifier(data);
+            svm.buildClassifier(instances);
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to train on given dataset", e);
         }
@@ -31,6 +33,7 @@ public class SVM implements Classifier {
     public List<Double> test(DataSet testDs) {
         return testDs.toInstanceSet().getInstances().stream().map(datasetTransformer::toInstance).map(i -> {
             try {
+                i.setDataset(instances);
                 return svm.classifyInstance(i);
             } catch (Exception e) {
                 throw new IllegalArgumentException("Given dataset is not valid", e);

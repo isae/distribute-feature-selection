@@ -1,12 +1,16 @@
 package ru.ifmo.ctddev.isaev;
 
-import ru.ifmo.ctddev.isaev.dataset.DataSet;
+import ru.ifmo.ctddev.isaev.classifier.Classifier;
+import ru.ifmo.ctddev.isaev.classifier.SVM;
+import ru.ifmo.ctddev.isaev.dataset.*;
+import ru.ifmo.ctddev.isaev.feature.DatasetFilter;
+import ru.ifmo.ctddev.isaev.feature.FitCriterion;
+import ru.ifmo.ctddev.isaev.feature.VDM;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
 
 /**
@@ -24,6 +28,10 @@ public class SimpleMeLiF {
 
     private static final DatasetReader datasetReader = new DatasetReader();
 
+    private static final DatasetFilter datasetFilter = new DatasetFilter();
+
+    private static final DatasetSplitter datasetSplitter = new DatasetSplitter();
+
     private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
 
     public SimpleMeLiF(DataSet dataSet) {
@@ -33,11 +41,13 @@ public class SimpleMeLiF {
     private static final double DELTA = 0.3;
 
     private void run() {
-        performCoordinateDescend(new Point(1, 0, 0, 0));
-        performCoordinateDescend(new Point(0, 1, 0, 0));
-        performCoordinateDescend(new Point(0, 0, 1, 0));
-        performCoordinateDescend(new Point(0, 0, 0, 1));
-        performCoordinateDescend(new Point(1, 1, 1, 1));
+        double score1 = performCoordinateDescend(new Point(1, 0));
+        double score2 = performCoordinateDescend(new Point(0, 1));
+        double score3 = performCoordinateDescend(new Point(1, 1));
+        System.out.println("Total scores: ");
+        System.out.println(score1);
+        System.out.println(score2);
+        System.out.println(score3);
     }
 
     protected Double visitPoint(Point point, double baseScore) {
@@ -84,23 +94,16 @@ public class SimpleMeLiF {
     }
 
     private double getF1Score(Point point) {
-        //EvaluateOptimisationPoint.main(new String[] {"start", folder.getAbsolutePath(), String.valueOf(point.getCoordinates()[0]), String.valueOf(point.getCoordinates()[1]), String.valueOf(point.getCoordinates()[2]), String.valueOf(point.getCoordinates()[3])});
-        File subFolder = new File(folder.getAbsolutePath() + "//7_AUC_scores_WPCA_SVM//");
-        double auc = 0;
-        int experiments = 0;
-        for (File experiment : subFolder.listFiles()) {
-            if (!experiment.isDirectory()) {
-                continue;
-            }
-            experiments++;
-            BufferedReader br = new BufferedReader(new FileReader(experiment.listFiles()[0].getAbsolutePath() + "//rank"));
-            auc += Double.parseDouble(br.readLine());
-            br.close();
-        }
-        auc /= experiments;
-
-        //BackupUtilities.storePoint(folder.getAbsolutePath(), point.getCoordinates(), auc);
-        //BackupUtilities.deleteAllOddFolders(3, folder.getAbsolutePath() + File.separator);
-        return auc;
+        FeatureDataSet filteredDs = datasetFilter.filterDataset(dataSet.toFeatureSet(), 100, point, new VDM(), new FitCriterion());
+        InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
+        List<Double> f1Scores = datasetSplitter.splitRandomly(instanceDataSet, 20, 5).stream().map(dsPair -> {
+            Classifier classifier = new SVM();
+            classifier.train(dsPair.getTrainSet());
+            List<Double> predictedValues = classifier.test(dsPair.getTestSet());
+            List<Integer> rounded = predictedValues.stream().map(d -> (int) Math.round(d)).collect(Collectors.toList());
+            List<Integer> expectedValues = dsPair.getTestSet().toInstanceSet().getInstances().stream().map(DataInstance::getClazz).collect(Collectors.toList());
+            return scoreCalculator.calculateF1Score(expectedValues, rounded);
+        }).collect(Collectors.toList());
+        return f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
     }
 }
