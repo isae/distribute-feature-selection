@@ -9,12 +9,12 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 
-public class DatasetReaderTest {
-    private DatasetReader datasetReader = new DatasetReader();
+public class DataSetReaderTest {
+    private DataSetReader dataSetReader = new DataSetReader();
 
     @Test
     public void testDatasetReader() {
-        FeatureDataSet dataset = datasetReader.readCsv("src/test/resources/datasets/simpleDataset.csv");
+        FeatureDataSet dataset = dataSetReader.readCsv("src/test/resources/datasets/simpleDataset.csv");
         assertEquals("5 classes", 5, dataset.getClasses().size());
         List<Integer> classes = dataset.getClasses();
         assertArrayEquals("Classes", new Object[] {0, 0, 1, 1, 1}, classes.toArray());
