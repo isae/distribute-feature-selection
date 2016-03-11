@@ -22,7 +22,7 @@ public class DatasetFilter {
                 .sorted(Comparator.comparingDouble(EvaluatedFeature::getMeasure))
                 .limit(preferredSize)
                 .map((evaluatedFeature) -> {
-                    System.out.println("Measure value: "+evaluatedFeature.getMeasure());
+                    //System.out.println("Measure value: "+evaluatedFeature.getMeasure());
                     return evaluatedFeature.getFeature();
                 }).collect(Collectors.toList());
         return new FeatureDataSet(filteredFeatures, original.getClasses(), original.getName());

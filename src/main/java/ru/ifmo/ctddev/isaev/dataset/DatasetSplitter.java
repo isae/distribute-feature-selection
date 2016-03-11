@@ -11,15 +11,15 @@ import java.util.stream.IntStream;
 public class DatasetSplitter {
     private final Random random = new Random();
 
-    public List<DatasetPair> splitRandomly(DataSet original, int testPercent, int times) {
+    public List<DataSetPair> splitRandomly(DataSet original, int testPercent, int times) {
         return IntStream.range(0, times).mapToObj(i -> splitRandomly(original, testPercent)).collect(Collectors.toList());
     }
 
-    public List<DatasetPair> splitSequentially(DataSet original, int testPercent, int times) {
+    public List<DataSetPair> splitSequentially(DataSet original, int testPercent, int times) {
         throw new UnsupportedOperationException("Method is not implemented");
     }
 
-    public DatasetPair splitRandomly(DataSet original, int testPercent) {
+    public DataSetPair splitRandomly(DataSet original, int testPercent) {
         int testInstanceNumber = (int) ((double) original.getInstanceCount() * testPercent) / 100;
         Set<Integer> selectedInstances = new HashSet<>();
         while (selectedInstances.size() != testInstanceNumber) {
@@ -35,6 +35,6 @@ public class DatasetSplitter {
                 trainInstances.add(instanceSet.getInstances().get(i));
             }
         });
-        return new DatasetPair(new InstanceDataSet(trainInstances), new InstanceDataSet(testInstances));
+        return new DataSetPair(new InstanceDataSet(trainInstances), new InstanceDataSet(testInstances));
     }
 }

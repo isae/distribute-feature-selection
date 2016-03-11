@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.classifier;
 
-import ru.ifmo.ctddev.isaev.DatasetTransformer;
+import ru.ifmo.ctddev.isaev.DataSetTransformer;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.List;
  * @author iisaev
  */
 public interface Classifier {
-    DatasetTransformer datasetTransformer = new DatasetTransformer();
+    DataSetTransformer datasetTransformer = new DataSetTransformer();
 
     void train(DataSet trainDs);
 

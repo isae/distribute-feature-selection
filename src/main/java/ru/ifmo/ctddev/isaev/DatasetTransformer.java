@@ -14,7 +14,7 @@ import java.util.stream.IntStream;
 /**
  * @author iisaev
  */
-public class DatasetTransformer {
+public class DataSetTransformer {
     private final Random random = new Random();
 
     public String nextAttrName() {

@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 /**
  * @author iisaev
  */
-public class DatasetReader {
+public class DataSetReader {
     public FeatureDataSet readCsv(String path) {
         return readDataset(path, ",");
     }
