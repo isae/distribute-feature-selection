@@ -1,9 +1,10 @@
 package ru.ifmo.ctddev.isaev.feature;
 
-import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
 import ru.ifmo.ctddev.isaev.EvaluatedFeature;
-import ru.ifmo.ctddev.isaev.dataset.Feature;
 import ru.ifmo.ctddev.isaev.Point;
+import ru.ifmo.ctddev.isaev.RunStats;
+import ru.ifmo.ctddev.isaev.dataset.Feature;
+import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
 
 import java.util.Comparator;
 import java.util.List;
@@ -17,12 +18,16 @@ public class DatasetFilter {
     private final MeasureEvaluator measureEvaluator = new MeasureEvaluator();
 
     public FeatureDataSet filterDataset(FeatureDataSet original, Integer preferredSize, Point measureCosts,
-                                        RelevanceMeasure... measures) {
-        List<Feature> filteredFeatures = measureEvaluator.evaluateFeatureMeasures(original.getFeatures().stream(), original.getClasses(), measureCosts, measures)
-                .sorted(Comparator.comparingDouble(EvaluatedFeature::getMeasure))
+                                        RunStats runStats) {
+        List<Feature> filteredFeatures = measureEvaluator
+                .evaluateFeatureMeasures(
+                        original.getFeatures().stream(),
+                        original.getClasses(),
+                        measureCosts,
+                        runStats.getMeasures()
+                ).sorted(Comparator.comparingDouble(EvaluatedFeature::getMeasure))
                 .limit(preferredSize)
                 .map((evaluatedFeature) -> {
-                    //System.out.println("Measure value: "+evaluatedFeature.getMeasure());
                     return evaluatedFeature.getFeature();
                 }).collect(Collectors.toList());
         return new FeatureDataSet(filteredFeatures, original.getClasses(), original.getName());

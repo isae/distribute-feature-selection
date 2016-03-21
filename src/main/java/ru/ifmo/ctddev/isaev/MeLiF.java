@@ -1,11 +1,11 @@
 package ru.ifmo.ctddev.isaev;
 
-import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure;
+import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 
 
 /**
  * @author iisaev
  */
 public interface MeLiF {
-    void run(Point[] points, RelevanceMeasure[] measures);
+    RunStats run(Point[] points, RelevanceMeasure[] measures);
 }

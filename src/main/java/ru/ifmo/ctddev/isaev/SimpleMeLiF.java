@@ -6,7 +6,7 @@ import ru.ifmo.ctddev.isaev.classifier.Classifier;
 import ru.ifmo.ctddev.isaev.classifier.SVM;
 import ru.ifmo.ctddev.isaev.dataset.*;
 import ru.ifmo.ctddev.isaev.feature.DatasetFilter;
-import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure;
+import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -19,17 +19,9 @@ import java.util.stream.Collectors;
  */
 public class SimpleMeLiF implements MeLiF {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleMeLiF.class);
-
-    public static void main(String[] args) {
-        DataSet dataSet = datasetReader.readCsv(args[0]);
-        AlgorithmConfig config = new AlgorithmConfig(0.1, 10, 20, dataSet, 100);
-        new SimpleMeLiF(config).run();
-    }
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected final Set<Point> visitedPoints = new TreeSet<>();
-
-    private static final DataSetReader datasetReader = new DataSetReader();
 
     protected static final DatasetFilter datasetFilter = new DatasetFilter();
 
@@ -43,45 +35,45 @@ public class SimpleMeLiF implements MeLiF {
         this.config = config;
     }
 
-    public void run() {
-
-    }
-
     @Override
-    public void run(Point[] points, RelevanceMeasure[] measures) {
+    public RunStats run(Point[] points, RelevanceMeasure[] measures) {
         Arrays.asList(points).forEach(p -> {
             if (p.getCoordinates().length != measures.length) {
                 throw new IllegalArgumentException("Each point must have same coordinates number as number of measures");
             }
         });
 
+        RunStats runStats = new RunStats();
+        runStats.setMeasures(measures);
+
         LocalDateTime startTime = LocalDateTime.now();
-        LOGGER.info("Started {} at {}", getClass().getSimpleName(), startTime);
-        List<Double> scores = Arrays.asList(points).stream()
-                .map(p -> performCoordinateDescend(p, measures))
+        logger.info("Started {} at {}", getClass().getSimpleName(), startTime);
+        List<SelectionResult> scores = Arrays.asList(points).stream()
+                .map(p -> performCoordinateDescend(p, runStats))
                 .collect(Collectors.toList());
-        LOGGER.info("Total scores: ");
-        scores.forEach(System.out::println);
-        LOGGER.info("Max score: {}", scores.stream().max(Comparator.comparingDouble(t -> t)).get());
+        logger.info("Total scores: ");
+        scores.stream().mapToDouble(SelectionResult::getF1Score).forEach(System.out::println);
+        logger.info("Max score: {}", scores.stream().max(Comparator.comparingDouble(SelectionResult::getF1Score)).get().getF1Score());
         LocalDateTime finishTime = LocalDateTime.now();
-        LOGGER.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
-        LOGGER.info("Working time: {} seconds", ChronoUnit.SECONDS.between(startTime, finishTime));
+        logger.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
+        logger.info("Working time: {} seconds", ChronoUnit.SECONDS.between(startTime, finishTime));
+        return runStats;
     }
 
-    protected Double visitPoint(Point point, RelevanceMeasure[] measures, double baseScore) {
+    protected SelectionResult visitPoint(Point point, RunStats measures, SelectionResult bestResult) {
         if (!visitedPoints.contains(point)) {
-            double score = getF1Score(point, measures);
+            SelectionResult score = getSelectionResult(point, measures);
             visitedPoints.add(new Point(point));
-            if (score > baseScore) {
+            if (score.compareTo(bestResult) == 1) {
                 return score;
             }
         }
         return null;
     }
 
-    protected double performCoordinateDescend(Point point, RelevanceMeasure[] measures) {
-        double baseScore = getF1Score(point, measures);
-        visitedPoints.add(new Point(point));
+    protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
+        SelectionResult bestScore = getSelectionResult(point, runStats);
+        visitedPoints.add(point);
 
         boolean smthChanged = true;
 
@@ -91,23 +83,23 @@ public class SimpleMeLiF implements MeLiF {
             for (int i = 0; i < coordinates.length; i++) {
                 double initCoordValue = coordinates[i];
                 coordinates[i] = initCoordValue + config.getDelta();
-                Double currentScore = visitPoint(point, measures, baseScore);
+                SelectionResult currentScore = visitPoint(point, runStats, bestScore);
                 if (currentScore != null) {
-                    baseScore = currentScore;
+                    bestScore = currentScore;
                     smthChanged = true;
                     break;
                 }
                 coordinates[i] = initCoordValue - config.getDelta();
-                currentScore = visitPoint(point, measures, baseScore);
+                currentScore = visitPoint(point, runStats, bestScore);
                 if (currentScore != null) {
-                    baseScore = currentScore;
+                    bestScore = currentScore;
                     smthChanged = true;
                     break;
                 }
                 coordinates[i] = initCoordValue;
             }
         }
-        return baseScore;
+        return bestScore;
     }
 
     protected double getF1Score(DataSetPair dsPair) {
@@ -116,19 +108,19 @@ public class SimpleMeLiF implements MeLiF {
         List<Double> predictedValues = classifier.test(dsPair.getTestSet());
         List<Integer> rounded = predictedValues.stream().map(d -> (int) Math.round(d)).collect(Collectors.toList());
         List<Integer> expectedValues = dsPair.getTestSet().toInstanceSet().getInstances().stream().map(DataInstance::getClazz).collect(Collectors.toList());
-        LOGGER.trace("Expected values: {}", Arrays.toString(expectedValues.toArray()));
-        LOGGER.trace("Actual values: {}", Arrays.toString(rounded.toArray()));
+        logger.trace("Expected values: {}", Arrays.toString(expectedValues.toArray()));
+        logger.trace("Actual values: {}", Arrays.toString(rounded.toArray()));
         return scoreCalculator.calculateF1Score(expectedValues, rounded);
     }
 
-    protected double getF1Score(Point point, RelevanceMeasure[] measures) {
-        FeatureDataSet filteredDs = datasetFilter.filterDataset(config.getInitialDataset().toFeatureSet(), config.getFeatureCount(), point, measures);
+    protected SelectionResult getSelectionResult(Point point, RunStats stats) {
+        FeatureDataSet filteredDs = datasetFilter.filterDataset(config.getInitialDataset().toFeatureSet(), config.getFeatureCount(), point, stats);
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
         List<Double> f1Scores = datasetSplitter.splitRandomly(instanceDataSet, config.getTestPercent(), config.getFolds())
                 .stream().map(this::getF1Score)
                 .collect(Collectors.toList());
-        double result = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
-        LOGGER.debug("Point {}; F1 score: {}", Arrays.toString(point.getCoordinates()), result);
-        return result;
+        double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
+        logger.debug("Point {}; F1 score: {}", Arrays.toString(point.getCoordinates()), f1Score);
+        return new SelectionResult(filteredDs.getFeatures(), point, f1Score);
     }
 }

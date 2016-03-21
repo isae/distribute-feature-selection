@@ -1,4 +1,4 @@
-package ru.ifmo.ctddev.isaev.feature;
+package ru.ifmo.ctddev.isaev.feature.measure;
 
 import ru.ifmo.ctddev.isaev.dataset.Feature;
 
