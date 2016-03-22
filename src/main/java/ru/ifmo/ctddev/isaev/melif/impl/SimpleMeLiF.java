@@ -70,15 +70,17 @@ public class SimpleMeLiF implements MeLiF {
         return runStats;
     }
 
-    protected Optional<SelectionResult> visitPoint(Point point, RunStats measures, SelectionResult bestResult) {
+    protected SelectionResult visitPoint(Point point, RunStats measures, SelectionResult bestResult) {
         if (!visitedPoints.contains(point)) {
             SelectionResult score = getSelectionResult(point, measures);
             visitedPoints.add(new Point(point));
             if (score.compareTo(bestResult) == 1) {
-                return Optional.of(score);
+                return score;
+            } else {
+                return bestResult;
             }
         }
-        return Optional.empty();
+        return bestResult;
     }
 
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
@@ -90,23 +92,26 @@ public class SimpleMeLiF implements MeLiF {
         while (smthChanged) {
             smthChanged = false;
             double[] coordinates = point.getCoordinates();
+
             for (int i = 0; i < coordinates.length; i++) {
-                double initCoordValue = coordinates[i];
-                coordinates[i] = initCoordValue + config.getDelta();
-                Optional<SelectionResult> currentScore = visitPoint(point, runStats, bestScore);
-                if (currentScore.isPresent()) {
-                    bestScore = currentScore.get();
+
+                Point plusDelta = new Point(point);
+                plusDelta.getCoordinates()[i] += config.getDelta();
+                SelectionResult plusScore = visitPoint(plusDelta, runStats, bestScore);
+                if (plusScore.betterThan(bestScore)) {
+                    bestScore = plusScore;
                     smthChanged = true;
                     break;
                 }
-                coordinates[i] = initCoordValue - config.getDelta();
-                currentScore = visitPoint(point, runStats, bestScore);
-                if (currentScore.isPresent()) {
-                    bestScore = currentScore.get();
+
+                Point minusDelta = new Point(point);
+                minusDelta.getCoordinates()[i] -= config.getDelta();
+                SelectionResult minusScore = visitPoint(minusDelta, runStats, bestScore);
+                if (minusScore.betterThan(bestScore)) {
+                    bestScore = minusScore;
                     smthChanged = true;
                     break;
                 }
-                coordinates[i] = initCoordValue;
             }
         }
         return bestScore;
@@ -115,12 +120,16 @@ public class SimpleMeLiF implements MeLiF {
     protected double getF1Score(DataSetPair dsPair) {
         Classifier classifier = new SVM();
         classifier.train(dsPair.getTrainSet());
-        List<Double> predictedValues = classifier.test(dsPair.getTestSet());
-        List<Integer> rounded = predictedValues.stream().map(d -> (int) Math.round(d)).collect(Collectors.toList());
+        List<Integer> actual = classifier.test(dsPair.getTestSet())
+                .stream()
+                .map(d -> (int) Math.round(d))
+                .collect(Collectors.toList());
         List<Integer> expectedValues = dsPair.getTestSet().toInstanceSet().getInstances().stream().map(DataInstance::getClazz).collect(Collectors.toList());
-        logger.trace("Expected values: {}", Arrays.toString(expectedValues.toArray()));
-        logger.trace("Actual values: {}", Arrays.toString(rounded.toArray()));
-        return scoreCalculator.calculateF1Score(expectedValues, rounded);
+        if (logger.isTraceEnabled()) {
+            logger.trace("Expected values: {}", Arrays.toString(expectedValues.toArray()));
+            logger.trace("Actual values: {}", Arrays.toString(actual.toArray()));
+        }
+        return scoreCalculator.calculateF1Score(expectedValues, actual);
     }
 
     protected SelectionResult getSelectionResult(Point point, RunStats stats) {

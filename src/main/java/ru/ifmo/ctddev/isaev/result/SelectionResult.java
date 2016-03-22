@@ -38,4 +38,8 @@ public class SelectionResult implements Comparable<SelectionResult> {
     public Point getPoint() {
         return point;
     }
+
+    public boolean betterThan(SelectionResult bestScore) {
+        return this.compareTo(bestScore) == 1;
+    }
 }

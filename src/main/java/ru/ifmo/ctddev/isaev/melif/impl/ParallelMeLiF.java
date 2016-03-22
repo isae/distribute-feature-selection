@@ -39,6 +39,17 @@ public class ParallelMeLiF extends SimpleMeLiF {
         this.executorService = executorService;
     }
 
+    @Override
+    protected SelectionResult visitPoint(Point point, RunStats measures, SelectionResult bestResult) {
+        SelectionResult score = getSelectionResult(point, measures);
+        visitedPoints.add(new Point(point));
+        if (score.compareTo(bestResult) == 1) {
+            return score;
+        } else {
+            return bestResult;
+        }
+    }
+
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
         SelectionResult bestScore = getSelectionResult(point, runStats);
         runStats.updateBestResultUnsafe(bestScore);
@@ -50,35 +61,26 @@ public class ParallelMeLiF extends SimpleMeLiF {
             smthChanged = false;
             double[] coordinates = point.getCoordinates();
             for (int i = 0; i < coordinates.length; i++) {
+                CountDownLatch latch = new CountDownLatch(2);
 
                 Point plusDelta = new Point(point);
                 plusDelta.getCoordinates()[i] += config.getDelta();
-                CountDownLatch latch = new CountDownLatch(2);
-                final SelectionResult finalBestScore = bestScore;
-                Future<Optional<SelectionResult>> plusDeltaScore = executorService.submit(() -> {
-                    Optional<SelectionResult> result = visitPoint(plusDelta, runStats, finalBestScore);
-                    latch.countDown();
-                    return result;
-                });
+                Future<SelectionResult> plusDeltaScore = getSelectionResultFuture(runStats, bestScore, plusDelta, latch);
 
                 Point minusDelta = new Point(point);
                 minusDelta.getCoordinates()[i] -= config.getDelta();
-                Future<Optional<SelectionResult>> minusDeltaScore = executorService.submit(() -> {
-                    Optional<SelectionResult> result = visitPoint(minusDelta, runStats, finalBestScore);
-                    latch.countDown();
-                    return result;
-                });
+                Future<SelectionResult> minusDeltaScore = getSelectionResultFuture(runStats, bestScore, minusDelta, latch);
 
                 try {
                     latch.await();
-                    if (plusDeltaScore.get().isPresent()) {
-                        bestScore = plusDeltaScore.get().get();
+                    if (plusDeltaScore.get().betterThan(bestScore)) {
+                        bestScore = plusDeltaScore.get();
                         smthChanged = true;
                         break;
                     }
                     runStats.updateBestResultUnsafe(bestScore);
-                    if (minusDeltaScore.get().isPresent()) {
-                        bestScore = minusDeltaScore.get().get();
+                    if (minusDeltaScore.get().betterThan(bestScore)) {
+                        bestScore = minusDeltaScore.get();
                         smthChanged = true;
                         break;
                     }
@@ -91,6 +93,21 @@ public class ParallelMeLiF extends SimpleMeLiF {
             }
         }
         return bestScore;
+    }
+
+    private Future<SelectionResult> getSelectionResultFuture(RunStats runStats, SelectionResult bestScore, Point plusDelta, CountDownLatch latch) {
+        Future<SelectionResult> plusDeltaScore;
+        if (!visitedPoints.contains(plusDelta)) {
+            plusDeltaScore = executorService.submit(() -> {
+                SelectionResult result = visitPoint(plusDelta, runStats, bestScore);
+                latch.countDown();
+                return result;
+            });
+        } else {
+            latch.countDown();
+            plusDeltaScore = CompletableFuture.completedFuture(bestScore);
+        }
+        return plusDeltaScore;
     }
 
     protected SelectionResult getSelectionResult(Point point, RunStats stats) {
