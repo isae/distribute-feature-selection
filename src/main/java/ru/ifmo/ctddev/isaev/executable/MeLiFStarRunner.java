@@ -1,7 +1,11 @@
-package ru.ifmo.ctddev.isaev;
+package ru.ifmo.ctddev.isaev.executable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.DataSetReader;
+import ru.ifmo.ctddev.isaev.melif.impl.MeLifStar;
+import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
 

@@ -1,7 +1,11 @@
-package ru.ifmo.ctddev.isaev;
+package ru.ifmo.ctddev.isaev.melif.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.result.Point;
+import ru.ifmo.ctddev.isaev.result.RunStats;
+import ru.ifmo.ctddev.isaev.result.SelectionResult;
 import ru.ifmo.ctddev.isaev.dataset.DataSetPair;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
 import ru.ifmo.ctddev.isaev.dataset.InstanceDataSet;
@@ -11,6 +15,8 @@ import java.util.concurrent.*;
 
 
 /**
+ * Implementation, that evaluates each point in separate thread
+ *
  * @author iisaev
  */
 public class ParallelMeLiF extends SimpleMeLiF {
@@ -35,6 +41,7 @@ public class ParallelMeLiF extends SimpleMeLiF {
 
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
         SelectionResult bestScore = getSelectionResult(point, runStats);
+        runStats.updateBestResultUnsafe(bestScore);
         visitedPoints.add(new Point(point));
 
         boolean smthChanged = true;
@@ -48,32 +55,34 @@ public class ParallelMeLiF extends SimpleMeLiF {
                 plusDelta.getCoordinates()[i] += config.getDelta();
                 CountDownLatch latch = new CountDownLatch(2);
                 final SelectionResult finalBestScore = bestScore;
-                Future<SelectionResult> plusDeltaScore = executorService.submit(() -> {
-                    SelectionResult result = visitPoint(plusDelta, runStats, finalBestScore);
+                Future<Optional<SelectionResult>> plusDeltaScore = executorService.submit(() -> {
+                    Optional<SelectionResult> result = visitPoint(plusDelta, runStats, finalBestScore);
                     latch.countDown();
                     return result;
                 });
 
                 Point minusDelta = new Point(point);
                 minusDelta.getCoordinates()[i] -= config.getDelta();
-                Future<SelectionResult> minusDeltaScore = executorService.submit(() -> {
-                    SelectionResult result = visitPoint(minusDelta, runStats, finalBestScore);
+                Future<Optional<SelectionResult>> minusDeltaScore = executorService.submit(() -> {
+                    Optional<SelectionResult> result = visitPoint(minusDelta, runStats, finalBestScore);
                     latch.countDown();
                     return result;
                 });
 
                 try {
                     latch.await();
-                    if (plusDeltaScore.get() != null) {
-                        bestScore = plusDeltaScore.get();
+                    if (plusDeltaScore.get().isPresent()) {
+                        bestScore = plusDeltaScore.get().get();
                         smthChanged = true;
                         break;
                     }
-                    if (minusDeltaScore.get() != null) {
-                        bestScore = minusDeltaScore.get();
+                    runStats.updateBestResultUnsafe(bestScore);
+                    if (minusDeltaScore.get().isPresent()) {
+                        bestScore = minusDeltaScore.get().get();
                         smthChanged = true;
                         break;
                     }
+                    runStats.updateBestResultUnsafe(bestScore);
                 } catch (InterruptedException e) {
                     throw new IllegalArgumentException("Waiting on latch interrupted!");
                 } catch (ExecutionException e) {
@@ -90,20 +99,16 @@ public class ParallelMeLiF extends SimpleMeLiF {
         List<DataSetPair> dataSetPairs = datasetSplitter.splitRandomly(instanceDataSet, config.getTestPercent(), config.getFolds());
         CountDownLatch latch = new CountDownLatch(dataSetPairs.size());
         List<Double> f1Scores = Collections.synchronizedList(new ArrayList<>(dataSetPairs.size()));
-        dataSetPairs.forEach(ds -> {
-            executorService.submit(() -> {
-                double score = getF1Score(ds);
-                f1Scores.add(score);
-                latch.countDown();
-            });
-        });
+        dataSetPairs.forEach(ds -> executorService.submit(() -> {
+            double score = getF1Score(ds);
+            f1Scores.add(score);
+            latch.countDown();
+        }));
         try {
             latch.await();
             double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
             LOGGER.debug("Point {}; F1 score: {}", Arrays.toString(point.getCoordinates()), f1Score);
-            SelectionResult result = new SelectionResult(filteredDs.getFeatures(), point, f1Score);
-            stats.updateBestResult(result);
-            return result;
+            return new SelectionResult(filteredDs.getFeatures(), point, f1Score);
         } catch (InterruptedException e) {
             throw new IllegalStateException("Waiting on latch interrupted! ", e);
         }

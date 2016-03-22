@@ -1,12 +1,17 @@
-package ru.ifmo.ctddev.isaev;
+package ru.ifmo.ctddev.isaev.melif.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.ifmo.ctddev.isaev.*;
 import ru.ifmo.ctddev.isaev.classifier.Classifier;
 import ru.ifmo.ctddev.isaev.classifier.SVM;
 import ru.ifmo.ctddev.isaev.dataset.*;
 import ru.ifmo.ctddev.isaev.feature.DatasetFilter;
 import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
+import ru.ifmo.ctddev.isaev.melif.MeLiF;
+import ru.ifmo.ctddev.isaev.result.Point;
+import ru.ifmo.ctddev.isaev.result.RunStats;
+import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -15,6 +20,8 @@ import java.util.stream.Collectors;
 
 
 /**
+ * Core single-threaded MeLiF implementation
+ *
  * @author iisaev
  */
 public class SimpleMeLiF implements MeLiF {
@@ -63,15 +70,15 @@ public class SimpleMeLiF implements MeLiF {
         return runStats;
     }
 
-    protected SelectionResult visitPoint(Point point, RunStats measures, SelectionResult bestResult) {
+    protected Optional<SelectionResult> visitPoint(Point point, RunStats measures, SelectionResult bestResult) {
         if (!visitedPoints.contains(point)) {
             SelectionResult score = getSelectionResult(point, measures);
             visitedPoints.add(new Point(point));
             if (score.compareTo(bestResult) == 1) {
-                return score;
+                return Optional.of(score);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
@@ -86,16 +93,16 @@ public class SimpleMeLiF implements MeLiF {
             for (int i = 0; i < coordinates.length; i++) {
                 double initCoordValue = coordinates[i];
                 coordinates[i] = initCoordValue + config.getDelta();
-                SelectionResult currentScore = visitPoint(point, runStats, bestScore);
-                if (currentScore != null) {
-                    bestScore = currentScore;
+                Optional<SelectionResult> currentScore = visitPoint(point, runStats, bestScore);
+                if (currentScore.isPresent()) {
+                    bestScore = currentScore.get();
                     smthChanged = true;
                     break;
                 }
                 coordinates[i] = initCoordValue - config.getDelta();
                 currentScore = visitPoint(point, runStats, bestScore);
-                if (currentScore != null) {
-                    bestScore = currentScore;
+                if (currentScore.isPresent()) {
+                    bestScore = currentScore.get();
                     smthChanged = true;
                     break;
                 }
@@ -125,7 +132,7 @@ public class SimpleMeLiF implements MeLiF {
         double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
         logger.debug("Point {}; F1 score: {}", Arrays.toString(point.getCoordinates()), f1Score);
         SelectionResult result = new SelectionResult(filteredDs.getFeatures(), point, f1Score);
-        stats.updateBestResult(result);
+        stats.updateBestResultUnsafe(result);
         return result;
     }
 }

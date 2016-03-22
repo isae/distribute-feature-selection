@@ -1,5 +1,7 @@
-package ru.ifmo.ctddev.isaev;
+package ru.ifmo.ctddev.isaev.melif;
 
+import ru.ifmo.ctddev.isaev.result.Point;
+import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 
 

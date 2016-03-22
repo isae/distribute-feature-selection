@@ -1,6 +1,8 @@
-package ru.ifmo.ctddev.isaev;
+package ru.ifmo.ctddev.isaev.result;
 
 import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
+
+import java.util.Collections;
 
 
 /**
@@ -10,7 +12,9 @@ public class RunStats {
     private RelevanceMeasure[] measures;
 
     private static final class StatsHolder {
-        private SelectionResult bestResult;
+        private SelectionResult bestResult = new SelectionResult(Collections.emptyList(), new Point(), 0.0);
+
+        private volatile long visitedPoints;
     }
 
     private final StatsHolder holder = new StatsHolder();
@@ -19,15 +23,24 @@ public class RunStats {
         return holder.bestResult;
     }
 
+    public long getVisitedPoints() {
+        return holder.visitedPoints;
+    }
+
     public void updateBestResult(SelectionResult bestResult) {
         synchronized (holder) {
-            if (holder.bestResult != null) {
-                if (holder.bestResult.compareTo(bestResult) == -1) {
-                    holder.bestResult = bestResult;
-                }
-            } else {
+            updateBestResultUnsafe(bestResult);
+        }
+    }
+
+    public void updateBestResultUnsafe(SelectionResult bestResult) {
+        ++holder.visitedPoints;
+        if (holder.bestResult != null) {
+            if (holder.bestResult.compareTo(bestResult) == -1) {
                 holder.bestResult = bestResult;
             }
+        } else {
+            holder.bestResult = bestResult;
         }
     }
 
