@@ -18,7 +18,8 @@ public class MeLiFStarRunner {
     public static void main(String[] args) {
         DataSetReader dataSetReader = new DataSetReader();
         DataSet dataSet = dataSetReader.readCsv(args[0]);
-        AlgorithmConfig config = new AlgorithmConfig(0.3, 5, Runtime.getRuntime().availableProcessors(), dataSet, 100);
+        int threads = Runtime.getRuntime().availableProcessors();
+        AlgorithmConfig config = new AlgorithmConfig(0.3, 5, 20, dataSet, 100);
         Point[] points = new Point[] {
                 new Point(1, 0, 0, 0),
                 new Point(0, 1, 0, 0),

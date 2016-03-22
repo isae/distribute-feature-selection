@@ -15,8 +15,27 @@ public class DatasetSplitter {
         return IntStream.range(0, times).mapToObj(i -> splitRandomly(original, testPercent)).collect(Collectors.toList());
     }
 
-    public List<DataSetPair> splitSequentially(DataSet original, int testPercent, int times) {
-        throw new UnsupportedOperationException("Method is not implemented");
+    public List<DataSetPair> splitSequentially(DataSet original, int testPercent) {
+        List<DataSetPair> result = new ArrayList<>();
+        int folds = (int) ((double) 100 / testPercent);
+        List<DataInstance> instances = new ArrayList<>(original.toInstanceSet().getInstances());
+        int testSize = (int) ((double) instances.size() * testPercent / 100);
+        Collections.shuffle(instances);
+        int startPosition = 0;
+        while (startPosition < instances.size()) {
+            int endPosition = startPosition + testSize;
+            List<DataInstance> beforeCV = instances.subList(0, startPosition);
+            List<DataInstance> cv = instances.subList(startPosition, endPosition);
+            List<DataInstance> afterCV = instances.subList(endPosition, instances.size());
+            beforeCV.addAll(afterCV);
+            result.add(new DataSetPair(
+                    new InstanceDataSet(new ArrayList<>(beforeCV)),
+                    new InstanceDataSet(new ArrayList<>(cv))
+            ));
+            startPosition = endPosition;
+        }
+        assert result.size() == folds;
+        return result;
     }
 
     public DataSetPair splitRandomly(DataSet original, int testPercent) {

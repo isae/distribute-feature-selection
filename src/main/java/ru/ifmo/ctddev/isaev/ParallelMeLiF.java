@@ -101,7 +101,9 @@ public class ParallelMeLiF extends SimpleMeLiF {
             latch.await();
             double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
             LOGGER.debug("Point {}; F1 score: {}", Arrays.toString(point.getCoordinates()), f1Score);
-            return new SelectionResult(filteredDs.getFeatures(), point, f1Score);
+            SelectionResult result = new SelectionResult(filteredDs.getFeatures(), point, f1Score);
+            stats.updateBestResult(result);
+            return result;
         } catch (InterruptedException e) {
             throw new IllegalStateException("Waiting on latch interrupted! ", e);
         }

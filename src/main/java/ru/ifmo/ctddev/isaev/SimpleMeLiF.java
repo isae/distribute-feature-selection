@@ -53,7 +53,10 @@ public class SimpleMeLiF implements MeLiF {
                 .collect(Collectors.toList());
         logger.info("Total scores: ");
         scores.stream().mapToDouble(SelectionResult::getF1Score).forEach(System.out::println);
-        logger.info("Max score: {}", scores.stream().max(Comparator.comparingDouble(SelectionResult::getF1Score)).get().getF1Score());
+        logger.info("Max score: {} at point {}",
+                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getPoint().getCoordinates()
+        );
         LocalDateTime finishTime = LocalDateTime.now();
         logger.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
         logger.info("Working time: {} seconds", ChronoUnit.SECONDS.between(startTime, finishTime));
@@ -121,6 +124,8 @@ public class SimpleMeLiF implements MeLiF {
                 .collect(Collectors.toList());
         double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
         logger.debug("Point {}; F1 score: {}", Arrays.toString(point.getCoordinates()), f1Score);
-        return new SelectionResult(filteredDs.getFeatures(), point, f1Score);
+        SelectionResult result = new SelectionResult(filteredDs.getFeatures(), point, f1Score);
+        stats.updateBestResult(result);
+        return result;
     }
 }
