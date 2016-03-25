@@ -5,12 +5,12 @@ import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
+import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
-import ru.ifmo.ctddev.isaev.melif.impl.SimpleMeLiF;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -38,7 +38,7 @@ public class ThreadedVsSequentialComparison extends Comparison {
         int threads = 20;
         LocalDateTime startTime = LocalDateTime.now();
         LOGGER.info("Starting SimpleMeliF at {}", startTime);
-        RunStats simpleStats = new SimpleMeLiF(config, dataSet).run(points);
+        RunStats simpleStats = new BasicMeLiF(config, dataSet).run(points);
         LocalDateTime simpleFinish = LocalDateTime.now();
         LOGGER.info("Starting ParallelMeliF at {}", simpleFinish);
         ParallelMeLiF parallelMeLiF = new ParallelMeLiF(config, dataSet, threads);

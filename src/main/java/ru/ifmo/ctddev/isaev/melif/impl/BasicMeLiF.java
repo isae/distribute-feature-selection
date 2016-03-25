@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
  *
  * @author iisaev
  */
-public class SimpleMeLiF implements MeLiF {
+public class BasicMeLiF implements MeLiF {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
@@ -42,7 +42,7 @@ public class SimpleMeLiF implements MeLiF {
 
     protected final DataSet dataSet;
 
-    public SimpleMeLiF(AlgorithmConfig config, DataSet dataSet) {
+    public BasicMeLiF(AlgorithmConfig config, DataSet dataSet) {
         this.config = config;
         this.dataSet = dataSet;
     }

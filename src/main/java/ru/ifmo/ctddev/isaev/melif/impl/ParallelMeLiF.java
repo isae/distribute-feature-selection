@@ -20,7 +20,7 @@ import java.util.concurrent.*;
  *
  * @author iisaev
  */
-public class ParallelMeLiF extends SimpleMeLiF {
+public class ParallelMeLiF extends BasicMeLiF {
     private final ExecutorService executorService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelMeLiF.class);
