@@ -7,15 +7,20 @@ import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
+import java.util.Comparator;
 
 
 /**
  * @author iisaev
  */
-public class RunStats {
+public class RunStats implements Comparable<RunStats> {
     private RelevanceMeasure[] measures;
 
     private long workTime;
+
+    public double getScore() {
+        return getBestResult().getF1Score() / workTime;
+    }
 
     private Classifiers usedClassifier;
 
@@ -51,6 +56,11 @@ public class RunStats {
 
     public LocalDateTime getFinishTime() {
         return finishTime;
+    }
+
+    @Override
+    public int compareTo(RunStats o) {
+        return Comparator.comparingDouble(RunStats::getScore).compare(this, o);
     }
 
     private static final class StatsHolder {

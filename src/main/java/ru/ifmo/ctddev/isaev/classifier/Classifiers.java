@@ -10,7 +10,6 @@ public enum Classifiers {
     WEKA_HOEFD(WekaHoeffdingTree.class),
     WEKA_J48(WekaJ48.class),
     WEKA_KNN(WekaKNN.class),
-    WEKA_LINEAR_REG(WekaLinearRegression.class),
     WEKA_LMT(WekaLMT.class),
     WEKA_PERCEPTRON(WekaMultilayerPerceptron.class),
     WEKA_PART(WekaPART.class),

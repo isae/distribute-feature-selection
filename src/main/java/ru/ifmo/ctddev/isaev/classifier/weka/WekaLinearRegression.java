@@ -7,6 +7,7 @@ import weka.classifiers.functions.LinearRegression;
 /**
  * @author iisaev
  */
+@Deprecated
 public class WekaLinearRegression extends WekaClassifier {
 
     @Override

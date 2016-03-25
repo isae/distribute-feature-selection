@@ -36,7 +36,10 @@ public class ClassifiersComparison extends Comparison {
         List<RunStats> allStats = IntStream.range(0, Classifiers.values().length).mapToObj(i -> {
             LOGGER.info("Classifier: {}", Classifiers.values()[i]);
             AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, Classifiers.values()[i], 100, measures);
-            return new ParallelMeLiF(config, dataSet, 20).run(points);
+            ParallelMeLiF meLiF = new ParallelMeLiF(config, dataSet, 20);
+            RunStats result = meLiF.run(points);
+            meLiF.getExecutorService().shutdown();
+            return result;
         }).collect(Collectors.toList());
         allStats.forEach(stats -> {
             LOGGER.info("Classifier: {}; f1Score: {}; work time: {} seconds", new Object[] {
