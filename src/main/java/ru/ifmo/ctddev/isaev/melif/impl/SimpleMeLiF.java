@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.*;
 import ru.ifmo.ctddev.isaev.classifier.Classifier;
-import ru.ifmo.ctddev.isaev.classifier.WekaSVM;
+import ru.ifmo.ctddev.isaev.classifier.weka.WekaSVM;
 import ru.ifmo.ctddev.isaev.dataset.*;
 import ru.ifmo.ctddev.isaev.feature.DatasetFilter;
 import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;

@@ -1,7 +1,8 @@
-package ru.ifmo.ctddev.isaev.classifier;
+package ru.ifmo.ctddev.isaev.classifier.weka;
 
+import ru.ifmo.ctddev.isaev.classifier.Classifier;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
-import weka.classifiers.functions.SMO;
+import weka.classifiers.AbstractClassifier;
 import weka.core.Instances;
 
 import java.util.List;
@@ -11,13 +12,15 @@ import java.util.stream.Collectors;
 /**
  * @author iisaev
  */
-public class WekaSVM implements Classifier {
+public abstract class WekaClassifier implements Classifier {
 
-    private SMO svm = new SMO();
+    private AbstractClassifier classifier;
 
     private Instances instances;
 
     private volatile boolean trained = false;
+
+    protected abstract AbstractClassifier createClassifier();
 
     @Override
     public void train(DataSet trainDs) {
@@ -27,9 +30,8 @@ public class WekaSVM implements Classifier {
         try {
             trained = true;
             instances = datasetTransformer.toInstances(trainDs.toInstanceSet());
-            svm = new SMO();
-            svm.setBuildLogisticModels(true);
-            svm.buildClassifier(instances);
+            classifier = createClassifier();
+            classifier.buildClassifier(instances);
         } catch (Exception e) {
             throw new IllegalArgumentException("Failed to train on given dataset", e);
         }
@@ -37,10 +39,13 @@ public class WekaSVM implements Classifier {
 
     @Override
     public List<Double> test(DataSet testDs) {
+        if (!trained) {
+            throw new IllegalStateException("Classifier is not trained yet");
+        }
         return testDs.toInstanceSet().getInstances().stream().map(datasetTransformer::toInstance).map(i -> {
             try {
                 i.setDataset(instances);
-                return svm.classifyInstance(i);
+                return classifier.classifyInstance(i);
             } catch (Exception e) {
                 throw new IllegalArgumentException("Given dataset is not valid", e);
             }
