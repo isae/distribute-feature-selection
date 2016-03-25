@@ -1,7 +1,11 @@
 package ru.ifmo.ctddev.isaev.result;
 
+import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 
 
@@ -10,6 +14,44 @@ import java.util.Collections;
  */
 public class RunStats {
     private RelevanceMeasure[] measures;
+
+    private long workTime;
+
+    private Classifiers usedClassifier;
+
+    private LocalDateTime startTime;
+
+    private LocalDateTime finishTime;
+
+    public RunStats(AlgorithmConfig config) {
+        this.measures = config.getMeasures();
+        this.usedClassifier = config.getClassifiers();
+    }
+
+    public Classifiers getUsedClassifier() {
+        return usedClassifier;
+    }
+
+    public long getWorkTime() {
+        return workTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setFinishTime(LocalDateTime finishTime) {
+        this.finishTime = finishTime;
+        this.workTime = ChronoUnit.SECONDS.between(startTime, finishTime);
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public LocalDateTime getFinishTime() {
+        return finishTime;
+    }
 
     private static final class StatsHolder {
         private SelectionResult bestResult = new SelectionResult(Collections.emptyList(), new Point(), 0.0);

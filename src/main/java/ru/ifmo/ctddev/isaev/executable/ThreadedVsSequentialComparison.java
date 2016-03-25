@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
+import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
@@ -24,7 +25,6 @@ public class ThreadedVsSequentialComparison extends Comparison {
     public static void main(String[] args) {
         DataSetReader dataSetReader = new DataSetReader();
         DataSet dataSet = dataSetReader.readCsv(args[0]);
-        AlgorithmConfig config = new AlgorithmConfig(0.1, 10, 20, dataSet, 100);
         Point[] points = new Point[] {
                 new Point(1, 0, 0, 0),
                 new Point(0, 1, 0, 0),
@@ -33,14 +33,16 @@ public class ThreadedVsSequentialComparison extends Comparison {
                 new Point(1, 1, 1, 1)
         };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
+
+        AlgorithmConfig config = new AlgorithmConfig(0.1, 10, 20, Classifiers.WEKA_SVM, 100, measures);
         int threads = 20;
         LocalDateTime startTime = LocalDateTime.now();
         LOGGER.info("Starting SimpleMeliF at {}", startTime);
-        RunStats simpleStats = new SimpleMeLiF(config).run(points, measures);
+        RunStats simpleStats = new SimpleMeLiF(config, dataSet).run(points);
         LocalDateTime simpleFinish = LocalDateTime.now();
         LOGGER.info("Starting ParallelMeliF at {}", simpleFinish);
-        ParallelMeLiF parallelMeLiF = new ParallelMeLiF(config, threads);
-        RunStats parallelStats = parallelMeLiF.run(points, measures);
+        ParallelMeLiF parallelMeLiF = new ParallelMeLiF(config, dataSet, threads);
+        RunStats parallelStats = parallelMeLiF.run(points);
         LocalDateTime parallelFinish = LocalDateTime.now();
         long simpleWorkTime = ChronoUnit.SECONDS.between(startTime, simpleFinish);
         long parallelWorkTime = ChronoUnit.SECONDS.between(simpleFinish, parallelFinish);
@@ -57,7 +59,7 @@ public class ThreadedVsSequentialComparison extends Comparison {
                 parallelStats.getBestResult().getF1Score()
         });
         LOGGER.info("Multi-threaded to single-threaded version speed improvement: {}%",
-                getSpeedImprovementPercent(simpleWorkTime, parallelWorkTime));
+                getSpeedImprovementPercent(simpleStats.getWorkTime(), parallelStats.getWorkTime()));
         parallelMeLiF.getExecutorService().shutdown();
     }
 }

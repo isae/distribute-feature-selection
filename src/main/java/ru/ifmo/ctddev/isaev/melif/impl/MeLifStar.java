@@ -1,6 +1,7 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
 import ru.ifmo.ctddev.isaev.*;
+import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.result.OptimizationPoint;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
@@ -24,8 +25,8 @@ import java.util.stream.Stream;
  */
 public class MeLifStar extends ParallelMeLiF {
 
-    public MeLifStar(AlgorithmConfig config, int threads) {
-        super(config, new ForkJoinPool(threads));
+    public MeLifStar(AlgorithmConfig config, DataSet dataSet, int threads) {
+        super(config, dataSet, new ForkJoinPool(threads));
     }
 
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {

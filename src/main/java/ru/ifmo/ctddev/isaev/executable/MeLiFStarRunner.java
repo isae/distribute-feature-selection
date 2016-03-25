@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
+import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.melif.impl.MeLifStar;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
@@ -22,8 +23,6 @@ public class MeLiFStarRunner {
     public static void main(String[] args) {
         DataSetReader dataSetReader = new DataSetReader();
         DataSet dataSet = dataSetReader.readCsv(args[0]);
-        int threads = Runtime.getRuntime().availableProcessors();
-        AlgorithmConfig config = new AlgorithmConfig(0.3, 5, 20, dataSet, 100);
         Point[] points = new Point[] {
                 new Point(1, 0, 0, 0),
                 new Point(0, 1, 0, 0),
@@ -32,9 +31,10 @@ public class MeLiFStarRunner {
                 new Point(1, 1, 1, 1)
         };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
+        AlgorithmConfig config = new AlgorithmConfig(0.3, 5, 20, Classifiers.WEKA_SVM, 100, measures);
         LocalDateTime startTime = LocalDateTime.now();
-        MeLifStar meLifStar = new MeLifStar(config, 20);
-        meLifStar.run(points, measures);
+        MeLifStar meLifStar = new MeLifStar(config, dataSet, 20);
+        meLifStar.run(points);
         LocalDateTime starFinish = LocalDateTime.now();
         LOGGER.info("Finished MeLifStar at {}", starFinish);
         long starWorkTime = ChronoUnit.SECONDS.between(startTime, starFinish);

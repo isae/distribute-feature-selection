@@ -3,6 +3,7 @@ package ru.ifmo.ctddev.isaev.executable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.*;
+import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
 import ru.ifmo.ctddev.isaev.melif.impl.MeLifStar;
@@ -24,7 +25,6 @@ public class MeLiFComparison extends Comparison {
     public static void main(String[] args) {
         DataSetReader dataSetReader = new DataSetReader();
         DataSet dataSet = dataSetReader.readCsv(args[0]);
-        AlgorithmConfig config = new AlgorithmConfig(0.3, 10, 20, dataSet, 100);
         Point[] points = new Point[] {
                 new Point(1, 0, 0, 0),
                 new Point(0, 1, 0, 0),
@@ -33,19 +33,20 @@ public class MeLiFComparison extends Comparison {
                 new Point(1, 1, 1, 1)
         };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
+        AlgorithmConfig config = new AlgorithmConfig(0.3, 10, 20, Classifiers.WEKA_SVM, 100, measures);
         //int threads = Runtime.getRuntime().availableProcessors();
         int threads = 20;
         LocalDateTime startTime = LocalDateTime.now();
         LOGGER.info("Starting SimpleMeliF at {}", startTime);
-        RunStats simpleStats = new SimpleMeLiF(config).run(points, measures);
+        RunStats simpleStats = new SimpleMeLiF(config, dataSet).run(points);
         LocalDateTime simpleFinish = LocalDateTime.now();
         LOGGER.info("Starting ParallelMeliF at {}", simpleFinish);
-        ParallelMeLiF parallelMeLiF = new ParallelMeLiF(config, threads);
-        RunStats parallelStats = parallelMeLiF.run(points, measures);
+        ParallelMeLiF parallelMeLiF = new ParallelMeLiF(config, dataSet, threads);
+        RunStats parallelStats = parallelMeLiF.run(points);
         LocalDateTime parallelFinish = LocalDateTime.now();
         LOGGER.info("Starting MeLifStar at {}", parallelFinish);
-        MeLifStar meLifStar = new MeLifStar(config, threads);
-        RunStats starStats = meLifStar.run(points, measures);
+        MeLifStar meLifStar = new MeLifStar(config, dataSet, threads);
+        RunStats starStats = meLifStar.run(points);
         LocalDateTime starFinish = LocalDateTime.now();
         LOGGER.info("Finished MeLifStar at {}", starFinish);
         long simpleWorkTime = ChronoUnit.SECONDS.between(startTime, simpleFinish);

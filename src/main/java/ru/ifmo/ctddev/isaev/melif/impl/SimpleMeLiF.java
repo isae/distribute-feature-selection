@@ -2,12 +2,11 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.ifmo.ctddev.isaev.*;
+import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.ScoreCalculator;
 import ru.ifmo.ctddev.isaev.classifier.Classifier;
-import ru.ifmo.ctddev.isaev.classifier.weka.WekaSVM;
 import ru.ifmo.ctddev.isaev.dataset.*;
 import ru.ifmo.ctddev.isaev.feature.DatasetFilter;
-import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
@@ -15,7 +14,10 @@ import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 
@@ -38,22 +40,25 @@ public class SimpleMeLiF implements MeLiF {
 
     protected final AlgorithmConfig config;
 
-    public SimpleMeLiF(AlgorithmConfig config) {
+    protected final DataSet dataSet;
+
+    public SimpleMeLiF(AlgorithmConfig config, DataSet dataSet) {
         this.config = config;
+        this.dataSet = dataSet;
     }
 
     @Override
-    public RunStats run(Point[] points, RelevanceMeasure[] measures) {
+    public RunStats run(Point[] points) {
         Arrays.asList(points).forEach(p -> {
-            if (p.getCoordinates().length != measures.length) {
+            if (p.getCoordinates().length != config.getMeasures().length) {
                 throw new IllegalArgumentException("Each point must have same coordinates number as number of measures");
             }
         });
 
-        RunStats runStats = new RunStats();
-        runStats.setMeasures(measures);
+        RunStats runStats = new RunStats(config);
 
         LocalDateTime startTime = LocalDateTime.now();
+        runStats.setStartTime(startTime);
         logger.info("Started {} at {}", getClass().getSimpleName(), startTime);
         List<SelectionResult> scores = Arrays.asList(points).stream()
                 .map(p -> performCoordinateDescend(p, runStats))
@@ -65,6 +70,7 @@ public class SimpleMeLiF implements MeLiF {
                 runStats.getBestResult().getPoint().getCoordinates()
         );
         LocalDateTime finishTime = LocalDateTime.now();
+        runStats.setFinishTime(finishTime);
         logger.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
         logger.info("Working time: {} seconds", ChronoUnit.SECONDS.between(startTime, finishTime));
         return runStats;
@@ -118,7 +124,7 @@ public class SimpleMeLiF implements MeLiF {
     }
 
     protected double getF1Score(DataSetPair dsPair) {
-        Classifier classifier = new WekaSVM();
+        Classifier classifier = config.getClassifiers().newClassifier();
         classifier.train(dsPair.getTrainSet());
         List<Integer> actual = classifier.test(dsPair.getTestSet())
                 .stream()
@@ -133,7 +139,7 @@ public class SimpleMeLiF implements MeLiF {
     }
 
     protected SelectionResult getSelectionResult(Point point, RunStats stats) {
-        FeatureDataSet filteredDs = datasetFilter.filterDataset(config.getInitialDataset().toFeatureSet(), config.getFeatureCount(), point, stats);
+        FeatureDataSet filteredDs = datasetFilter.filterDataset(dataSet.toFeatureSet(), config.getFeatureCount(), point, stats);
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
         List<Double> f1Scores = datasetSplitter.splitRandomly(instanceDataSet, config.getTestPercent(), config.getFolds())
                 .stream().map(this::getF1Score)

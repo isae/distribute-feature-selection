@@ -3,6 +3,7 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.result.SelectionResult;
@@ -30,12 +31,12 @@ public class ParallelMeLiF extends SimpleMeLiF {
 
     protected final Set<Point> visitedPoints = new ConcurrentSkipListSet<>();
 
-    public ParallelMeLiF(AlgorithmConfig config, int threads) {
-        this(config, Executors.newFixedThreadPool(threads));
+    public ParallelMeLiF(AlgorithmConfig config, DataSet dataSet, int threads) {
+        this(config, dataSet, Executors.newFixedThreadPool(threads));
     }
 
-    public ParallelMeLiF(AlgorithmConfig config, ExecutorService executorService) {
-        super(config);
+    public ParallelMeLiF(AlgorithmConfig config, DataSet dataSet, ExecutorService executorService) {
+        super(config, dataSet);
         this.executorService = executorService;
     }
 
@@ -111,7 +112,7 @@ public class ParallelMeLiF extends SimpleMeLiF {
     }
 
     protected SelectionResult getSelectionResult(Point point, RunStats stats) {
-        FeatureDataSet filteredDs = datasetFilter.filterDataset(config.getInitialDataset().toFeatureSet(), config.getFeatureCount(), point, stats);
+        FeatureDataSet filteredDs = datasetFilter.filterDataset(dataSet.toFeatureSet(), config.getFeatureCount(), point, stats);
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
         List<DataSetPair> dataSetPairs = datasetSplitter.splitRandomly(instanceDataSet, config.getTestPercent(), config.getFolds());
         CountDownLatch latch = new CountDownLatch(dataSetPairs.size());
