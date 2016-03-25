@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.*;
 import ru.ifmo.ctddev.isaev.classifier.Classifier;
-import ru.ifmo.ctddev.isaev.classifier.SVM;
+import ru.ifmo.ctddev.isaev.classifier.WekaSVM;
 import ru.ifmo.ctddev.isaev.dataset.*;
 import ru.ifmo.ctddev.isaev.feature.DatasetFilter;
 import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
@@ -118,7 +118,7 @@ public class SimpleMeLiF implements MeLiF {
     }
 
     protected double getF1Score(DataSetPair dsPair) {
-        Classifier classifier = new SVM();
+        Classifier classifier = new WekaSVM();
         classifier.train(dsPair.getTrainSet());
         List<Integer> actual = classifier.test(dsPair.getTestSet())
                 .stream()

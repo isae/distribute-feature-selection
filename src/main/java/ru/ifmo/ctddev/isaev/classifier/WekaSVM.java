@@ -11,15 +11,21 @@ import java.util.stream.Collectors;
 /**
  * @author iisaev
  */
-public class SVM implements Classifier {
+public class WekaSVM implements Classifier {
 
     private SMO svm = new SMO();
 
     private Instances instances;
 
+    private volatile boolean trained = false;
+
     @Override
     public void train(DataSet trainDs) {
+        if (trained) {
+            throw new IllegalStateException("Classifier has been already trained");
+        }
         try {
+            trained = true;
             instances = datasetTransformer.toInstances(trainDs.toInstanceSet());
             svm = new SMO();
             svm.setBuildLogisticModels(true);
