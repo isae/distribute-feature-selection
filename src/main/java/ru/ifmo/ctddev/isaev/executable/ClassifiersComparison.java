@@ -8,6 +8,7 @@ import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
+import ru.ifmo.ctddev.isaev.melif.impl.ParallelNopMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 
@@ -33,20 +34,35 @@ public class ClassifiersComparison extends Comparison {
                 new Point(1, 1, 1, 1)
         };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
-        List<RunStats> allStats = IntStream.range(0, Classifiers.values().length).mapToObj(i -> {
-            LOGGER.info("Classifier: {}", Classifiers.values()[i]);
-            AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, Classifiers.values()[i], 100, measures);
-            ParallelMeLiF meLiF = new ParallelMeLiF(config, dataSet, 20);
-            RunStats result = meLiF.run(points);
-            meLiF.getExecutorService().shutdown();
-            return result;
-        }).collect(Collectors.toList());
-        allStats.forEach(stats -> {
-            LOGGER.info("Classifier: {}; f1Score: {}; work time: {} seconds", new Object[] {
-                    stats.getUsedClassifier(),
-                    stats.getBestResult().getF1Score(),
-                    stats.getWorkTime()
-            });
+        List<RunStats> allStats = IntStream.range(0, Classifiers.values().length)
+                .mapToObj(i -> Classifiers.values()[i])
+                .filter(clf -> clf == Classifiers.WEKA_SVM)
+                .map(clf -> {
+                    LOGGER.info("Classifier: {}", clf);
+                    AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, clf, 100, measures);
+                    ParallelMeLiF meLiF = new ParallelMeLiF(config, dataSet, 20);
+                    RunStats result = meLiF.run(points);
+                    return result;
+                })
+                .collect(Collectors.toList());
+        RunStats svmStats = allStats.stream().filter(s -> s.getUsedClassifier() == Classifiers.WEKA_SVM).findAny().get();
+        AlgorithmConfig nopMelifConfig = new AlgorithmConfig(0.1, 3, 20, Classifiers.WEKA_SVM, 100, measures);
+        RunStats nopMelifStats = new ParallelNopMeLiF(nopMelifConfig, 20, (int) svmStats.getVisitedPoints()).run(points);
+        allStats.forEach(stats ->
+                LOGGER.info("Classifier: {}; f1Score: {}; work time: {} seconds; visited points: {}", new Object[] {
+                        stats.getUsedClassifier(),
+                        stats.getBestResult().getF1Score(),
+                        stats.getWorkTime(),
+                        stats.getVisitedPoints()
+                }));
+        LOGGER.info("Nop classifier work time: {}; visitedPoints: {}", new Object[] {
+                nopMelifStats.getWorkTime(),
+                nopMelifStats.getVisitedPoints()
         });
+        LOGGER.info("Percent of time spent to classifying for svm: {}%",
+                getPercentImprovement(
+                        svmStats.getWorkTime() / svmStats.getVisitedPoints(),
+                        nopMelifStats.getWorkTime() / nopMelifStats.getVisitedPoints()
+                ));
     }
 }

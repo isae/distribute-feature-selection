@@ -15,9 +15,6 @@ public class InstanceDataSet extends DataSet {
 
     protected InstanceDataSet(List<DataInstance> instances) {
         super("");
-        if (instances.isEmpty()) {
-            throw new IllegalArgumentException("Number of instances must not be equal to zero");
-        }
         this.instances = Collections.unmodifiableList(instances);
     }
 

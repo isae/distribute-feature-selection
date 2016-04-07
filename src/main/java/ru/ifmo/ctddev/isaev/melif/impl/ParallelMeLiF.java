@@ -41,6 +41,13 @@ public class ParallelMeLiF extends BasicMeLiF {
     }
 
     @Override
+    public RunStats run(Point[] points) {
+        RunStats result = super.run(points);
+        getExecutorService().shutdown();
+        return result;
+    }
+
+    @Override
     protected SelectionResult visitPoint(Point point, RunStats measures, SelectionResult bestResult) {
         SelectionResult score = getSelectionResult(point, measures);
         visitedPoints.add(new Point(point));

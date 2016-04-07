@@ -10,4 +10,9 @@ public class Comparison {
         return (double) diff / prevSeconds * 100;
     }
 
+    protected static double getPercentImprovement(double prev, double cur) {
+        double diff = prev - cur;
+        return diff / prev * 100;
+    }
+
 }
