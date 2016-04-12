@@ -6,7 +6,6 @@ import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Collections;
 import java.util.Comparator;
 
 
@@ -64,7 +63,7 @@ public class RunStats implements Comparable<RunStats> {
     }
 
     private static final class StatsHolder {
-        private SelectionResult bestResult = new SelectionResult(Collections.emptyList(), new Point(), 0.0);
+        private SelectionResult bestResult = null;
 
         private volatile long visitedPoints;
     }

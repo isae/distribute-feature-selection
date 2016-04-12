@@ -7,7 +7,7 @@ public class Point implements Comparable<Point> {
     private final double[] coordinates;
 
     public Point(double... coordinates) {
-        this.coordinates = coordinates;
+        this.coordinates = coordinates.clone();
     }
 
     public Point(Point point) {

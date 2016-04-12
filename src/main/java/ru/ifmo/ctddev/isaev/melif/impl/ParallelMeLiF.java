@@ -51,31 +51,30 @@ public class ParallelMeLiF extends BasicMeLiF {
     protected SelectionResult visitPoint(Point point, RunStats measures, SelectionResult bestResult) {
         SelectionResult score = getSelectionResult(point, measures);
         visitedPoints.add(new Point(point));
-        if (score.compareTo(bestResult) == 1) {
-            return score;
-        } else {
-            return bestResult;
-        }
+        return score;
     }
 
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
         SelectionResult bestScore = getSelectionResult(point, runStats);
+        visitedPoints.add(point);
+        if (runStats.getBestResult() != null && runStats.getScore()>bestScore.getF1Score()) {
+            bestScore = runStats.getBestResult();
+        }
         runStats.updateBestResultUnsafe(bestScore);
-        visitedPoints.add(new Point(point));
 
+        double[] coordinates = point.getCoordinates();
         boolean smthChanged = true;
 
         while (smthChanged) {
             smthChanged = false;
-            double[] coordinates = point.getCoordinates();
             for (int i = 0; i < coordinates.length; i++) {
                 CountDownLatch latch = new CountDownLatch(2);
 
-                Point plusDelta = new Point(point);
+                Point plusDelta = new Point(coordinates);
                 plusDelta.getCoordinates()[i] += config.getDelta();
                 Future<SelectionResult> plusDeltaScore = getSelectionResultFuture(runStats, bestScore, plusDelta, latch);
 
-                Point minusDelta = new Point(point);
+                Point minusDelta = new Point(coordinates);
                 minusDelta.getCoordinates()[i] -= config.getDelta();
                 Future<SelectionResult> minusDeltaScore = getSelectionResultFuture(runStats, bestScore, minusDelta, latch);
 
@@ -83,16 +82,19 @@ public class ParallelMeLiF extends BasicMeLiF {
                     latch.await();
                     if (plusDeltaScore.get().betterThan(bestScore)) {
                         bestScore = plusDeltaScore.get();
+                        runStats.updateBestResultUnsafe(plusDeltaScore.get());
+                        coordinates = plusDelta.getCoordinates();
                         smthChanged = true;
-                        break;
                     }
-                    runStats.updateBestResultUnsafe(bestScore);
                     if (minusDeltaScore.get().betterThan(bestScore)) {
                         bestScore = minusDeltaScore.get();
+                        runStats.updateBestResultUnsafe(minusDeltaScore.get());
+                        coordinates = minusDelta.getCoordinates();
                         smthChanged = true;
+                    }
+                    if (smthChanged) {
                         break;
                     }
-                    runStats.updateBestResultUnsafe(bestScore);
                 } catch (InterruptedException e) {
                     throw new IllegalArgumentException("Waiting on latch interrupted!");
                 } catch (ExecutionException e) {
