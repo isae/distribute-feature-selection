@@ -4,13 +4,13 @@ import ru.ifmo.ctddev.isaev.dataset.Feature;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 
 /**
@@ -18,12 +18,16 @@ import java.util.stream.IntStream;
  */
 public class DataSetReader {
     public FeatureDataSet readCsv(String path) {
-        return readDataset(path, ",");
+        return readDataset(new File(path), ",");
     }
 
-    private FeatureDataSet readDataset(String path, String delimiter) {
+    public FeatureDataSet readCsv(File file) {
+        return readDataset(file, ",");
+    }
+
+    private FeatureDataSet readDataset(File file, String delimiter) {
         try {
-            BufferedReader reader = new BufferedReader(new FileReader(path));
+            BufferedReader reader = new BufferedReader(new FileReader(file));
             final boolean[] firstLine = {true};
             List<Integer> classes = new ArrayList<>();
             List<Feature> features = new ArrayList<>();
@@ -40,7 +44,7 @@ public class DataSetReader {
                     features.add(new Feature("feature" + (++counter[0]), parsedRow));
                 }
             });
-            return new FeatureDataSet(features, classes, path);
+            return new FeatureDataSet(features, classes, file.getAbsolutePath());
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException("File not found", e);
         }

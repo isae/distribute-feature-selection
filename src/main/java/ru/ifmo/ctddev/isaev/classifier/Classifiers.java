@@ -14,7 +14,8 @@ public enum Classifiers {
     WEKA_PERCEPTRON(WekaMultilayerPerceptron.class),
     WEKA_PART(WekaPART.class),
     WEKA_RAND_FOREST(WekaRandomForest.class),
-    WEKA_SVM(WekaSVM.class);
+    WEKA_SVM(WekaSVM.class),
+    WEKA_NAIVE_BAYES(WekaNaiveBayes.class);
 
     private Class<? extends Classifier> typeToken;
 

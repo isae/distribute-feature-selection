@@ -1,6 +1,7 @@
-package ru.ifmo.ctddev.isaev.feature;
+package filter;
 
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
+import ru.ifmo.ctddev.isaev.feature.MeasureEvaluator;
 import ru.ifmo.ctddev.isaev.result.EvaluatedFeature;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;

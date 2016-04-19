@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.executable;
 
+import filter.PercentFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
@@ -7,7 +8,6 @@ import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.dataset.DatasetSplitter;
-import ru.ifmo.ctddev.isaev.feature.WeirdCuttingRuleFilter;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
 import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
@@ -46,9 +46,9 @@ public class ThreadedVsSequentialComparison extends Comparison {
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         //RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM()};
 
-        AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, Classifiers.WEKA_SVM, measures);
+        AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, Classifiers.WEKA_NAIVE_BAYES, measures);
         config.setDataSetSplitter(new DatasetSplitter(order));
-        config.setDataSetFilter(new WeirdCuttingRuleFilter());
+        config.setDataSetFilter(new PercentFilter(1));
         int threads = 20;
         LocalDateTime startTime = LocalDateTime.now();
         LOGGER.info("Starting SimpleMeliF at {}", startTime);

@@ -7,7 +7,7 @@ import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.dataset.DatasetSplitter;
-import ru.ifmo.ctddev.isaev.feature.PrefferedSizeFilter;
+import filter.PrefferedSizeFilter;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelNopMeLiF;

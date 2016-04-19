@@ -6,7 +6,7 @@ import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DatasetSplitter;
-import ru.ifmo.ctddev.isaev.feature.PrefferedSizeFilter;
+import filter.PrefferedSizeFilter;
 import ru.ifmo.ctddev.isaev.melif.impl.MeLifStar;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;

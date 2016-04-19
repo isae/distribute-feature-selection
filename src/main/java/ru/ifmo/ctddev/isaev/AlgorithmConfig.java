@@ -2,7 +2,7 @@ package ru.ifmo.ctddev.isaev;
 
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DatasetSplitter;
-import ru.ifmo.ctddev.isaev.feature.DatasetFilter;
+import filter.DatasetFilter;
 import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 
 

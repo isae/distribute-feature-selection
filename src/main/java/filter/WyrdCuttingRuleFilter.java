@@ -1,4 +1,4 @@
-package ru.ifmo.ctddev.isaev.feature;
+package filter;
 
 import ru.ifmo.ctddev.isaev.dataset.Feature;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 /**
  * @author iisaev
  */
-public class WeirdCuttingRuleFilter extends DatasetFilter {
+public class WyrdCuttingRuleFilter extends DatasetFilter {
 
     public FeatureDataSet filterDataSet(FeatureDataSet original, Point measureCosts,
                                         RunStats runStats) {
