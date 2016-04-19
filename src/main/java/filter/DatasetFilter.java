@@ -1,5 +1,7 @@
 package filter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
 import ru.ifmo.ctddev.isaev.feature.MeasureEvaluator;
 import ru.ifmo.ctddev.isaev.result.EvaluatedFeature;
@@ -14,6 +16,8 @@ import java.util.stream.Stream;
  */
 public abstract class DatasetFilter {
     private final MeasureEvaluator measureEvaluator = new MeasureEvaluator();
+
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected Stream<EvaluatedFeature> evaluateFeatures(FeatureDataSet original, Point measureCosts,
                                                         RunStats runStats) {

@@ -14,7 +14,7 @@
         <!-- We will assign a value to 'logFileName' via Java code -->
         <discriminator>
             <key>fileName</key>
-            <defaultValue>someFile</defaultValue>
+            <defaultValue>generalInfo</defaultValue>
         </discriminator>
 
         <sift>

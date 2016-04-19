@@ -17,6 +17,7 @@ public class PreferredSizeFilter extends DatasetFilter {
 
     public PreferredSizeFilter(int preferredSize) {
         this.preferredSize = preferredSize;
+        logger.info("Initialized dataset filter with preferred size {}", preferredSize);
     }
 
     public FeatureDataSet filterDataSet(FeatureDataSet original, Point measureCosts,

@@ -19,6 +19,9 @@ public class OrderSplitter extends SequentalSplitter {
     public OrderSplitter(int testPercent, List<Integer> order) {
         super(testPercent);
         this.order = order;
+        if (logger.isTraceEnabled()) {
+            logger.trace("Initialized dataset splitter with order {}", Arrays.toString(order.toArray()));
+        }
     }
 
     private final List<Integer> order;

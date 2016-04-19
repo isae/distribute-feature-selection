@@ -13,13 +13,14 @@ import java.util.Random;
 /**
  * @author iisaev
  */
-public class SequentalSplitter implements DatasetSplitter {
+public class SequentalSplitter extends AbstractDatasetSplitter {
     private final Random random = new Random();
 
     protected final int testPercent;
 
     public SequentalSplitter(int testPercent) {
         this.testPercent = testPercent;
+        logger.info("Initialized dataset splitter with test percent {}", testPercent);
     }
 
     public List<DataSetPair> split(DataSet original) {

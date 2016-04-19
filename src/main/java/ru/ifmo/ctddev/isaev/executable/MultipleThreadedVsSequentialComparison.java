@@ -34,6 +34,8 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
     private static final Logger LOGGER = LoggerFactory.getLogger(MultipleThreadedVsSequentialComparison.class);
 
     public static void main(String[] args) {
+        int threadsCount = Math.max(20, Runtime.getRuntime().availableProcessors());
+        LOGGER.info("Available processors: {}; Threads count: {}", Runtime.getRuntime().availableProcessors(), threadsCount);
         DataSetReader dataSetReader = new DataSetReader();
         File dataSetDir = new File(args[0]);
         assert dataSetDir.exists();
@@ -56,7 +58,7 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
                 })
                 .map(dataSetReader::readCsv)
                 .forEach(dataSet -> {
-                    ExecutorService executorService = Executors.newFixedThreadPool(20);
+                    ExecutorService executorService = Executors.newFixedThreadPool(threadsCount);
                     List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
                     Collections.shuffle(order);
                     config.setDataSetSplitter(new OrderSplitter(20, order));
