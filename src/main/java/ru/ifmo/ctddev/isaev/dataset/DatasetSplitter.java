@@ -11,6 +11,16 @@ import java.util.stream.IntStream;
 public class DatasetSplitter {
     private final Random random = new Random();
 
+    public DatasetSplitter() {
+
+    }
+
+    public DatasetSplitter(List<Integer> order) {
+        this.order = order;
+    }
+
+    private List<Integer> order;
+
     public List<DataSetPair> splitRandomly(DataSet original, int testPercent, int times) {
         return IntStream.range(0, times).mapToObj(i -> splitRandomly(original, testPercent)).collect(Collectors.toList());
     }
@@ -18,9 +28,15 @@ public class DatasetSplitter {
     public List<DataSetPair> splitSequentially(DataSet original, int testPercent) {
         List<DataSetPair> result = new ArrayList<>();
         int folds = (int) ((double) 100 / testPercent);
-        List<DataInstance> instances = new ArrayList<>(original.toInstanceSet().getInstances());
+        List<DataInstance> instancesBeforeShuffle = new ArrayList<>(original.toInstanceSet().getInstances());
+        List<DataInstance> instances = new ArrayList<>();
+        if (order != null) {
+            final List<DataInstance> finalInstances = instances;
+            order.forEach(i -> finalInstances.add(instancesBeforeShuffle.get(i)));
+        } else {
+            instances = instancesBeforeShuffle;
+        }
         int testSize = (int) ((double) instances.size() * testPercent / 100);
-        Collections.shuffle(instances);
         int startPosition = 0;
         while (startPosition < instances.size()) {
             int endPosition = Math.min(startPosition + testSize, instances.size());

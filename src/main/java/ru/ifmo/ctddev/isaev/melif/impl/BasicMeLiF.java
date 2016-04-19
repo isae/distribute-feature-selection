@@ -34,7 +34,11 @@ public class BasicMeLiF implements MeLiF {
 
     protected static final DatasetFilter datasetFilter = new DatasetFilter();
 
-    protected static final DatasetSplitter datasetSplitter = new DatasetSplitter();
+    protected  DatasetSplitter datasetSplitter = new DatasetSplitter();
+
+    public void setDatasetSplitter(DatasetSplitter datasetSplitter) {
+        this.datasetSplitter = datasetSplitter;
+    }
 
     private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
 

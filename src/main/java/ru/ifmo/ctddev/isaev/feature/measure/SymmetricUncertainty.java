@@ -33,7 +33,7 @@ public class SymmetricUncertainty extends CorrelationBasedMeasure {
      */
     private double getConditionalEntropy(List<Integer> featureValues, List<Integer> classes) {
         Map<Integer, Distribution> yDistribution = calculateDistribution(classes, featureValues);
-        return -yDistribution.entrySet().stream()
+        return yDistribution.entrySet().stream()
                 .mapToDouble(xEntry -> {
                     Distribution distrib = xEntry.getValue();
                     Double px = (double) distrib.getSum() / classes.size();
