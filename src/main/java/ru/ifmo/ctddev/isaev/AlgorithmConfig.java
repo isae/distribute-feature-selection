@@ -1,7 +1,7 @@
 package ru.ifmo.ctddev.isaev;
 
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
-import ru.ifmo.ctddev.isaev.dataset.DatasetSplitter;
+import ru.ifmo.ctddev.isaev.splitter.DatasetSplitter;
 import filter.DatasetFilter;
 import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 
@@ -12,10 +12,6 @@ import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 public class AlgorithmConfig {
     private final double delta;
 
-    private final int folds;
-
-    private final int testPercent;
-
     private final Classifiers classifiers;
 
     private final RelevanceMeasure[] measures;
@@ -24,24 +20,14 @@ public class AlgorithmConfig {
 
     private DatasetSplitter dataSetSplitter;
 
-    public AlgorithmConfig(double delta, int folds, int testPercent, Classifiers classifiers, RelevanceMeasure[] measures) {
+    public AlgorithmConfig(double delta, Classifiers classifiers, RelevanceMeasure[] measures) {
         this.delta = delta;
-        this.folds = folds;
-        this.testPercent = testPercent;
         this.classifiers = classifiers;
         this.measures = measures;
     }
 
     public double getDelta() {
         return delta;
-    }
-
-    public int getFolds() {
-        return folds;
-    }
-
-    public int getTestPercent() {
-        return testPercent;
     }
 
     public Classifiers getClassifiers() {

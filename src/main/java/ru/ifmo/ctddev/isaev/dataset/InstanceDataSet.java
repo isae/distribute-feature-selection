@@ -13,7 +13,7 @@ import java.util.stream.Stream;
 public class InstanceDataSet extends DataSet {
     private final List<DataInstance> instances;
 
-    protected InstanceDataSet(List<DataInstance> instances) {
+    public InstanceDataSet(List<DataInstance> instances) {
         super("");
         this.instances = Collections.unmodifiableList(instances);
     }

@@ -7,12 +7,12 @@ import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
-import ru.ifmo.ctddev.isaev.dataset.DatasetSplitter;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
 import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
+import ru.ifmo.ctddev.isaev.splitter.OrderSplitter;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -46,8 +46,8 @@ public class ThreadedVsSequentialComparison extends Comparison {
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         //RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM()};
 
-        AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, Classifiers.WEKA_NAIVE_BAYES, measures);
-        config.setDataSetSplitter(new DatasetSplitter(order));
+        AlgorithmConfig config = new AlgorithmConfig(0.1, Classifiers.WEKA_SVM, measures);
+        config.setDataSetSplitter(new OrderSplitter(20, order));
         config.setDataSetFilter(new PercentFilter(1));
         int threads = 20;
         LocalDateTime startTime = LocalDateTime.now();

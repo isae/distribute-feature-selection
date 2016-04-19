@@ -1,18 +1,18 @@
 package ru.ifmo.ctddev.isaev.executable;
 
+import filter.PrefferedSizeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
-import ru.ifmo.ctddev.isaev.dataset.DatasetSplitter;
-import filter.PrefferedSizeFilter;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelNopMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
+import ru.ifmo.ctddev.isaev.splitter.RandomSplitter;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,8 +41,8 @@ public class ClassifiersComparison extends Comparison {
                 .filter(clf -> clf == Classifiers.WEKA_SVM)
                 .map(clf -> {
                     LOGGER.info("Classifier: {}", clf);
-                    AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, clf, measures);
-                    config.setDataSetSplitter(new DatasetSplitter());
+                    AlgorithmConfig config = new AlgorithmConfig(0.1, clf, measures);
+                    config.setDataSetSplitter(new RandomSplitter(20, 3));
                     config.setDataSetFilter(new PrefferedSizeFilter(100));
                     ParallelMeLiF meLiF = new ParallelMeLiF(config, dataSet, 20);
                     RunStats result = meLiF.run(points);
@@ -50,8 +50,8 @@ public class ClassifiersComparison extends Comparison {
                 })
                 .collect(Collectors.toList());
         RunStats svmStats = allStats.stream().filter(s -> s.getUsedClassifier() == Classifiers.WEKA_SVM).findAny().get();
-        AlgorithmConfig nopMelifConfig = new AlgorithmConfig(0.1, 3, 20, Classifiers.WEKA_SVM, measures);
-        nopMelifConfig.setDataSetSplitter(new DatasetSplitter());
+        AlgorithmConfig nopMelifConfig = new AlgorithmConfig(0.1, Classifiers.WEKA_SVM, measures);
+        nopMelifConfig.setDataSetSplitter(new RandomSplitter(20, 3));
         nopMelifConfig.setDataSetFilter(new PrefferedSizeFilter(100));
         RunStats nopMelifStats = new ParallelNopMeLiF(nopMelifConfig, 20, (int) svmStats.getVisitedPoints()).run(points);
         allStats.forEach(stats ->

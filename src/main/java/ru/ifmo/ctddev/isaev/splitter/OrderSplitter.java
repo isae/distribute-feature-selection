@@ -1,4 +1,9 @@
-package ru.ifmo.ctddev.isaev.dataset;
+package ru.ifmo.ctddev.isaev.splitter;
+
+import ru.ifmo.ctddev.isaev.dataset.DataInstance;
+import ru.ifmo.ctddev.isaev.dataset.DataSet;
+import ru.ifmo.ctddev.isaev.dataset.DataSetPair;
+import ru.ifmo.ctddev.isaev.dataset.InstanceDataSet;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -8,24 +13,21 @@ import java.util.stream.IntStream;
 /**
  * @author iisaev
  */
-public class DatasetSplitter {
+public class OrderSplitter extends SequentalSplitter {
     private final Random random = new Random();
 
-    public DatasetSplitter() {
-
-    }
-
-    public DatasetSplitter(List<Integer> order) {
+    public OrderSplitter(int testPercent, List<Integer> order) {
+        super(testPercent);
         this.order = order;
     }
 
-    private List<Integer> order;
+    private final List<Integer> order;
 
     public List<DataSetPair> splitRandomly(DataSet original, int testPercent, int times) {
         return IntStream.range(0, times).mapToObj(i -> splitRandomly(original, testPercent)).collect(Collectors.toList());
     }
 
-    public List<DataSetPair> splitSequentially(DataSet original, int testPercent) {
+    public List<DataSetPair> split(DataSet original) {
         List<DataSetPair> result = new ArrayList<>();
         int folds = (int) ((double) 100 / testPercent);
         List<DataInstance> instancesBeforeShuffle = new ArrayList<>(original.toInstanceSet().getInstances());

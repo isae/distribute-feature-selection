@@ -33,7 +33,7 @@ public class MeLiFComparison extends Comparison {
                 new Point(1, 1, 1, 1)
         };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
-        AlgorithmConfig config = new AlgorithmConfig(0.3, 10, 20, Classifiers.WEKA_SVM, measures);
+        AlgorithmConfig config = new AlgorithmConfig(0.3, Classifiers.WEKA_SVM, measures);
         //int threads = Runtime.getRuntime().availableProcessors();
         int threads = 20;
         LocalDateTime startTime = LocalDateTime.now();

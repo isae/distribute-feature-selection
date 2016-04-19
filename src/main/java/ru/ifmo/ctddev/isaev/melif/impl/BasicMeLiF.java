@@ -11,6 +11,7 @@ import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.result.SelectionResult;
+import ru.ifmo.ctddev.isaev.splitter.DatasetSplitter;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -144,7 +145,7 @@ public class BasicMeLiF implements MeLiF {
     protected SelectionResult getSelectionResult(Point point, RunStats stats) {
         FeatureDataSet filteredDs = datasetFilter.filterDataSet(dataSet.toFeatureSet(), point, stats);
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
-        List<Double> f1Scores = datasetSplitter.splitSequentially(instanceDataSet, config.getTestPercent())
+        List<Double> f1Scores = datasetSplitter.split(instanceDataSet)
                 .stream().map(this::getF1Score)
                 .collect(Collectors.toList());
         double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();

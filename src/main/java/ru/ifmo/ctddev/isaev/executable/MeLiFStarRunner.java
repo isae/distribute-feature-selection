@@ -1,16 +1,16 @@
 package ru.ifmo.ctddev.isaev.executable;
 
+import filter.PrefferedSizeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
-import ru.ifmo.ctddev.isaev.dataset.DatasetSplitter;
-import filter.PrefferedSizeFilter;
-import ru.ifmo.ctddev.isaev.melif.impl.MeLifStar;
-import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
+import ru.ifmo.ctddev.isaev.melif.impl.MeLifStar;
+import ru.ifmo.ctddev.isaev.result.Point;
+import ru.ifmo.ctddev.isaev.splitter.RandomSplitter;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -33,8 +33,8 @@ public class MeLiFStarRunner {
                 new Point(1, 1, 1, 1)
         };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
-        AlgorithmConfig config = new AlgorithmConfig(0.3, 5, 20, Classifiers.WEKA_SVM, measures);
-        config.setDataSetSplitter(new DatasetSplitter());
+        AlgorithmConfig config = new AlgorithmConfig(0.3, Classifiers.WEKA_SVM, measures);
+        config.setDataSetSplitter(new RandomSplitter(20, 3));
         config.setDataSetFilter(new PrefferedSizeFilter(100));
         LocalDateTime startTime = LocalDateTime.now();
         MeLifStar meLifStar = new MeLifStar(config, dataSet, 20);

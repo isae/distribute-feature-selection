@@ -1,17 +1,17 @@
 package ru.ifmo.ctddev.isaev.executable;
 
+import filter.PrefferedSizeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
-import ru.ifmo.ctddev.isaev.dataset.DatasetSplitter;
-import filter.PrefferedSizeFilter;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
 import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
+import ru.ifmo.ctddev.isaev.splitter.OrderSplitter;
 
 import java.io.File;
 import java.time.LocalDateTime;
@@ -44,7 +44,7 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
                 new Point(1, 1, 1, 1),
         };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
-        AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, Classifiers.WEKA_SVM, measures);
+        AlgorithmConfig config = new AlgorithmConfig(0.1, Classifiers.WEKA_SVM, measures);
         config.setDataSetFilter(new PrefferedSizeFilter(100));
         ExecutorService executorService = Executors.newFixedThreadPool(20);
         Arrays.asList(dataSetDir.listFiles()).stream()
@@ -52,7 +52,7 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
                 .forEach(dataSet -> {
                     List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
                     Collections.shuffle(order);
-                    config.setDataSetSplitter(new DatasetSplitter(order));
+                    config.setDataSetSplitter(new OrderSplitter(20, order));
                     LocalDateTime startTime = LocalDateTime.now();
                     LOGGER.info("Starting SimpleMeliF at {}", startTime);
                     BasicMeLiF basicMeLiF = new BasicMeLiF(config, dataSet);
