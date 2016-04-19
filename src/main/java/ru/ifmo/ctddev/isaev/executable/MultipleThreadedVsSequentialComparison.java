@@ -46,7 +46,11 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
         int threadsNeeded = points.length * 2 * (100 / testPercent);
         int availableProcessors = Runtime.getRuntime().availableProcessors();
         LOGGER.info("Available processors: {}; Threads needed: {}", availableProcessors, threadsNeeded);
-        threadsCount = Math.min(5 * availableProcessors, threadsNeeded);
+        if (threadsNeeded > 5 * availableProcessors) {
+            threadsCount = 5 * availableProcessors;
+        } else {
+            threadsCount = threadsNeeded;
+        }
         LOGGER.info("Initialized executor service with {} workers", threadsCount);
         DataSetReader dataSetReader = new DataSetReader();
         File dataSetDir = new File(args[0]);
