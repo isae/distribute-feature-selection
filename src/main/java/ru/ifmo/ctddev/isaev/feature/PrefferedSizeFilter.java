@@ -19,7 +19,7 @@ public class PrefferedSizeFilter extends DatasetFilter {
         this.preferredSize = preferredSize;
     }
 
-    public FeatureDataSet filterDataset(FeatureDataSet original, Point measureCosts,
+    public FeatureDataSet filterDataSet(FeatureDataSet original, Point measureCosts,
                                         RunStats runStats) {
         List<Feature> filteredFeatures = evaluateFeatures(original, measureCosts, runStats)
                 .limit(preferredSize)

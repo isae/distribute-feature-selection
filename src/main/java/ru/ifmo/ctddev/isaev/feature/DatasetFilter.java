@@ -25,6 +25,6 @@ public abstract class DatasetFilter {
                 ).sorted((o1, o2) -> o1.getMeasure() < o2.getMeasure() ? 1 : -1);
     }
 
-    public abstract FeatureDataSet filterDataset(FeatureDataSet original, Point measureCosts,
+    public abstract FeatureDataSet filterDataSet(FeatureDataSet original, Point measureCosts,
                                                  RunStats runStats);
 }
