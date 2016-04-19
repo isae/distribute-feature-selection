@@ -4,15 +4,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
-import ru.ifmo.ctddev.isaev.result.Point;
-import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ctddev.isaev.result.SelectionResult;
 import ru.ifmo.ctddev.isaev.dataset.DataSetPair;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
 import ru.ifmo.ctddev.isaev.dataset.InstanceDataSet;
+import ru.ifmo.ctddev.isaev.result.Point;
+import ru.ifmo.ctddev.isaev.result.RunStats;
+import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.stream.Collectors;
 
 
 /**
@@ -42,9 +45,48 @@ public class ParallelMeLiF extends BasicMeLiF {
 
     @Override
     public RunStats run(Point[] points) {
-        RunStats result = super.run(points);
+        Arrays.asList(points).forEach(p -> {
+            if (p.getCoordinates().length != config.getMeasures().length) {
+                throw new IllegalArgumentException("Each point must have same coordinates number as number of measures");
+            }
+        });
+
+        RunStats runStats = new RunStats(config);
+
+        LocalDateTime startTime = LocalDateTime.now();
+        runStats.setStartTime(startTime);
+        LOGGER.info("Started {} at {}", getClass().getSimpleName(), startTime);
+        CountDownLatch pointsLatch = new CountDownLatch(points.length);
+        List<Future<SelectionResult>> scoreFutures = Arrays.asList(points).stream()
+                .map(p -> executorService.submit(() -> {
+                    SelectionResult result = performCoordinateDescend(p, runStats);
+                    pointsLatch.countDown();
+                    return result;
+                })).collect(Collectors.toList());
+        try {
+            pointsLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        List<SelectionResult> scores = scoreFutures.stream().map(f -> {
+            try {
+                return f.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }).collect(Collectors.toList());
+        LOGGER.info("Total scores: ");
+        scores.stream().mapToDouble(SelectionResult::getF1Score).forEach(System.out::println);
+        LOGGER.info("Max score: {} at point {}",
+                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getPoint().getCoordinates()
+        );
+        LocalDateTime finishTime = LocalDateTime.now();
+        runStats.setFinishTime(finishTime);
+        LOGGER.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
+        LOGGER.info("Working time: {} seconds", ChronoUnit.SECONDS.between(startTime, finishTime));
         getExecutorService().shutdown();
-        return result;
+        return runStats;
     }
 
     @Override

@@ -31,7 +31,8 @@ public class ThreadedVsSequentialComparison extends Comparison {
     public static void main(String[] args) {
         DataSetReader dataSetReader = new DataSetReader();
         DataSet dataSet = dataSetReader.readCsv(args[0]);
-        List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
+        List<Integer> order = IntStream.range(0, dataSet.getInstanceCount())
+                .mapToObj(i -> i).collect(Collectors.toList());
         Collections.shuffle(order);
         Point[] points = new Point[] {
                 new Point(1, 0, 0, 0),

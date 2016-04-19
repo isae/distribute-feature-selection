@@ -34,12 +34,6 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
     private static final Logger LOGGER = LoggerFactory.getLogger(MultipleThreadedVsSequentialComparison.class);
 
     public static void main(String[] args) {
-        int threadsCount = Math.max(20, Runtime.getRuntime().availableProcessors());
-        LOGGER.info("Available processors: {}; Threads count: {}", Runtime.getRuntime().availableProcessors(), threadsCount);
-        DataSetReader dataSetReader = new DataSetReader();
-        File dataSetDir = new File(args[0]);
-        assert dataSetDir.exists();
-        assert dataSetDir.isDirectory();
         Point[] points = new Point[] {
                 new Point(1, 0, 0, 0),
                 new Point(0, 1, 0, 0),
@@ -47,6 +41,21 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
                 new Point(0, 0, 0, 1),
                 new Point(1, 1, 1, 1),
         };
+        int testPercent = 20;
+        int threadsCount;
+        int threadsNeeded = points.length * 2 * (100 / testPercent);
+        int availableProcessors = Runtime.getRuntime().availableProcessors();
+        LOGGER.info("Available processors: {}; Threads needed: {}", availableProcessors, threadsNeeded);
+        if (threadsNeeded > 5 * availableProcessors) {
+            threadsCount = 5 * availableProcessors;
+        } else {
+            threadsCount = threadsNeeded;
+        }
+        LOGGER.info("Initialized executor service with {} workers", threadsCount);
+        DataSetReader dataSetReader = new DataSetReader();
+        File dataSetDir = new File(args[0]);
+        assert dataSetDir.exists();
+        assert dataSetDir.isDirectory();
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         AlgorithmConfig config = new AlgorithmConfig(0.1, Classifiers.WEKA_SVM, measures);
         String startTimeString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH:mm"));
@@ -61,7 +70,7 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
                     ExecutorService executorService = Executors.newFixedThreadPool(threadsCount);
                     List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
                     Collections.shuffle(order);
-                    config.setDataSetSplitter(new OrderSplitter(20, order));
+                    config.setDataSetSplitter(new OrderSplitter(testPercent, order));
                     config.setDataSetFilter(new PreferredSizeFilter(100));
                     LocalDateTime startTime = LocalDateTime.now();
                     LOGGER.info("Starting SimpleMeliF at {}", startTime);
