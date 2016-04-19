@@ -6,6 +6,7 @@ import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DatasetSplitter;
+import ru.ifmo.ctddev.isaev.feature.PrefferedSizeFilter;
 import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
@@ -45,18 +46,18 @@ public class ThreadedVsSequentialComparison extends Comparison {
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         //RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM()};
 
-        AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, Classifiers.WEKA_SVM, 100, measures);
+        AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, Classifiers.WEKA_SVM, measures);
+        config.setDataSetSplitter(new DatasetSplitter(order));
+        config.setDataSetFilter(new PrefferedSizeFilter(100));
         int threads = 20;
         LocalDateTime startTime = LocalDateTime.now();
         LOGGER.info("Starting SimpleMeliF at {}", startTime);
         BasicMeLiF basicMeLiF = new BasicMeLiF(config, dataSet);
-        basicMeLiF.setDatasetSplitter(new DatasetSplitter(order));
         RunStats simpleStats = basicMeLiF.run(points);
         LocalDateTime simpleFinish = LocalDateTime.now();
         LOGGER.info("Starting ParallelMeliF at {}", simpleFinish);
 
         ParallelMeLiF parallelMeLiF = new ParallelMeLiF(config, dataSet, threads);
-        parallelMeLiF.setDatasetSplitter(new DatasetSplitter(order));
         RunStats parallelStats = parallelMeLiF.run(points);
         LocalDateTime parallelFinish = LocalDateTime.now();
 

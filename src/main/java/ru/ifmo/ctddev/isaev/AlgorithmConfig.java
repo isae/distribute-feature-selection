@@ -1,6 +1,8 @@
 package ru.ifmo.ctddev.isaev;
 
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
+import ru.ifmo.ctddev.isaev.dataset.DatasetSplitter;
+import ru.ifmo.ctddev.isaev.feature.DatasetFilter;
 import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 
 
@@ -16,16 +18,17 @@ public class AlgorithmConfig {
 
     private final Classifiers classifiers;
 
-    private final int featureCount;
-
     private final RelevanceMeasure[] measures;
 
-    public AlgorithmConfig(double delta, int folds, int testPercent, Classifiers classifiers, int featureCount, RelevanceMeasure[] measures) {
+    private DatasetFilter dataSetFilter;
+
+    private DatasetSplitter dataSetSplitter;
+
+    public AlgorithmConfig(double delta, int folds, int testPercent, Classifiers classifiers, RelevanceMeasure[] measures) {
         this.delta = delta;
         this.folds = folds;
         this.testPercent = testPercent;
         this.classifiers = classifiers;
-        this.featureCount = featureCount;
         this.measures = measures;
     }
 
@@ -41,15 +44,27 @@ public class AlgorithmConfig {
         return testPercent;
     }
 
-    public int getFeatureCount() {
-        return featureCount;
-    }
-
     public Classifiers getClassifiers() {
         return classifiers;
     }
 
     public RelevanceMeasure[] getMeasures() {
         return measures;
+    }
+
+    public DatasetSplitter getDataSetSplitter() {
+        return dataSetSplitter;
+    }
+
+    public DatasetFilter getDataSetFilter() {
+        return dataSetFilter;
+    }
+
+    public void setDataSetFilter(DatasetFilter dataSetFilter) {
+        this.dataSetFilter = dataSetFilter;
+    }
+
+    public void setDataSetSplitter(DatasetSplitter datasetSplitter) {
+        this.dataSetSplitter = datasetSplitter;
     }
 }

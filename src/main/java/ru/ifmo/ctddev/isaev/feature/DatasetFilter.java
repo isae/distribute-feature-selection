@@ -1,32 +1,30 @@
 package ru.ifmo.ctddev.isaev.feature;
 
-import ru.ifmo.ctddev.isaev.dataset.Feature;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
+import ru.ifmo.ctddev.isaev.result.EvaluatedFeature;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 /**
  * @author iisaev
  */
-public class DatasetFilter {
+public abstract class DatasetFilter {
     private final MeasureEvaluator measureEvaluator = new MeasureEvaluator();
 
-    public FeatureDataSet filterDataset(FeatureDataSet original, Integer preferredSize, Point measureCosts,
-                                        RunStats runStats) {
-        List<Feature> filteredFeatures = measureEvaluator
+    protected Stream<EvaluatedFeature> evaluateFeatures(FeatureDataSet original, Point measureCosts,
+                                                        RunStats runStats) {
+        return measureEvaluator
                 .evaluateFeatureMeasures(
                         original.getFeatures().stream(),
                         original.getClasses(),
                         measureCosts,
                         runStats.getMeasures()
-                ).sorted((o1, o2) -> o1.getMeasure() < o2.getMeasure() ? 1 : -1)
-                .limit(preferredSize)
-                .collect(Collectors.toList());
-        return new FeatureDataSet(filteredFeatures, original.getClasses(), original.getName());
+                ).sorted((o1, o2) -> o1.getMeasure() < o2.getMeasure() ? 1 : -1);
     }
 
+    public abstract FeatureDataSet filterDataset(FeatureDataSet original, Point measureCosts,
+                                                 RunStats runStats);
 }

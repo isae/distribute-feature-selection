@@ -32,13 +32,9 @@ public class BasicMeLiF implements MeLiF {
 
     protected final Set<Point> visitedPoints = new TreeSet<>();
 
-    protected static final DatasetFilter datasetFilter = new DatasetFilter();
+    protected final DatasetFilter datasetFilter;
 
-    protected  DatasetSplitter datasetSplitter = new DatasetSplitter();
-
-    public void setDatasetSplitter(DatasetSplitter datasetSplitter) {
-        this.datasetSplitter = datasetSplitter;
-    }
+    protected final DatasetSplitter datasetSplitter;
 
     private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
 
@@ -48,6 +44,8 @@ public class BasicMeLiF implements MeLiF {
 
     public BasicMeLiF(AlgorithmConfig config, DataSet dataSet) {
         this.config = config;
+        this.datasetSplitter = config.getDataSetSplitter();
+        this.datasetFilter = config.getDataSetFilter();
         this.dataSet = dataSet;
     }
 
@@ -92,7 +90,7 @@ public class BasicMeLiF implements MeLiF {
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
         SelectionResult bestScore = getSelectionResult(point, runStats);
         visitedPoints.add(point);
-        if (runStats.getBestResult() != null && runStats.getScore()>bestScore.getF1Score()) {
+        if (runStats.getBestResult() != null && runStats.getScore() > bestScore.getF1Score()) {
             bestScore = runStats.getBestResult();
         }
 
@@ -144,7 +142,7 @@ public class BasicMeLiF implements MeLiF {
     }
 
     protected SelectionResult getSelectionResult(Point point, RunStats stats) {
-        FeatureDataSet filteredDs = datasetFilter.filterDataset(dataSet.toFeatureSet(), config.getFeatureCount(), point, stats);
+        FeatureDataSet filteredDs = datasetFilter.filterDataset(dataSet.toFeatureSet(), point, stats);
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
         List<Double> f1Scores = datasetSplitter.splitSequentially(instanceDataSet, config.getTestPercent())
                 .stream().map(this::getF1Score)

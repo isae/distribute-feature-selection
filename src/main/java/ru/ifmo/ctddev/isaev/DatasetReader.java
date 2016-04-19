@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 
 /**
@@ -26,7 +27,8 @@ public class DataSetReader {
             final boolean[] firstLine = {true};
             List<Integer> classes = new ArrayList<>();
             List<Feature> features = new ArrayList<>();
-            reader.lines().forEach(line -> {
+            final int[] counter = {0};
+            reader.lines().filter(l -> !l.contains("NaN")).forEach(line -> {
                 List<Integer> parsedRow = Arrays.stream(line.split(delimiter))
                         .mapToInt(Integer::valueOf)
                         .boxed()
@@ -35,7 +37,7 @@ public class DataSetReader {
                     firstLine[0] = false;
                     classes.addAll(parsedRow);
                 } else {
-                    features.add(new Feature(parsedRow));
+                    features.add(new Feature("feature" + (++counter[0]), parsedRow));
                 }
             });
             return new FeatureDataSet(features, classes, path);

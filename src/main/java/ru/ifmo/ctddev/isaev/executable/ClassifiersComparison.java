@@ -6,6 +6,8 @@ import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
+import ru.ifmo.ctddev.isaev.dataset.DatasetSplitter;
+import ru.ifmo.ctddev.isaev.feature.PrefferedSizeFilter;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelNopMeLiF;
@@ -39,14 +41,18 @@ public class ClassifiersComparison extends Comparison {
                 .filter(clf -> clf == Classifiers.WEKA_SVM)
                 .map(clf -> {
                     LOGGER.info("Classifier: {}", clf);
-                    AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, clf, 100, measures);
+                    AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, clf, measures);
+                    config.setDataSetSplitter(new DatasetSplitter());
+                    config.setDataSetFilter(new PrefferedSizeFilter(100));
                     ParallelMeLiF meLiF = new ParallelMeLiF(config, dataSet, 20);
                     RunStats result = meLiF.run(points);
                     return result;
                 })
                 .collect(Collectors.toList());
         RunStats svmStats = allStats.stream().filter(s -> s.getUsedClassifier() == Classifiers.WEKA_SVM).findAny().get();
-        AlgorithmConfig nopMelifConfig = new AlgorithmConfig(0.1, 3, 20, Classifiers.WEKA_SVM, 100, measures);
+        AlgorithmConfig nopMelifConfig = new AlgorithmConfig(0.1, 3, 20, Classifiers.WEKA_SVM, measures);
+        nopMelifConfig.setDataSetSplitter(new DatasetSplitter());
+        nopMelifConfig.setDataSetFilter(new PrefferedSizeFilter(100));
         RunStats nopMelifStats = new ParallelNopMeLiF(nopMelifConfig, 20, (int) svmStats.getVisitedPoints()).run(points);
         allStats.forEach(stats ->
                 LOGGER.info("Classifier: {}; f1Score: {}; work time: {} seconds; visited points: {}", new Object[] {

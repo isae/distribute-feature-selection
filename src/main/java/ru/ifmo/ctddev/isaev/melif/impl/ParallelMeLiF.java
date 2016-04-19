@@ -57,7 +57,7 @@ public class ParallelMeLiF extends BasicMeLiF {
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
         SelectionResult bestScore = getSelectionResult(point, runStats);
         visitedPoints.add(point);
-        if (runStats.getBestResult() != null && runStats.getScore()>bestScore.getF1Score()) {
+        if (runStats.getBestResult() != null && runStats.getScore() > bestScore.getF1Score()) {
             bestScore = runStats.getBestResult();
         }
         runStats.updateBestResultUnsafe(bestScore);
@@ -121,7 +121,7 @@ public class ParallelMeLiF extends BasicMeLiF {
     }
 
     protected SelectionResult getSelectionResult(Point point, RunStats stats) {
-        FeatureDataSet filteredDs = datasetFilter.filterDataset(dataSet.toFeatureSet(), config.getFeatureCount(), point, stats);
+        FeatureDataSet filteredDs = datasetFilter.filterDataset(dataSet.toFeatureSet(), point, stats);
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
         List<DataSetPair> dataSetPairs = datasetSplitter.splitSequentially(instanceDataSet, config.getTestPercent());
         CountDownLatch latch = new CountDownLatch(dataSetPairs.size());
