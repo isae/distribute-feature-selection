@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import filter.PrefferedSizeFilter;
+import filter.PreferredSizeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
@@ -35,7 +35,7 @@ public class MeLiFStarRunner {
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         AlgorithmConfig config = new AlgorithmConfig(0.3, Classifiers.WEKA_SVM, measures);
         config.setDataSetSplitter(new RandomSplitter(20, 3));
-        config.setDataSetFilter(new PrefferedSizeFilter(100));
+        config.setDataSetFilter(new PreferredSizeFilter(100));
         LocalDateTime startTime = LocalDateTime.now();
         MeLifStar meLifStar = new MeLifStar(config, dataSet, 20);
         meLifStar.run(points);

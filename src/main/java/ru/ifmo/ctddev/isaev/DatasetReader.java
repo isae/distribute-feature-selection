@@ -1,5 +1,7 @@
 package ru.ifmo.ctddev.isaev;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.dataset.Feature;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
 
@@ -17,6 +19,9 @@ import java.util.stream.Collectors;
  * @author iisaev
  */
 public class DataSetReader {
+
+    protected final Logger logger = LoggerFactory.getLogger(DataSetReader.class);
+
     public FeatureDataSet readCsv(String path) {
         return readDataset(new File(path), ",");
     }
@@ -44,6 +49,7 @@ public class DataSetReader {
                     features.add(new Feature("feature" + (++counter[0]), parsedRow));
                 }
             });
+            logger.debug("Read dataset by path {}; {} classes; {} features", new Object[] {file.getAbsoluteFile(), classes.size(), features.size()});
             return new FeatureDataSet(features, classes, file.getAbsolutePath());
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException("File not found", e);

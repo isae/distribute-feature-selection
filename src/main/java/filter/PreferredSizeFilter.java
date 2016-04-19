@@ -12,10 +12,10 @@ import java.util.stream.Collectors;
 /**
  * @author iisaev
  */
-public class PrefferedSizeFilter extends DatasetFilter {
+public class PreferredSizeFilter extends DatasetFilter {
     private final int preferredSize;
 
-    public PrefferedSizeFilter(int preferredSize) {
+    public PreferredSizeFilter(int preferredSize) {
         this.preferredSize = preferredSize;
     }
 

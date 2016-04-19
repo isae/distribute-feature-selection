@@ -23,7 +23,13 @@ public abstract class DatasetFilter {
                         original.getClasses(),
                         measureCosts,
                         runStats.getMeasures()
-                ).sorted((o1, o2) -> o1.getMeasure() < o2.getMeasure() ? 1 : -1);
+                ).sorted((o1, o2) -> {
+                    if (o1.getMeasure() == o2.getMeasure()) {
+                        return 0;
+                    } else {
+                        return o1.getMeasure() < o2.getMeasure() ? 1 : -1;
+                    }
+                });
     }
 
     public abstract FeatureDataSet filterDataSet(FeatureDataSet original, Point measureCosts,

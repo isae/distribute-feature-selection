@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import filter.PrefferedSizeFilter;
+import filter.PreferredSizeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
@@ -34,7 +34,7 @@ public class ParallelRunner {
         };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         AlgorithmConfig config = new AlgorithmConfig(0.3, Classifiers.WEKA_SVM, measures);
-        config.setDataSetFilter(new PrefferedSizeFilter(100));
+        config.setDataSetFilter(new PreferredSizeFilter(100));
         config.setDataSetSplitter(new RandomSplitter(20, 3));
         LocalDateTime startTime = LocalDateTime.now();
         ParallelMeLiF meLif = new ParallelMeLiF(config, dataSet, 20);

@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import filter.PrefferedSizeFilter;
+import filter.PreferredSizeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
@@ -45,14 +45,15 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
         };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         AlgorithmConfig config = new AlgorithmConfig(0.1, Classifiers.WEKA_SVM, measures);
-        config.setDataSetFilter(new PrefferedSizeFilter(100));
         ExecutorService executorService = Executors.newFixedThreadPool(20);
         Arrays.asList(dataSetDir.listFiles()).stream()
+                .filter(f -> f.getAbsolutePath().endsWith(".csv"))
                 .map(dataSetReader::readCsv)
                 .forEach(dataSet -> {
                     List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
                     Collections.shuffle(order);
                     config.setDataSetSplitter(new OrderSplitter(20, order));
+                    config.setDataSetFilter(new PreferredSizeFilter(100));
                     LocalDateTime startTime = LocalDateTime.now();
                     LOGGER.info("Starting SimpleMeliF at {}", startTime);
                     BasicMeLiF basicMeLiF = new BasicMeLiF(config, dataSet);

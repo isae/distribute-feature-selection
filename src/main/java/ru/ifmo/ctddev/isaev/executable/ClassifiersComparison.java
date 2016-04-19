@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import filter.PrefferedSizeFilter;
+import filter.PreferredSizeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
@@ -43,7 +43,7 @@ public class ClassifiersComparison extends Comparison {
                     LOGGER.info("Classifier: {}", clf);
                     AlgorithmConfig config = new AlgorithmConfig(0.1, clf, measures);
                     config.setDataSetSplitter(new RandomSplitter(20, 3));
-                    config.setDataSetFilter(new PrefferedSizeFilter(100));
+                    config.setDataSetFilter(new PreferredSizeFilter(100));
                     ParallelMeLiF meLiF = new ParallelMeLiF(config, dataSet, 20);
                     RunStats result = meLiF.run(points);
                     return result;
@@ -52,7 +52,7 @@ public class ClassifiersComparison extends Comparison {
         RunStats svmStats = allStats.stream().filter(s -> s.getUsedClassifier() == Classifiers.WEKA_SVM).findAny().get();
         AlgorithmConfig nopMelifConfig = new AlgorithmConfig(0.1, Classifiers.WEKA_SVM, measures);
         nopMelifConfig.setDataSetSplitter(new RandomSplitter(20, 3));
-        nopMelifConfig.setDataSetFilter(new PrefferedSizeFilter(100));
+        nopMelifConfig.setDataSetFilter(new PreferredSizeFilter(100));
         RunStats nopMelifStats = new ParallelNopMeLiF(nopMelifConfig, 20, (int) svmStats.getVisitedPoints()).run(points);
         allStats.forEach(stats ->
                 LOGGER.info("Classifier: {}; f1Score: {}; work time: {} seconds; visited points: {}", new Object[] {
