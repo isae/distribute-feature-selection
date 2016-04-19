@@ -6,18 +6,13 @@ import ru.ifmo.ctddev.isaev.dataset.Feature;
 /**
  * @author iisaev
  */
-public class EvaluatedFeature {
-    private Feature feature;
+public class EvaluatedFeature extends Feature {
 
     private double measure;
 
     public EvaluatedFeature(Feature feature, double measure) {
-        this.feature = feature;
+        super(feature.getName(), feature.getValues());
         this.measure = measure;
-    }
-
-    public Feature getFeature() {
-        return feature;
     }
 
     public double getMeasure() {

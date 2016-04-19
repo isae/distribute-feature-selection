@@ -19,9 +19,8 @@ public class FitCriterion implements RelevanceMeasure {
         Double var1 = calculateVariance(1, mean1, values, classes);
 
         long fcpSum = IntStream.range(0, classes.size())
-                .filter(i -> {
-                    return calculateFCP(values.get(i), mean0, mean1, var0, var1).equals(classes.get(i));
-                }).count();
+                .filter(i -> calculateFCP(values.get(i), mean0, mean1, var0, var1)
+                        .equals(classes.get(i))).count();
         return (double) fcpSum / classes.size();
     }
 

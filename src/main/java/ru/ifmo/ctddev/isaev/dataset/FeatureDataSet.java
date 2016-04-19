@@ -44,12 +44,13 @@ public class FeatureDataSet extends DataSet {
 
     @Override
     public InstanceDataSet toInstanceSet() {
+        final int[] counter = {0};
         List<DataInstance> instances = IntStream.range(0, classes.size()).mapToObj(i -> {
             List<Integer> values = new ArrayList<>();
             features.forEach(feature -> {
                 values.add(feature.getValues().get(i));
             });
-            return new DataInstance(classes.get(i), values);
+            return new DataInstance("instance" + (++counter[0]), classes.get(i), values);
         }).collect(Collectors.toList());
         return new InstanceDataSet(instances);
     }

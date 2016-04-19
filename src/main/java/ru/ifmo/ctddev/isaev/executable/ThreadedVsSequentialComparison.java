@@ -30,11 +30,15 @@ public class ThreadedVsSequentialComparison extends Comparison {
                 new Point(0, 1, 0, 0),
                 new Point(0, 0, 1, 0),
                 new Point(0, 0, 0, 1),
-                new Point(1, 1, 1, 1)
+                new Point(1, 1, 1, 1),
         };
+        /*Point[] points = new Point[] {
+                new Point(1)
+        };*/
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
+        //RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM()};
 
-        AlgorithmConfig config = new AlgorithmConfig(0.1, 10, 20, Classifiers.WEKA_SVM, 100, measures);
+        AlgorithmConfig config = new AlgorithmConfig(0.1, 3, 20, Classifiers.WEKA_SVM, 100, measures);
         int threads = 20;
         LocalDateTime startTime = LocalDateTime.now();
         LOGGER.info("Starting SimpleMeliF at {}", startTime);

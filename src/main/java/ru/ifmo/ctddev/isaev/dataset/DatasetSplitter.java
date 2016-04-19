@@ -23,13 +23,13 @@ public class DatasetSplitter {
         Collections.shuffle(instances);
         int startPosition = 0;
         while (startPosition < instances.size()) {
-            int endPosition = startPosition + testSize;
-            List<DataInstance> beforeCV = instances.subList(0, startPosition);
+            int endPosition = Math.min(startPosition + testSize, instances.size());
+            List<DataInstance> beforeCV = new ArrayList<>(instances.subList(0, startPosition));
             List<DataInstance> cv = instances.subList(startPosition, endPosition);
             List<DataInstance> afterCV = instances.subList(endPosition, instances.size());
             beforeCV.addAll(afterCV);
             result.add(new DataSetPair(
-                    new InstanceDataSet(new ArrayList<>(beforeCV)),
+                    new InstanceDataSet(beforeCV),
                     new InstanceDataSet(new ArrayList<>(cv))
             ));
             startPosition = endPosition;

@@ -34,6 +34,6 @@ public class SpearmanRankCorrelation implements RelevanceMeasure {
             return devY * devY;
         }).sum();
 
-        return sumDeviationsXY / Math.sqrt(squaredDeviationX + squaredDeviationY);
+        return sumDeviationsXY / Math.sqrt(squaredDeviationX * squaredDeviationY);
     }
 }

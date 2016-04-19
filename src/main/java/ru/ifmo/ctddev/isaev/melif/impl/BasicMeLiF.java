@@ -142,7 +142,7 @@ public class BasicMeLiF implements MeLiF {
     protected SelectionResult getSelectionResult(Point point, RunStats stats) {
         FeatureDataSet filteredDs = datasetFilter.filterDataset(dataSet.toFeatureSet(), config.getFeatureCount(), point, stats);
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
-        List<Double> f1Scores = datasetSplitter.splitRandomly(instanceDataSet, config.getTestPercent(), config.getFolds())
+        List<Double> f1Scores = datasetSplitter.splitSequentially(instanceDataSet, config.getTestPercent())
                 .stream().map(this::getF1Score)
                 .collect(Collectors.toList());
         double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();

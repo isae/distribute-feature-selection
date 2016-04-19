@@ -123,7 +123,7 @@ public class ParallelMeLiF extends BasicMeLiF {
     protected SelectionResult getSelectionResult(Point point, RunStats stats) {
         FeatureDataSet filteredDs = datasetFilter.filterDataset(dataSet.toFeatureSet(), config.getFeatureCount(), point, stats);
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
-        List<DataSetPair> dataSetPairs = datasetSplitter.splitRandomly(instanceDataSet, config.getTestPercent(), config.getFolds());
+        List<DataSetPair> dataSetPairs = datasetSplitter.splitSequentially(instanceDataSet, config.getTestPercent());
         CountDownLatch latch = new CountDownLatch(dataSetPairs.size());
         List<Double> f1Scores = Collections.synchronizedList(new ArrayList<>(dataSetPairs.size()));
         dataSetPairs.forEach(ds -> executorService.submit(() -> {
