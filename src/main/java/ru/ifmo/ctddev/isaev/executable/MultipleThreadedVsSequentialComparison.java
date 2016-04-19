@@ -3,6 +3,7 @@ package ru.ifmo.ctddev.isaev.executable;
 import filter.PreferredSizeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
@@ -15,6 +16,7 @@ import ru.ifmo.ctddev.isaev.splitter.OrderSplitter;
 
 import java.io.File;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
@@ -45,11 +47,16 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
         };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         AlgorithmConfig config = new AlgorithmConfig(0.1, Classifiers.WEKA_SVM, measures);
-        ExecutorService executorService = Executors.newFixedThreadPool(20);
+        String startTimeString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH:mm"));
         Arrays.asList(dataSetDir.listFiles()).stream()
                 .filter(f -> f.getAbsolutePath().endsWith(".csv"))
+                .map(file -> {
+                    MDC.put("fileName", file.getName() + "-" + startTimeString);
+                    return file;
+                })
                 .map(dataSetReader::readCsv)
                 .forEach(dataSet -> {
+                    ExecutorService executorService = Executors.newFixedThreadPool(20);
                     List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
                     Collections.shuffle(order);
                     config.setDataSetSplitter(new OrderSplitter(20, order));
@@ -81,8 +88,9 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
                     });
                     LOGGER.info("Multi-threaded to single-threaded version speed improvement: {}%",
                             getSpeedImprovementPercent(simpleStats.getWorkTime(), parallelStats.getWorkTime()));
+                    executorService.shutdown();
+                    MDC.remove("fileName");
                 });
 
-        executorService.shutdown();
     }
 }

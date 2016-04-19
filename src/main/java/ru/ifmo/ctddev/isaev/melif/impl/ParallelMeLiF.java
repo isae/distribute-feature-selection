@@ -60,7 +60,6 @@ public class ParallelMeLiF extends BasicMeLiF {
         if (runStats.getBestResult() != null && runStats.getScore() > bestScore.getF1Score()) {
             bestScore = runStats.getBestResult();
         }
-        runStats.updateBestResultUnsafe(bestScore);
 
         double[] coordinates = point.getCoordinates();
         boolean smthChanged = true;
@@ -82,13 +81,11 @@ public class ParallelMeLiF extends BasicMeLiF {
                     latch.await();
                     if (plusDeltaScore.get().betterThan(bestScore)) {
                         bestScore = plusDeltaScore.get();
-                        runStats.updateBestResultUnsafe(plusDeltaScore.get());
                         coordinates = plusDelta.getCoordinates();
                         smthChanged = true;
                     }
                     if (minusDeltaScore.get().betterThan(bestScore)) {
                         bestScore = minusDeltaScore.get();
-                        runStats.updateBestResultUnsafe(minusDeltaScore.get());
                         coordinates = minusDelta.getCoordinates();
                         smthChanged = true;
                     }
@@ -135,7 +132,9 @@ public class ParallelMeLiF extends BasicMeLiF {
             latch.await();
             double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
             LOGGER.debug("Point {}; F1 score: {}", Arrays.toString(point.getCoordinates()), f1Score);
-            return new SelectionResult(filteredDs.getFeatures(), point, f1Score);
+            SelectionResult result = new SelectionResult(filteredDs.getFeatures(), point, f1Score);
+            stats.updateBestResult(result);
+            return result;
         } catch (InterruptedException e) {
             throw new IllegalStateException("Waiting on latch interrupted! ", e);
         }
