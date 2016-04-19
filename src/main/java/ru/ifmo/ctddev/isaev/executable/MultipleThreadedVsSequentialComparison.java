@@ -57,7 +57,7 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
         assert dataSetDir.exists();
         assert dataSetDir.isDirectory();
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
-        AlgorithmConfig config = new AlgorithmConfig(0.1, Classifiers.WEKA_SVM, measures);
+        AlgorithmConfig config = new AlgorithmConfig(0.25, Classifiers.WEKA_SVM, measures);
         String startTimeString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH:mm"));
         Arrays.asList(dataSetDir.listFiles()).stream()
                 .filter(f -> f.getAbsolutePath().endsWith(".csv"))
