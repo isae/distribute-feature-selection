@@ -41,7 +41,7 @@ public class OrderSplitter extends SequentalSplitter {
         } else {
             instances = instancesBeforeShuffle;
         }
-        int testSize = (int) ((double) instances.size() * testPercent / 100);
+        int testSize = (int) Math.ceil((double) instances.size() * testPercent / 100);
         int startPosition = 0;
         while (startPosition < instances.size()) {
             int endPosition = Math.min(startPosition + testSize, instances.size());

@@ -43,8 +43,13 @@ public class ParallelMeLiF extends BasicMeLiF {
         this.executorService = executorService;
     }
 
+
     @Override
     public RunStats run(Point[] points) {
+        return run(points, true);
+    }
+
+    public RunStats run(Point[] points, boolean shutdown) {
         Arrays.asList(points).forEach(p -> {
             if (p.getCoordinates().length != config.getMeasures().length) {
                 throw new IllegalArgumentException("Each point must have same coordinates number as number of measures");
@@ -68,6 +73,9 @@ public class ParallelMeLiF extends BasicMeLiF {
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
+        scoreFutures.forEach(f -> {
+            assert f.isDone();
+        });
         List<SelectionResult> scores = scoreFutures.stream().map(f -> {
             try {
                 return f.get();
@@ -85,7 +93,9 @@ public class ParallelMeLiF extends BasicMeLiF {
         runStats.setFinishTime(finishTime);
         LOGGER.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
         LOGGER.info("Working time: {} seconds", ChronoUnit.SECONDS.between(startTime, finishTime));
-        getExecutorService().shutdown();
+        if (shutdown) {
+            getExecutorService().shutdown();
+        }
         return runStats;
     }
 
@@ -121,6 +131,10 @@ public class ParallelMeLiF extends BasicMeLiF {
 
                 try {
                     latch.await();
+
+                    assert plusDeltaScore.isDone();
+                    assert minusDeltaScore.isDone();
+
                     if (plusDeltaScore.get().betterThan(bestScore)) {
                         bestScore = plusDeltaScore.get();
                         coordinates = plusDelta.getCoordinates();
@@ -165,13 +179,16 @@ public class ParallelMeLiF extends BasicMeLiF {
         List<DataSetPair> dataSetPairs = datasetSplitter.split(instanceDataSet);
         CountDownLatch latch = new CountDownLatch(dataSetPairs.size());
         List<Double> f1Scores = Collections.synchronizedList(new ArrayList<>(dataSetPairs.size()));
-        dataSetPairs.forEach(ds -> executorService.submit(() -> {
+        List<Future> futures = dataSetPairs.stream().map(ds -> executorService.submit(() -> {
             double score = getF1Score(ds);
             f1Scores.add(score);
             latch.countDown();
-        }));
+        })).collect(Collectors.toList());
         try {
             latch.await();
+            futures.forEach(f -> {
+                assert f.isDone();
+            });
             double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
             LOGGER.debug("Point {}; F1 score: {}", Arrays.toString(point.getCoordinates()), f1Score);
             SelectionResult result = new SelectionResult(filteredDs.getFeatures(), point, f1Score);
