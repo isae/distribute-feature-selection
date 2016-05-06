@@ -144,7 +144,7 @@ public class BasicMeLiF implements MeLiF {
     }
 
     protected SelectionResult getSelectionResult(Point point, RunStats stats) {
-        FeatureDataSet filteredDs = datasetFilter.filterDataSet(dataSet.toFeatureSet(), point, stats);
+        FeatureDataSet filteredDs = datasetFilter.filterDataSet(dataSet.toFeatureSet(), point, stats.getMeasures());
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
         List<Double> f1Scores = datasetSplitter.split(instanceDataSet)
                 .stream().map(this::getF1Score)

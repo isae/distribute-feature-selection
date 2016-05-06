@@ -2,8 +2,8 @@ package filter;
 
 import ru.ifmo.ctddev.isaev.dataset.Feature;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
+import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 import ru.ifmo.ctddev.isaev.result.Point;
-import ru.ifmo.ctddev.isaev.result.RunStats;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,8 +21,8 @@ public class PreferredSizeFilter extends DatasetFilter {
     }
 
     public FeatureDataSet filterDataSet(FeatureDataSet original, Point measureCosts,
-                                        RunStats runStats) {
-        List<Feature> filteredFeatures = evaluateFeatures(original, measureCosts, runStats)
+                                        RelevanceMeasure[] measures) {
+        List<Feature> filteredFeatures = evaluateFeatures(original, measureCosts, measures)
                 .limit(preferredSize)
                 .collect(Collectors.toList());
         return new FeatureDataSet(filteredFeatures, original.getClasses(), original.getName());

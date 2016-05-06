@@ -4,9 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
 import ru.ifmo.ctddev.isaev.feature.MeasureEvaluator;
+import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 import ru.ifmo.ctddev.isaev.result.EvaluatedFeature;
 import ru.ifmo.ctddev.isaev.result.Point;
-import ru.ifmo.ctddev.isaev.result.RunStats;
 
 import java.util.stream.Stream;
 
@@ -20,13 +20,13 @@ public abstract class DatasetFilter {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected Stream<EvaluatedFeature> evaluateFeatures(FeatureDataSet original, Point measureCosts,
-                                                        RunStats runStats) {
+                                                        RelevanceMeasure[] measures) {
         return measureEvaluator
                 .evaluateFeatureMeasures(
                         original.getFeatures().stream(),
                         original.getClasses(),
                         measureCosts,
-                        runStats.getMeasures()
+                        measures
                 ).sorted((o1, o2) -> {
                     if (o1.getMeasure() == o2.getMeasure()) {
                         return 0;
@@ -37,5 +37,5 @@ public abstract class DatasetFilter {
     }
 
     public abstract FeatureDataSet filterDataSet(FeatureDataSet original, Point measureCosts,
-                                                 RunStats runStats);
+                                                 RelevanceMeasure[] measures);
 }

@@ -1,5 +1,7 @@
 package ru.ifmo.ctddev.isaev.result;
 
+import java.util.Arrays;
+
 /**
  * @author iisaev
  */
@@ -29,5 +31,10 @@ public class Point implements Comparable<Point> {
             }
         }
         return 0;
+    }
+
+    @Override
+    public String toString() {
+        return Arrays.toString(coordinates);
     }
 }

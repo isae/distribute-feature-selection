@@ -2,9 +2,9 @@ package filter;
 
 import ru.ifmo.ctddev.isaev.dataset.Feature;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
+import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 import ru.ifmo.ctddev.isaev.result.EvaluatedFeature;
 import ru.ifmo.ctddev.isaev.result.Point;
-import ru.ifmo.ctddev.isaev.result.RunStats;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +17,8 @@ import java.util.stream.Collectors;
 public class WyrdCuttingRuleFilter extends DatasetFilter {
 
     public FeatureDataSet filterDataSet(FeatureDataSet original, Point measureCosts,
-                                        RunStats runStats) {
-        List<EvaluatedFeature> filteredFeatures = evaluateFeatures(original, measureCosts, runStats).collect(Collectors.toList());
+                                        RelevanceMeasure[] measures) {
+        List<EvaluatedFeature> filteredFeatures = evaluateFeatures(original, measureCosts, measures).collect(Collectors.toList());
         double mean = filteredFeatures.stream().mapToDouble(EvaluatedFeature::getMeasure).average().getAsDouble();
         double std = Math.sqrt(
                 filteredFeatures.stream()

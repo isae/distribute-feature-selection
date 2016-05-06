@@ -174,7 +174,7 @@ public class ParallelMeLiF extends BasicMeLiF {
     }
 
     protected SelectionResult getSelectionResult(Point point, RunStats stats) {
-        FeatureDataSet filteredDs = datasetFilter.filterDataSet(dataSet.toFeatureSet(), point, stats);
+        FeatureDataSet filteredDs = datasetFilter.filterDataSet(dataSet.toFeatureSet(), point, stats.getMeasures());
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
         List<DataSetPair> dataSetPairs = datasetSplitter.split(instanceDataSet);
         CountDownLatch latch = new CountDownLatch(dataSetPairs.size());

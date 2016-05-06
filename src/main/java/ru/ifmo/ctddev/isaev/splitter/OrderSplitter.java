@@ -31,7 +31,6 @@ public class OrderSplitter extends SequentalSplitter {
     }
 
     public List<DataSetPair> split(DataSet original) {
-        List<DataSetPair> result = new ArrayList<>();
         int folds = (int) ((double) 100 / testPercent);
         List<DataInstance> instancesBeforeShuffle = new ArrayList<>(original.toInstanceSet().getInstances());
         List<DataInstance> instances = new ArrayList<>();
@@ -41,20 +40,27 @@ public class OrderSplitter extends SequentalSplitter {
         } else {
             instances = instancesBeforeShuffle;
         }
-        int testSize = (int) Math.ceil((double) instances.size() * testPercent / 100);
-        int startPosition = 0;
-        while (startPosition < instances.size()) {
-            int endPosition = Math.min(startPosition + testSize, instances.size());
-            List<DataInstance> beforeCV = new ArrayList<>(instances.subList(0, startPosition));
-            List<DataInstance> cv = instances.subList(startPosition, endPosition);
-            List<DataInstance> afterCV = instances.subList(endPosition, instances.size());
-            beforeCV.addAll(afterCV);
-            result.add(new DataSetPair(
-                    new InstanceDataSet(beforeCV),
-                    new InstanceDataSet(new ArrayList<>(cv))
-            ));
-            startPosition = endPosition;
-        }
+        List<ArrayList<DataInstance>> results = new ArrayList<>();
+        IntStream.range(0, folds).forEach(i -> {
+            results.add(new ArrayList<>());
+        });
+        final int[] pos = {0};
+        instances.forEach(inst -> {
+            results.get(pos[0]).add(inst);
+            pos[0] = (pos[0] + 1) % folds;
+        });
+        List<DataSetPair> result = IntStream.range(0, folds).mapToObj(i -> {
+            List<DataInstance> train = new ArrayList<>();
+            List<DataInstance> test = new ArrayList<>();
+            for (int j = 0; j < folds; ++j) {
+                if (i != j) {
+                    train.addAll(results.get(j));
+                } else {
+                    test.addAll(results.get(j));
+                }
+            }
+            return new DataSetPair(new InstanceDataSet(train), new InstanceDataSet(test));
+        }).collect(Collectors.toList());
         assert result.size() == folds;
         return result;
     }

@@ -133,17 +133,16 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
 
                     executionResults.add(new Pr<>(simpleStats, parallelStats));
 
-
                     DatasetSplitter tenFoldSplitter = new OrderSplitter(10, order);
 
                     List<Double> basicScores = tenFoldSplitter.split(
-                            datasetFilter.filterDataSet(dataSet.toFeatureSet(), simpleStats.getBestResult().getPoint(), simpleStats)
+                            datasetFilter.filterDataSet(dataSet.toFeatureSet(), simpleStats.getBestResult().getPoint(), measures)
                     ).stream()
                             .map(MultipleThreadedVsSequentialComparison::getF1Score)
                             .collect(Collectors.toList());
 
                     List<Double> parallelScores = tenFoldSplitter.split(
-                            datasetFilter.filterDataSet(dataSet.toFeatureSet(), parallelStats.getBestResult().getPoint(), parallelStats)
+                            datasetFilter.filterDataSet(dataSet.toFeatureSet(), parallelStats.getBestResult().getPoint(), measures)
                     )
                             .stream().map(MultipleThreadedVsSequentialComparison::getF1Score)
                             .collect(Collectors.toList());
