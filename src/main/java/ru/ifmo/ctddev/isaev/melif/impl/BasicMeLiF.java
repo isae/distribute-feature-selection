@@ -135,11 +135,12 @@ public class BasicMeLiF implements MeLiF {
                 .map(d -> (int) Math.round(d))
                 .collect(Collectors.toList());
         List<Integer> expectedValues = dsPair.getTestSet().toInstanceSet().getInstances().stream().map(DataInstance::getClazz).collect(Collectors.toList());
+        double result = scoreCalculator.calculateF1Score(expectedValues, actual);
         if (logger.isTraceEnabled()) {
             logger.trace("Expected values: {}", Arrays.toString(expectedValues.toArray()));
             logger.trace("Actual values: {}", Arrays.toString(actual.toArray()));
         }
-        return scoreCalculator.calculateF1Score(expectedValues, actual);
+        return result;
     }
 
     protected SelectionResult getSelectionResult(Point point, RunStats stats) {

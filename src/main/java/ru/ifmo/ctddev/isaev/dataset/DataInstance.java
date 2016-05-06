@@ -33,6 +33,6 @@ public class DataInstance {
 
     @Override
     public String toString() {
-        return name;
+        return name + ": " + clazz;
     }
 }

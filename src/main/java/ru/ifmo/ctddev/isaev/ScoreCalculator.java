@@ -34,6 +34,7 @@ public class ScoreCalculator {
         double precision = (double) truePositive / (truePositive + falsePositive);
         double recall = (double) truePositive / (truePositive + falseNegative);
         double result = 2 * precision * recall / (precision + recall);
-        return Double.isNaN(result) ? Double.MIN_VALUE : result;
+        result = Double.isNaN(result) ? Double.MIN_VALUE : result;
+        return result;
     }
 }

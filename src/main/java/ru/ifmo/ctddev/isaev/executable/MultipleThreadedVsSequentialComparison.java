@@ -1,5 +1,7 @@
 package ru.ifmo.ctddev.isaev.executable;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import filter.DatasetFilter;
 import filter.PreferredSizeFilter;
 import org.slf4j.Logger;
@@ -33,22 +35,15 @@ import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static j2html.TagCreator.*;
+
 
 /**
  * @author iisaev
  */
 public class MultipleThreadedVsSequentialComparison extends Comparison {
     private static final Logger LOGGER = LoggerFactory.getLogger(MultipleThreadedVsSequentialComparison.class);
-
-    static class Pr<F, S> {
-        F basic;
-        S parallel;
-
-        public Pr(F basic, S parallel) {
-            this.basic = basic;
-            this.parallel = parallel;
-        }
-    }
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
 
@@ -63,10 +58,10 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
         return scoreCalculator.calculateF1Score(expectedValues, actual);
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws JsonProcessingException {
 
         String startTimeString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH:mm"));
-        MDC.put("fileName", "COMMON-" + startTimeString);
+        MDC.put("fileName", startTimeString + "/COMMON");
         Point[] points = new Point[]{
                 new Point(1, 0, 0, 0),
                 new Point(0, 1, 0, 0),
@@ -93,10 +88,11 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
         AlgorithmConfig config = new AlgorithmConfig(0.25, Classifiers.WEKA_SVM, measures);
         //ForkJoinPool executorService = new ForkJoinPool(threadsCount);
         ExecutorService executorService = Executors.newFixedThreadPool(threadsCount);
+        List<Pr<RunStats, RunStats>> executionResults = new ArrayList<>();
         List<Pr<Double, Double>> results = Arrays.asList(dataSetDir.listFiles()).stream()
                 .filter(f -> f.getAbsolutePath().endsWith(".csv"))
                 .map(file -> {
-                    MDC.put("fileName", file.getName() + "-" + startTimeString);
+                    MDC.put("fileName", startTimeString + "/" + file.getName());
                     return file;
                 })
                 .map(dataSetReader::readCsv)
@@ -135,6 +131,8 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
                             getSpeedImprovementPercent(simpleStats.getWorkTime(), parallelStats.getWorkTime()));
                     MDC.remove("fileName");
 
+                    executionResults.add(new Pr<>(simpleStats, parallelStats));
+
 
                     DatasetSplitter tenFoldSplitter = new OrderSplitter(10, order);
 
@@ -152,7 +150,7 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
                     assert basicScores.size() == parallelScores.size();
                     return new Pr<>(basicScores, parallelScores);
                 })
-                .flatMap(pr -> IntStream.range(0, pr.basic.size()).mapToObj(i -> new Pr<>(pr.basic.get(i), pr.parallel.get(i))))
+                .flatMap(pr -> IntStream.range(0, pr.getBasic().size()).mapToObj(i -> new Pr<>(pr.getBasic().get(i), pr.getParallel().get(i))))
                 .collect(Collectors.toList());
         executorService.shutdown();
         MDC.put("fileName", "COMMON-" + startTimeString);
@@ -160,11 +158,31 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
         List<Double> expected = new ArrayList<>();
         List<Double> actual = new ArrayList<>();
         results.forEach(pr -> {
-            expected.add(pr.basic);
-            actual.add(pr.parallel);
+            expected.add(pr.getBasic());
+            actual.add(pr.getParallel());
         });
         LOGGER.info("Expected values over all datasets: {}", expected);
         LOGGER.info("Actual values over all datasets: {}", actual);
         LOGGER.info("Spearman rank correlation: {}", new SpearmanRankCorrelation().evaluate(actual, expected));
+        MDC.put("fileName", "STATS_JSON-" + startTimeString);
+        LOGGER.info(MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(executionResults));
+        MDC.put("fileName", "STATS_HTML-" + startTimeString);
+        String htmlString = html().with(
+                head().with(
+                        title("Experiment results")
+                ),
+                body().with(
+                        h1("Heading!"),
+                        table().with(
+                                tr().with(
+                                        th("1"),
+                                        th("2"),
+                                        th("3"),
+                                        th("4")
+                                )
+                        )
+                )
+        ).render();
+        LOGGER.info(htmlString);
     }
 }
