@@ -5,15 +5,16 @@ import java.util.function.Function;
 /**
  * @author iisaev
  */
-public class UCB extends BanditStrategy {
+public class UCBTuned extends BanditStrategy {
 
-    public UCB(int arms) {
+    private int tries = 0;
+
+    public UCBTuned(int arms) {
         super(arms);
-        throw new IllegalArgumentException("Not implemented");
+        throw new IllegalStateException("Not implemented");
     }
 
     @Override
     public void processPoint(Function<Integer, Double> action) {
-        throw new IllegalArgumentException("Not implemented");
     }
 }

@@ -22,18 +22,18 @@ public class EpsilonGreedy extends BanditStrategy {
 
     @Override
     public void processPoint(Function<Integer, Double> action) {
-        int armNumber;
+        int arm;
         if (RANDOM.nextDouble() < epsilon) {
-            armNumber = RANDOM.nextInt(visitedSum.length);
+            arm = RANDOM.nextInt(visitedSum.length);
         } else {
-            armNumber = IntStream.range(0, arms)
+            arm = IntStream.range(0, arms)
                     .mapToObj(i -> i)
-                    .sorted(Comparator.comparingDouble(i -> visitedSum[i] / visitedNumber[i]))
+                    .sorted(Comparator.comparingDouble(this::mu))
                     .findFirst()
                     .get();
         }
-        double result = action.apply(armNumber);
-        ++visitedNumber[armNumber];
-        visitedSum[armNumber] += result;
+        double result = action.apply(arm);
+        ++visitedNumber[arm];
+        visitedSum[arm] += result;
     }
 }

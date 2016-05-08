@@ -9,7 +9,7 @@ import java.util.stream.IntStream;
 /**
  * @author iisaev
  */
-public class FitCriterion implements RelevanceMeasure {
+public class FitCriterion extends RelevanceMeasure {
     @Override
     public double evaluate(Feature feature, List<Integer> classes) {
         List<Integer> values = feature.getValues();

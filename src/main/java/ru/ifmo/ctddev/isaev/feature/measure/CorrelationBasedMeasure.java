@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 /**
  * @author iisaev
  */
-public abstract class CorrelationBasedMeasure implements RelevanceMeasure {
+public abstract class CorrelationBasedMeasure extends RelevanceMeasure {
     protected class Distribution {
         private int sum;
 

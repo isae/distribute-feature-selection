@@ -20,16 +20,16 @@ public class SoftMax extends BanditStrategy {
 
     @Override
     public void processPoint(Function<Integer, Double> action) {
-        int armNumber;
+        int arm;
         double expSum = IntStream.range(0, arms)
-                .mapToDouble(i -> Math.exp(visitedSum[i] / (visitedNumber[i] * tau))).sum();
-        armNumber = IntStream.range(0, arms)
+                .mapToDouble(i -> Math.exp(mu(i) / tau)).sum();
+        arm = IntStream.range(0, arms)
                 .mapToObj(i -> i)
-                .sorted(Comparator.comparingDouble(i -> Math.exp(visitedSum[i] / (visitedNumber[i] * tau * expSum))))
+                .sorted(Comparator.comparingDouble(i -> Math.exp(mu(i) / (tau * expSum))))
                 .findFirst()
                 .get();
-        double result = action.apply(armNumber);
-        ++visitedNumber[armNumber];
-        visitedSum[armNumber] += result;
+        double result = action.apply(arm);
+        ++visitedNumber[arm];
+        visitedSum[arm] += result;
     }
 }

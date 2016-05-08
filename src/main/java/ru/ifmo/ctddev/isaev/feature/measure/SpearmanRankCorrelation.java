@@ -10,7 +10,7 @@ import java.util.stream.IntStream;
 /**
  * @author iisaev
  */
-public class SpearmanRankCorrelation implements RelevanceMeasure {
+public class SpearmanRankCorrelation extends RelevanceMeasure {
     @Override
     public double evaluate(Feature feature, List<Integer> classes) {
         return evaluate(

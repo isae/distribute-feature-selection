@@ -8,6 +8,11 @@ import java.util.List;
 /**
  * @author iisaev
  */
-public interface RelevanceMeasure {
-    double evaluate(Feature feature, List<Integer> classes);
+public abstract class RelevanceMeasure {
+    public abstract double evaluate(Feature feature, List<Integer> classes);
+
+    @Override
+    public String toString() {
+        return getClass().getSimpleName();
+    }
 }
