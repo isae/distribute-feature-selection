@@ -3,55 +3,52 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
-import ru.ifmo.ctddev.isaev.ScoreCalculator;
-import ru.ifmo.ctddev.isaev.classifier.Classifier;
-import ru.ifmo.ctddev.isaev.dataset.*;
-import filter.DatasetFilter;
-import ru.ifmo.ctddev.isaev.melif.MeLiF;
+import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.result.SelectionResult;
-import ru.ifmo.ctddev.isaev.splitter.DatasetSplitter;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 
 /**
- * Core single-threaded MeLiF implementation
+ * Implementation, that evaluates each point in separate thread
  *
  * @author iisaev
  */
-public class BasicMeLiF implements MeLiF {
+public class StupidParallelMeLiF extends BasicMeLiF {
+    private final ExecutorService executorService;
 
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    private static final Logger LOGGER = LoggerFactory.getLogger(StupidParallelMeLiF.class);
 
-    protected final Set<Point> visitedPoints = new TreeSet<>();
-
-    protected final DatasetFilter datasetFilter;
-
-    protected final DatasetSplitter datasetSplitter;
-
-    private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
-
-    protected final AlgorithmConfig config;
-
-    protected final DataSet dataSet;
-
-    public BasicMeLiF(AlgorithmConfig config, DataSet dataSet) {
-        this.config = config;
-        this.datasetSplitter = config.getDataSetSplitter();
-        this.datasetFilter = config.getDataSetFilter();
-        this.dataSet = dataSet;
+    public ExecutorService getExecutorService() {
+        return executorService;
     }
+
+    protected final Set<Point> visitedPoints = new ConcurrentSkipListSet<>();
+
+    public StupidParallelMeLiF(AlgorithmConfig config, DataSet dataSet, int threads) {
+        this(config, dataSet, Executors.newFixedThreadPool(5));
+    }
+
+    public StupidParallelMeLiF(AlgorithmConfig config, DataSet dataSet, ExecutorService executorService) {
+        super(config, dataSet);
+        this.executorService = executorService;
+    }
+
 
     @Override
     public RunStats run(Point[] points) {
+        return run(points, true);
+    }
+
+    public RunStats run(Point[] points, boolean shutdown) {
         Arrays.asList(points).forEach(p -> {
             if (p.getCoordinates().length != config.getMeasures().length) {
                 throw new IllegalArgumentException("Each point must have same coordinates number as number of measures");
@@ -62,20 +59,42 @@ public class BasicMeLiF implements MeLiF {
 
         LocalDateTime startTime = LocalDateTime.now();
         runStats.setStartTime(startTime);
-        logger.info("Started {} at {}", getClass().getSimpleName(), startTime);
-        List<SelectionResult> scores = Arrays.asList(points).stream()
-                .map(p -> performCoordinateDescend(p, runStats))
-                .collect(Collectors.toList());
-        logger.info("Total scores: ");
+        LOGGER.info("Started {} at {}", getClass().getSimpleName(), startTime);
+        CountDownLatch pointsLatch = new CountDownLatch(points.length);
+        List<Future<SelectionResult>> scoreFutures = Arrays.asList(points).stream()
+                .map(p -> executorService.submit(() -> {
+                    SelectionResult result = performCoordinateDescend(p, runStats);
+                    pointsLatch.countDown();
+                    return result;
+                })).collect(Collectors.toList());
+        try {
+            pointsLatch.await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        scoreFutures.forEach(f -> {
+            assert f.isDone();
+        });
+        List<SelectionResult> scores = scoreFutures.stream().map(f -> {
+            try {
+                return f.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }).collect(Collectors.toList());
+        LOGGER.info("Total scores: ");
         scores.stream().mapToDouble(SelectionResult::getF1Score).forEach(System.out::println);
-        logger.info("Max score: {} at point {}",
+        LOGGER.info("Max score: {} at point {}",
                 runStats.getBestResult().getF1Score(),
                 runStats.getBestResult().getPoint().getCoordinates()
         );
         LocalDateTime finishTime = LocalDateTime.now();
         runStats.setFinishTime(finishTime);
-        logger.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
-        logger.info("Working time: {} seconds", ChronoUnit.SECONDS.between(startTime, finishTime));
+        LOGGER.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
+        LOGGER.info("Working time: {} seconds", ChronoUnit.SECONDS.between(startTime, finishTime));
+        if (shutdown) {
+            getExecutorService().shutdown();
+        }
         return runStats;
     }
 
@@ -125,34 +144,5 @@ public class BasicMeLiF implements MeLiF {
             }
         }
         return bestScore;
-    }
-
-    protected double getF1Score(DataSetPair dsPair) {
-        Classifier classifier = config.getClassifiers().newClassifier();
-        classifier.train(dsPair.getTrainSet());
-        List<Integer> actual = classifier.test(dsPair.getTestSet())
-                .stream()
-                .map(d -> (int) Math.round(d))
-                .collect(Collectors.toList());
-        List<Integer> expectedValues = dsPair.getTestSet().toInstanceSet().getInstances().stream().map(DataInstance::getClazz).collect(Collectors.toList());
-        double result = scoreCalculator.calculateF1Score(expectedValues, actual);
-        if (logger.isTraceEnabled()) {
-            logger.trace("Expected values: {}", Arrays.toString(expectedValues.toArray()));
-            logger.trace("Actual values: {}", Arrays.toString(actual.toArray()));
-        }
-        return result;
-    }
-
-    protected SelectionResult getSelectionResult(Point point, RunStats stats) {
-        FeatureDataSet filteredDs = datasetFilter.filterDataSet(dataSet.toFeatureSet(), point, stats.getMeasures());
-        InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
-        List<Double> f1Scores = datasetSplitter.split(instanceDataSet)
-                .stream().map(this::getF1Score)
-                .collect(Collectors.toList());
-        double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
-        logger.debug("Point {}; F1 score: {}", Arrays.toString(point.getCoordinates()), f1Score);
-        SelectionResult result = new SelectionResult(filteredDs.getFeatures(), point, f1Score);
-        stats.updateBestResultUnsafe(result);
-        return result;
     }
 }

@@ -62,13 +62,13 @@ public class LogsSearcher {
                             List<Double> basicScores = tenFoldSplitter.split(
                                     datasetFilter.filterDataSet(dataSet.toFeatureSet(), points.get(0), measures)
                             ).stream()
-                                    .map(MultipleThreadedVsSequentialComparison::getF1Score)
+                                    .map(MultipleComparison::getF1Score)
                                     .collect(Collectors.toList());
 
                             List<Double> parallelScores = tenFoldSplitter.split(
                                     datasetFilter.filterDataSet(dataSet.toFeatureSet(), points.get(1), measures)
                             )
-                                    .stream().map(MultipleThreadedVsSequentialComparison::getF1Score)
+                                    .stream().map(MultipleComparison::getF1Score)
                                     .collect(Collectors.toList());
                             assert basicScores.size() == parallelScores.size();
                             System.out.format("Size: %d\n",basicScores.size());

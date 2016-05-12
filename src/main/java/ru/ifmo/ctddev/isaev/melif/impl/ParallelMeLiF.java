@@ -56,7 +56,7 @@ public class ParallelMeLiF extends BasicMeLiF {
             }
         });
 
-        RunStats runStats = new RunStats(config);
+        RunStats runStats = new RunStats(config,dataSet);
 
         LocalDateTime startTime = LocalDateTime.now();
         runStats.setStartTime(startTime);

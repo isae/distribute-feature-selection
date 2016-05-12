@@ -2,6 +2,7 @@ package ru.ifmo.ctddev.isaev.result;
 
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
+import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,9 @@ public class RunStats implements Comparable<RunStats> {
     private RelevanceMeasure[] measures;
 
     private long workTime;
+    private final String dataSetName;
+    private final int featureCount;
+    private final int instanceCount;
 
     public double getScore() {
         return getBestResult().getF1Score() / workTime;
@@ -27,9 +31,12 @@ public class RunStats implements Comparable<RunStats> {
 
     private LocalDateTime finishTime;
 
-    public RunStats(AlgorithmConfig config) {
+    public RunStats(AlgorithmConfig config, DataSet dataSet) {
         this.measures = config.getMeasures();
         this.usedClassifier = config.getClassifiers();
+        this.dataSetName = dataSet.getName();
+        this.featureCount = dataSet.getFeatureCount();
+        this.instanceCount = dataSet.getInstanceCount();
     }
 
     public Classifiers getUsedClassifier() {
@@ -60,6 +67,18 @@ public class RunStats implements Comparable<RunStats> {
     @Override
     public int compareTo(RunStats o) {
         return Comparator.comparingDouble(RunStats::getScore).compare(this, o);
+    }
+
+    public String getDataSetName() {
+        return dataSetName;
+    }
+
+    public int getFeatureCount() {
+        return featureCount;
+    }
+
+    public int getInstanceCount() {
+        return instanceCount;
     }
 
     private static final class StatsHolder {

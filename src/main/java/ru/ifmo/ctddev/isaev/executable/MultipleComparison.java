@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import filter.DatasetFilter;
 import filter.PreferredSizeFilter;
+import j2html.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -23,6 +24,8 @@ import ru.ifmo.ctddev.isaev.splitter.DatasetSplitter;
 import ru.ifmo.ctddev.isaev.splitter.OrderSplitter;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -34,6 +37,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static j2html.TagCreator.*;
 
@@ -41,8 +45,8 @@ import static j2html.TagCreator.*;
 /**
  * @author iisaev
  */
-public class MultipleThreadedVsSequentialComparison extends Comparison {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MultipleThreadedVsSequentialComparison.class);
+public class MultipleComparison extends Comparison {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MultipleComparison.class);
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
@@ -58,7 +62,55 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
         return scoreCalculator.calculateF1Score(expectedValues, actual);
     }
 
-    public static void main(String[] args) throws JsonProcessingException {
+    private static String htmlRepresentation(List<Pr<RunStats, RunStats>> executionResults) {
+        Tag[] rows = Stream.concat(
+                Stream.of(
+                        tr().with(
+                                th("Dataset"),
+                                th("Shape"),
+                                th("Features"),
+                                th("Instances"),
+                                th("Basic time"),
+                                th("Basic best point"),
+                                th("Basic score"),
+                                th("Basic visited points"),
+                                th("Parallel time"),
+                                th("Parallel best point"),
+                                th("Parallel score"),
+                                th("Parallel visited points")
+                        )
+                ),
+                executionResults.stream()
+                        .map(pr -> {
+                            return tr().with(
+                                    td(pr.getBasic().getDataSetName()),
+                                    td(String.format("%dx%d", pr.getBasic().getFeatureCount(), pr.getBasic().getInstanceCount())),
+                                    td(String.valueOf(pr.getBasic().getFeatureCount())),
+                                    td(String.valueOf(pr.getBasic().getInstanceCount())),
+                                    td(String.valueOf(pr.getBasic().getWorkTime())),
+                                    td(String.valueOf(pr.getBasic().getBestResult().getPoint())),
+                                    td(String.format("%.3f", pr.getBasic().getBestResult().getF1Score())),
+                                    td(String.valueOf(pr.getBasic().getVisitedPoints())),
+                                    td(String.valueOf(pr.getParallel().getWorkTime())),
+                                    td(String.valueOf(pr.getParallel().getScore())),
+                                    td(String.valueOf(pr.getParallel().getVisitedPoints())),
+                                    td(String.format("%.3f", pr.getParallel().getBestResult().getF1Score()))
+                            );
+                        })
+        ).collect(Collectors.toList()).toArray(new Tag[0]);
+        return html().with(
+                head().with(
+                        title("Experiment results")
+                ),
+                body().with(
+                        h1("Experiment results"),
+                        table().with(rows)
+                )
+        ).render();
+    }
+
+    public static void main(String[] args) throws JsonProcessingException, FileNotFoundException {
+        new File("html_results").mkdir();
 
         String startTimeString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH:mm"));
         MDC.put("fileName", startTimeString + "/COMMON");
@@ -138,13 +190,13 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
                     List<Double> basicScores = tenFoldSplitter.split(
                             datasetFilter.filterDataSet(dataSet.toFeatureSet(), simpleStats.getBestResult().getPoint(), measures)
                     ).stream()
-                            .map(MultipleThreadedVsSequentialComparison::getF1Score)
+                            .map(MultipleComparison::getF1Score)
                             .collect(Collectors.toList());
 
                     List<Double> parallelScores = tenFoldSplitter.split(
                             datasetFilter.filterDataSet(dataSet.toFeatureSet(), parallelStats.getBestResult().getPoint(), measures)
                     )
-                            .stream().map(MultipleThreadedVsSequentialComparison::getF1Score)
+                            .stream().map(MultipleComparison::getF1Score)
                             .collect(Collectors.toList());
                     assert basicScores.size() == parallelScores.size();
                     return new Pr<>(basicScores, parallelScores);
@@ -163,25 +215,9 @@ public class MultipleThreadedVsSequentialComparison extends Comparison {
         LOGGER.info("Expected values over all datasets: {}", expected);
         LOGGER.info("Actual values over all datasets: {}", actual);
         LOGGER.info("Spearman rank correlation: {}", new SpearmanRankCorrelation().evaluate(actual, expected));
-        MDC.put("fileName", "STATS_JSON-" + startTimeString);
-        LOGGER.info(MAPPER.writerWithDefaultPrettyPrinter().writeValueAsString(executionResults));
-        MDC.put("fileName", "STATS_HTML-" + startTimeString);
-        String htmlString = html().with(
-                head().with(
-                        title("Experiment results")
-                ),
-                body().with(
-                        h1("Heading!"),
-                        table().with(
-                                tr().with(
-                                        th("1"),
-                                        th("2"),
-                                        th("3"),
-                                        th("4")
-                                )
-                        )
-                )
-        ).render();
-        LOGGER.info(htmlString);
+
+        PrintWriter writer = new PrintWriter("html_results/" + startTimeString + ".html");
+        writer.println(htmlRepresentation(executionResults));
+        writer.close();
     }
 }
