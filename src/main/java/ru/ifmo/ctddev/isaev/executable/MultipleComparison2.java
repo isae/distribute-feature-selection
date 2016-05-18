@@ -1,7 +1,5 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import filter.DatasetFilter;
 import filter.PreferredSizeFilter;
 import j2html.tags.Tag;
@@ -48,7 +46,6 @@ import static j2html.TagCreator.*;
  */
 public class MultipleComparison2 extends Comparison {
     private static final Logger LOGGER = LoggerFactory.getLogger(MultipleComparison2.class);
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
 
@@ -118,7 +115,7 @@ public class MultipleComparison2 extends Comparison {
         ).render();
     }
 
-    public static void main(String[] args) throws JsonProcessingException, FileNotFoundException {
+    public static void main(String[] args) throws FileNotFoundException {
         new File("html_results").mkdir();
 
         String startTimeString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH:mm"));
