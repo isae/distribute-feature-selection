@@ -20,7 +20,7 @@ public class PointTest {
                 new Point(37.0 / 29, 237.0 / 46),
                 new Point(237.0 / 46, 237.0 / 46)
         );
-        Assert.assertEquals("All points are distinct", points.size(), new TreeSet<>(points).size());
+        Assert.assertEquals("First and last are the same", 3, new TreeSet<>(points).size());
     }
 
     @Test

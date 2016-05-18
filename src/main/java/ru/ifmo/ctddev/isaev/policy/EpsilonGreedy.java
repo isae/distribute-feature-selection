@@ -24,16 +24,16 @@ public class EpsilonGreedy extends BanditStrategy {
     public void processPoint(Function<Integer, Double> action) {
         int arm;
         if (RANDOM.nextDouble() < epsilon) {
-            arm = RANDOM.nextInt(visitedSum.length);
+            arm = RANDOM.nextInt(getArms());
         } else {
-            arm = IntStream.range(0, arms)
+            arm = IntStream.range(0, getArms())
                     .mapToObj(i -> i)
                     .sorted(Comparator.comparingDouble(this::mu))
                     .findFirst()
                     .get();
         }
         double result = action.apply(arm);
-        ++visitedNumber[arm];
-        visitedSum[arm] += result;
+        ++getVisitedNumber()[arm];
+        getVisitedSum()[arm] += result;
     }
 }

@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.policy;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.util.Comparator;
 import java.util.function.Function;
 import java.util.stream.IntStream;
@@ -10,6 +11,7 @@ import static java.lang.Math.sqrt;
 /**
  * @author iisaev
  */
+@ThreadSafe
 public class UCB1 extends BanditStrategy {
 
     private int tries = 0;
@@ -21,17 +23,23 @@ public class UCB1 extends BanditStrategy {
     @Override
     public void processPoint(Function<Integer, Double> action) {
         int arm;
-        if (tries < arms) {
-            arm = tries;
-        } else {
-            arm = IntStream.range(0, arms)
-                    .mapToObj(i -> i)
-                    .sorted(Comparator.comparingDouble(i -> mu(i) + sqrt(2 * log(tries) / visitedNumber[i])))
-                    .findFirst()
-                    .get();
+        synchronized (getHolder()) {
+            if (tries < getArms()) {
+                arm = tries;
+            } else {
+                arm = IntStream.range(0, getArms())
+                        .mapToObj(i -> i)
+                        .sorted(Comparator.comparingDouble(i -> mu(i) + sqrt(2 * log(tries) / getVisitedNumber()[i])))
+                        .findFirst()
+                        .get();
+            }
+            ++getVisitedNumber()[arm];
+            ++tries;
+            //TODO: maybe update visitedSum temporarily while reward is not computed yet
         }
-        visitedSum[arm] += action.apply(arm);
-        ++visitedNumber[arm];
-        ++tries;
+        double reward = action.apply(arm);
+        synchronized (getHolder()) {
+            getVisitedSum()[arm] += reward;
+        }
     }
 }

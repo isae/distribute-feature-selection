@@ -1,6 +1,8 @@
 package ru.ifmo.ctddev.isaev.result;
 
 import java.util.Arrays;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
 
 /**
  * @author iisaev
@@ -10,6 +12,8 @@ public class Point implements Comparable<Point> {
 
     public Point(double... coordinates) {
         this.coordinates = coordinates.clone();
+        double sum = DoubleStream.of(coordinates).sum();
+        IntStream.range(0, coordinates.length).forEach(i -> this.coordinates[i] /= sum); // normalization
     }
 
     public Point(Point point) {

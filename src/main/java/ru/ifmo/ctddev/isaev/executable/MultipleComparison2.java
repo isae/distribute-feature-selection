@@ -148,8 +148,6 @@ public class MultipleComparison2 extends Comparison {
         RelevanceMeasure[] measures = new RelevanceMeasure[]{new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         AlgorithmConfig config = new AlgorithmConfig(0.25, Classifiers.WEKA_SVM, measures);
         //ForkJoinPool executorService = new ForkJoinPool(threadsCount);
-        ExecutorService executorService = Executors.newFixedThreadPool(threadsCount);
-        ExecutorService stupidService = Executors.newFixedThreadPool(5);
         List<RunStats[]> executionResults = new ArrayList<>();
         List<Pr<Double, Double>> results = Arrays.asList(dataSetDir.listFiles()).stream()
                 .filter(f -> f.getAbsolutePath().endsWith(".csv"))
@@ -171,12 +169,15 @@ public class MultipleComparison2 extends Comparison {
                     LocalDateTime simpleFinish = LocalDateTime.now();
                     LOGGER.info("Starting ParallelMeliF at {}", simpleFinish);
 
+                    ExecutorService executorService = Executors.newFixedThreadPool(threadsCount);
                     ParallelMeLiF parallelMeLiF = new ParallelMeLiF(config, dataSet, executorService);
-                    RunStats parallelStats = parallelMeLiF.run(points, false);
+                    RunStats parallelStats = parallelMeLiF.run(points, true);
                     LocalDateTime parallelFinish = LocalDateTime.now();
 
+
+                    ExecutorService stupidService = Executors.newFixedThreadPool(5);
                     StupidParallelMeLiF stupidParallelMeLiF = new StupidParallelMeLiF(config, dataSet, stupidService);
-                    RunStats stupidStats = stupidParallelMeLiF.run(points, false);
+                    RunStats stupidStats = stupidParallelMeLiF.run(points, true);
                     LocalDateTime stupidFinish = LocalDateTime.now();
 
                     long simpleWorkTime = ChronoUnit.SECONDS.between(startTime, simpleFinish);
@@ -224,7 +225,6 @@ public class MultipleComparison2 extends Comparison {
                 })
                 .flatMap(pr -> IntStream.range(0, pr.getBasic().size()).mapToObj(i -> new Pr<>(pr.getBasic().get(i), pr.getParallel().get(i))))
                 .collect(Collectors.toList());
-        executorService.shutdown();
         MDC.put("fileName", "COMMON-" + startTimeString);
 
         List<Double> expected = new ArrayList<>();
