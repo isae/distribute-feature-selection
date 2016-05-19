@@ -3,15 +3,12 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
-import ru.ifmo.ctddev.isaev.ScoreCalculator;
 import ru.ifmo.ctddev.isaev.classifier.Classifier;
 import ru.ifmo.ctddev.isaev.dataset.*;
-import filter.DatasetFilter;
 import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.result.SelectionResult;
-import ru.ifmo.ctddev.isaev.splitter.DatasetSplitter;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -27,27 +24,14 @@ import java.util.stream.Collectors;
  *
  * @author iisaev
  */
-public class BasicMeLiF implements MeLiF {
+public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
 
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected final Set<Point> visitedPoints = new TreeSet<>();
 
-    protected final DatasetFilter datasetFilter;
-
-    protected final DatasetSplitter datasetSplitter;
-
-    private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
-
-    protected final AlgorithmConfig config;
-
-    protected final DataSet dataSet;
-
     public BasicMeLiF(AlgorithmConfig config, DataSet dataSet) {
-        this.config = config;
-        this.datasetSplitter = config.getDataSetSplitter();
-        this.datasetFilter = config.getDataSetFilter();
-        this.dataSet = dataSet;
+        super(config, dataSet);
     }
 
     @Override
