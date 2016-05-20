@@ -84,7 +84,7 @@ public class FeatureSelectionAlgorithm {
         double f1Score = getF1Score(point, stats.getMeasures());
         logger.debug("Point {}; F1 score: {}", point, FORMAT.format(f1Score));
         SelectionResult result = new SelectionResult(filteredDs.getFeatures(), point, f1Score);
-        stats.updateBestResultUnsafe(result);
+        stats.updateBestResult(result);
         return result;
     }
 

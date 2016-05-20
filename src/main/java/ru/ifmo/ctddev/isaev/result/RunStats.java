@@ -110,7 +110,7 @@ public class RunStats implements Comparable<RunStats> {
         }
     }
 
-    public void updateBestResultUnsafe(SelectionResult bestResult) {
+    private void updateBestResultUnsafe(SelectionResult bestResult) {
         ++holder.visitedPoints;
         if (holder.bestResult != null) {
             if (holder.bestResult.compareTo(bestResult) == -1) {
