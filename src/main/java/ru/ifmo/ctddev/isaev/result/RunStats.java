@@ -17,26 +17,37 @@ public class RunStats implements Comparable<RunStats> {
     private RelevanceMeasure[] measures;
 
     private long workTime;
+
     private final String dataSetName;
+
     private final int featureCount;
+
     private final int instanceCount;
 
     public double getScore() {
         return getBestResult().getF1Score() / workTime;
     }
 
-    private Classifiers usedClassifier;
+    private final Classifiers usedClassifier;
 
-    private LocalDateTime startTime;
+    private final String algorithmName;
+
+    private final LocalDateTime startTime;
 
     private LocalDateTime finishTime;
 
-    public RunStats(AlgorithmConfig config, DataSet dataSet) {
+    public RunStats(AlgorithmConfig config, DataSet dataSet, String algorithmName) {
         this.measures = config.getMeasures();
         this.usedClassifier = config.getClassifiers();
         this.dataSetName = dataSet.getName();
         this.featureCount = dataSet.getFeatureCount();
         this.instanceCount = dataSet.getInstanceCount();
+        startTime = LocalDateTime.now();
+        this.algorithmName = algorithmName;
+    }
+
+    public String getAlgorithmName() {
+        return algorithmName;
     }
 
     public Classifiers getUsedClassifier() {
@@ -45,10 +56,6 @@ public class RunStats implements Comparable<RunStats> {
 
     public long getWorkTime() {
         return workTime;
-    }
-
-    public void setStartTime(LocalDateTime startTime) {
-        this.startTime = startTime;
     }
 
     public void setFinishTime(LocalDateTime finishTime) {

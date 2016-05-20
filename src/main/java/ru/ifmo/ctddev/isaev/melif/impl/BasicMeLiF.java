@@ -1,17 +1,13 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
-import ru.ifmo.ctddev.isaev.classifier.Classifier;
-import ru.ifmo.ctddev.isaev.dataset.*;
+import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -25,8 +21,6 @@ import java.util.stream.Collectors;
  * @author iisaev
  */
 public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
-
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     protected final Set<Point> visitedPoints = new TreeSet<>();
 
@@ -42,11 +36,9 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
             }
         });
 
-        RunStats runStats = new RunStats(config, dataSet);
+        RunStats runStats = new RunStats(config, dataSet, "Basic");
 
-        LocalDateTime startTime = LocalDateTime.now();
-        runStats.setStartTime(startTime);
-        logger.info("Started {} at {}", getClass().getSimpleName(), startTime);
+        logger.info("Started {} at {}", getClass().getSimpleName(), runStats.getStartTime());
         List<SelectionResult> scores = Arrays.asList(points).stream()
                 .map(p -> performCoordinateDescend(p, runStats))
                 .collect(Collectors.toList());
@@ -59,7 +51,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
         LocalDateTime finishTime = LocalDateTime.now();
         runStats.setFinishTime(finishTime);
         logger.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
-        logger.info("Working time: {} seconds", ChronoUnit.SECONDS.between(startTime, finishTime));
+        logger.info("Working time: {} seconds", runStats.getWorkTime());
         return runStats;
     }
 
@@ -109,34 +101,5 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
             }
         }
         return bestScore;
-    }
-
-    protected double getF1Score(DataSetPair dsPair) {
-        Classifier classifier = config.getClassifiers().newClassifier();
-        classifier.train(dsPair.getTrainSet());
-        List<Integer> actual = classifier.test(dsPair.getTestSet())
-                .stream()
-                .map(d -> (int) Math.round(d))
-                .collect(Collectors.toList());
-        List<Integer> expectedValues = dsPair.getTestSet().toInstanceSet().getInstances().stream().map(DataInstance::getClazz).collect(Collectors.toList());
-        double result = scoreCalculator.calculateF1Score(expectedValues, actual);
-        if (logger.isTraceEnabled()) {
-            logger.trace("Expected values: {}", Arrays.toString(expectedValues.toArray()));
-            logger.trace("Actual values: {}", Arrays.toString(actual.toArray()));
-        }
-        return result;
-    }
-
-    protected SelectionResult getSelectionResult(Point point, RunStats stats) {
-        FeatureDataSet filteredDs = datasetFilter.filterDataSet(dataSet.toFeatureSet(), point, stats.getMeasures());
-        InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
-        List<Double> f1Scores = datasetSplitter.split(instanceDataSet)
-                .stream().map(this::getF1Score)
-                .collect(Collectors.toList());
-        double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
-        logger.debug("Point {}; F1 score: {}", Arrays.toString(point.getCoordinates()), f1Score);
-        SelectionResult result = new SelectionResult(filteredDs.getFeatures(), point, f1Score);
-        stats.updateBestResultUnsafe(result);
-        return result;
     }
 }

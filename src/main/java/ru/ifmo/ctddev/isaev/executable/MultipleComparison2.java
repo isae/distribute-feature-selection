@@ -2,7 +2,6 @@ package ru.ifmo.ctddev.isaev.executable;
 
 import filter.DatasetFilter;
 import filter.PreferredSizeFilter;
-import j2html.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -16,10 +15,9 @@ import ru.ifmo.ctddev.isaev.dataset.DataSetPair;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
 import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
-import ru.ifmo.ctddev.isaev.melif.impl.StupidParallelMeLiF;
+import ru.ifmo.ctddev.isaev.melif.impl.PriorityQueueMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ctddev.isaev.splitter.DatasetSplitter;
 import ru.ifmo.ctddev.isaev.splitter.OrderSplitter;
 
 import java.io.File;
@@ -27,25 +25,22 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static j2html.TagCreator.*;
+import static ru.ifmo.ctddev.isaev.melif.impl.FeatureSelectionAlgorithm.FORMAT;
 
 
 /**
  * @author iisaev
  */
 public class MultipleComparison2 extends Comparison {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MultipleComparison2.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MultipleComparison.class);
 
     private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
 
@@ -60,67 +55,43 @@ public class MultipleComparison2 extends Comparison {
         return scoreCalculator.calculateF1Score(expectedValues, actual);
     }
 
-    private static String htmlRepresentation(List<RunStats[]> executionResults) {
-        Tag[] rows = Stream.concat(
-                Stream.of(
-                        tr().with(
-                                th("Dataset"),
-                                th("Shape"),
-                                th("Features"),
-                                th("Instances"),
-                                th("Basic time"),
-                                th("Basic best point"),
-                                th("Basic score"),
-                                th("Basic visited points"),
-                                th("Parallel time"),
-                                th("Parallel best point"),
-                                th("Parallel score"),
-                                th("Parallel visited points"),
-                                th("Stupid time"),
-                                th("Stupid best point"),
-                                th("Stupid score"),
-                                th("Stupid visited points")
-                        )
-                ),
-                executionResults.stream()
-                        .map(pr -> {
-                            return tr().with(
-                                    td(pr[0].getDataSetName()),
-                                    td(String.format("%dx%d", pr[0].getFeatureCount(), pr[0].getInstanceCount())),
-                                    td(String.valueOf(pr[0].getFeatureCount())),
-                                    td(String.valueOf(pr[0].getInstanceCount())),
-                                    td(String.valueOf(pr[0].getWorkTime())),
-                                    td(String.valueOf(pr[0].getBestResult().getPoint())),
-                                    td(String.valueOf(pr[0].getVisitedPoints())),
-                                    td(String.format("%.3f", pr[0].getBestResult().getF1Score())),
-                                    td(String.valueOf(pr[1].getWorkTime())),
-                                    td(String.valueOf(pr[1].getScore())),
-                                    td(String.valueOf(pr[1].getVisitedPoints())),
-                                    td(String.format("%.3f", pr[1].getBestResult().getF1Score())),
-                                    td(String.valueOf(pr[2].getWorkTime())),
-                                    td(String.valueOf(pr[2].getScore())),
-                                    td(String.valueOf(pr[2].getVisitedPoints())),
-                                    td(String.format("%.3f", pr[2].getBestResult().getF1Score()))
-                            );
-                        })
-        ).collect(Collectors.toList()).toArray(new Tag[0]);
-        return html().with(
-                head().with(
-                        title("Experiment results")
-                ),
-                body().with(
-                        h1("Experiment results"),
-                        table().with(rows)
-                )
-        ).render();
+    private static String csvRepresentation(List<List<RunStats>> executionResults) {
+        StringBuilder sb = new StringBuilder();
+        Stream<String> start = Stream.of("Dataset", "Shape", "Features", "Instances");
+        Stream<String> header = Stream.concat(start, executionResults.get(0).stream().flatMap(
+                stats -> Stream.of(
+                        String.format("%s time", stats.getAlgorithmName()),
+                        String.format("%s best point", stats.getAlgorithmName()),
+                        String.format("%s score", stats.getAlgorithmName()),
+                        String.format("%s visited points", stats.getAlgorithmName()))
+        ));
+        String headerStr = String.join(";", header.collect(Collectors.toList()));
+        sb.append(headerStr).append("\n");
+        executionResults.stream()
+                .forEach(pr -> {
+                    Stream<Object> rowStart = Stream.of(
+                            pr.get(0).getDataSetName(),
+                            String.format("%dx%d", pr.get(0).getFeatureCount(), pr.get(0).getInstanceCount()),
+                            pr.get(0).getFeatureCount(),
+                            pr.get(0).getInstanceCount());
+                    Stream<Object> row = Stream.concat(rowStart, pr.stream().flatMap(
+                            stats -> Stream.of(
+                                    stats.getWorkTime(),
+                                    stats.getBestResult().getPoint(),
+                                    FORMAT.format(stats.getBestResult().getF1Score()),
+                                    stats.getVisitedPoints())
+                    ));
+                    sb.append(String.join(";", row.map(Objects::toString).collect(Collectors.toList()))).append("\n");
+                });
+        return sb.toString();
     }
 
     public static void main(String[] args) throws FileNotFoundException {
-        new File("html_results").mkdir();
+        new File("table_results").mkdir();
 
         String startTimeString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH:mm"));
         MDC.put("fileName", startTimeString + "/COMMON");
-        Point[] points = new Point[]{
+        Point[] points = new Point[] {
                 new Point(1, 0, 0, 0),
                 new Point(0, 1, 0, 0),
                 new Point(0, 0, 1, 0),
@@ -142,11 +113,9 @@ public class MultipleComparison2 extends Comparison {
         File dataSetDir = new File(args[0]);
         assert dataSetDir.exists();
         assert dataSetDir.isDirectory();
-        RelevanceMeasure[] measures = new RelevanceMeasure[]{new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
+        RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         AlgorithmConfig config = new AlgorithmConfig(0.25, Classifiers.WEKA_SVM, measures);
-        //ForkJoinPool executorService = new ForkJoinPool(threadsCount);
-        List<RunStats[]> executionResults = new ArrayList<>();
-        List<Pr<Double, Double>> results = Arrays.asList(dataSetDir.listFiles()).stream()
+        List<List<RunStats>> results = Arrays.asList(dataSetDir.listFiles()).stream()
                 .filter(f -> f.getAbsolutePath().endsWith(".csv"))
                 .map(file -> {
                     MDC.put("fileName", startTimeString + "/" + file.getName());
@@ -159,83 +128,18 @@ public class MultipleComparison2 extends Comparison {
                     config.setDataSetSplitter(new OrderSplitter(testPercent, order));
                     DatasetFilter datasetFilter = new PreferredSizeFilter(100);
                     config.setDataSetFilter(datasetFilter);
-                    LocalDateTime startTime = LocalDateTime.now();
-                    LOGGER.info("Starting SimpleMeliF at {}", startTime);
-                    BasicMeLiF basicMeLiF = new BasicMeLiF(config, dataSet);
-                    RunStats simpleStats = basicMeLiF.run(points);
-                    LocalDateTime simpleFinish = LocalDateTime.now();
-                    LOGGER.info("Starting ParallelMeliF at {}", simpleFinish);
 
-                    ExecutorService executorService = Executors.newFixedThreadPool(threadsCount);
-                    ParallelMeLiF parallelMeLiF = new ParallelMeLiF(config, dataSet, executorService);
-                    RunStats parallelStats = parallelMeLiF.run(points, true);
-                    LocalDateTime parallelFinish = LocalDateTime.now();
-
-
-                    ExecutorService stupidService = Executors.newFixedThreadPool(5);
-                    StupidParallelMeLiF stupidParallelMeLiF = new StupidParallelMeLiF(config, dataSet, stupidService);
-                    RunStats stupidStats = stupidParallelMeLiF.run(points, true);
-                    LocalDateTime stupidFinish = LocalDateTime.now();
-
-                    long simpleWorkTime = ChronoUnit.SECONDS.between(startTime, simpleFinish);
-                    long parallelWorkTime = ChronoUnit.SECONDS.between(simpleFinish, parallelFinish);
-                    long stupidWorkTime = ChronoUnit.SECONDS.between(parallelFinish, stupidFinish);
-                    LOGGER.info("Single-threaded work time: {} seconds", simpleWorkTime);
-                    LOGGER.info("Visited {} points; best point is {} with score {}", new Object[]{
-                            simpleStats.getVisitedPoints(),
-                            simpleStats.getBestResult().getPoint().getCoordinates(),
-                            simpleStats.getBestResult().getF1Score()
-                    });
-                    LOGGER.info("Multi-threaded work time: {} seconds", parallelWorkTime);
-                    LOGGER.info("Visited {} points; best point is {} with score {}", new Object[]{
-                            parallelStats.getVisitedPoints(),
-                            parallelStats.getBestResult().getPoint().getCoordinates(),
-                            parallelStats.getBestResult().getF1Score()
-                    });
-                    LOGGER.info("Stupid Multi-threaded work time: {} seconds", stupidWorkTime);
-                    LOGGER.info("Visited {} points; best point is {} with score {}", new Object[]{
-                            stupidStats.getVisitedPoints(),
-                            stupidStats.getBestResult().getPoint().getCoordinates(),
-                            stupidStats.getBestResult().getF1Score()
-                    });
-                    LOGGER.info("Multi-threaded to single-threaded version speed improvement: {}%",
-                            getSpeedImprovementPercent(simpleStats.getWorkTime(), parallelStats.getWorkTime()));
+                    RunStats basicStats = new BasicMeLiF(config, dataSet).run(points);
+                    RunStats parallelStats = new ParallelMeLiF(config, dataSet, threadsCount).run(points);
+                    RunStats priorityStats = new PriorityQueueMeLiF(config, dataSet, threadsCount).run();
                     MDC.remove("fileName");
-
-                    executionResults.add(new RunStats[]{simpleStats, parallelStats, stupidStats});
-
-                    DatasetSplitter tenFoldSplitter = new OrderSplitter(10, order);
-
-                    List<Double> basicScores = tenFoldSplitter.split(
-                            datasetFilter.filterDataSet(dataSet.toFeatureSet(), simpleStats.getBestResult().getPoint(), measures)
-                    ).stream()
-                            .map(MultipleComparison2::getF1Score)
-                            .collect(Collectors.toList());
-
-                    List<Double> parallelScores = tenFoldSplitter.split(
-                            datasetFilter.filterDataSet(dataSet.toFeatureSet(), parallelStats.getBestResult().getPoint(), measures)
-                    )
-                            .stream().map(MultipleComparison2::getF1Score)
-                            .collect(Collectors.toList());
-                    assert basicScores.size() == parallelScores.size();
-                    return new Pr<>(basicScores, parallelScores);
+                    return Arrays.asList(basicStats, parallelStats, priorityStats);
                 })
-                .flatMap(pr -> IntStream.range(0, pr.getBasic().size()).mapToObj(i -> new Pr<>(pr.getBasic().get(i), pr.getParallel().get(i))))
                 .collect(Collectors.toList());
         MDC.put("fileName", "COMMON-" + startTimeString);
 
-        List<Double> expected = new ArrayList<>();
-        List<Double> actual = new ArrayList<>();
-        results.forEach(pr -> {
-            expected.add(pr.getBasic());
-            actual.add(pr.getParallel());
-        });
-        LOGGER.info("Expected values over all datasets: {}", expected);
-        LOGGER.info("Actual values over all datasets: {}", actual);
-        LOGGER.info("Spearman rank correlation: {}", new SpearmanRankCorrelation().evaluate(actual, expected));
-
-        PrintWriter writer = new PrintWriter("html_results/" + startTimeString + ".html");
-        writer.println(htmlRepresentation(executionResults));
+        PrintWriter writer = new PrintWriter("table_results/" + startTimeString + ".csv");
+        writer.println(csvRepresentation(results));
         writer.close();
     }
 }

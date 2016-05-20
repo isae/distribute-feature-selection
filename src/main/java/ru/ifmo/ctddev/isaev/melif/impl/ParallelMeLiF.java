@@ -12,7 +12,6 @@ import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
@@ -56,11 +55,8 @@ public class ParallelMeLiF extends BasicMeLiF {
             }
         });
 
-        RunStats runStats = new RunStats(config,dataSet);
-
-        LocalDateTime startTime = LocalDateTime.now();
-        runStats.setStartTime(startTime);
-        LOGGER.info("Started {} at {}", getClass().getSimpleName(), startTime);
+        RunStats runStats = new RunStats(config,dataSet, "Parallel");
+        LOGGER.info("Started {} at {}", getClass().getSimpleName(), runStats.getStartTime());
         CountDownLatch pointsLatch = new CountDownLatch(points.length);
         List<Future<SelectionResult>> scoreFutures = Arrays.asList(points).stream()
                 .map(p -> executorService.submit(() -> {
@@ -89,10 +85,9 @@ public class ParallelMeLiF extends BasicMeLiF {
                 runStats.getBestResult().getF1Score(),
                 runStats.getBestResult().getPoint().getCoordinates()
         );
-        LocalDateTime finishTime = LocalDateTime.now();
-        runStats.setFinishTime(finishTime);
-        LOGGER.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
-        LOGGER.info("Working time: {} seconds", ChronoUnit.SECONDS.between(startTime, finishTime));
+        runStats.setFinishTime(LocalDateTime.now());
+        LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());
+        LOGGER.info("Working time: {} seconds",runStats.getWorkTime());
         if (shutdown) {
             getExecutorService().shutdown();
         }
@@ -190,7 +185,7 @@ public class ParallelMeLiF extends BasicMeLiF {
                 assert f.isDone();
             });
             double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
-            LOGGER.debug("Point {}; F1 score: {}", Arrays.toString(point.getCoordinates()), f1Score);
+            LOGGER.debug("Point {}; F1 score: {}", point, f1Score);
             SelectionResult result = new SelectionResult(filteredDs.getFeatures(), point, f1Score);
             stats.updateBestResult(result);
             return result;

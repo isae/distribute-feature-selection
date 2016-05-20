@@ -9,7 +9,6 @@ import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -55,11 +54,9 @@ public class StupidParallelMeLiF extends BasicMeLiF {
             }
         });
 
-        RunStats runStats = new RunStats(config, dataSet);
+        RunStats runStats = new RunStats(config, dataSet, "Stupid");
 
-        LocalDateTime startTime = LocalDateTime.now();
-        runStats.setStartTime(startTime);
-        LOGGER.info("Started {} at {}", getClass().getSimpleName(), startTime);
+        LOGGER.info("Started {} at {}", getClass().getSimpleName(), runStats.getStartTime());
         CountDownLatch pointsLatch = new CountDownLatch(points.length);
         List<Future<SelectionResult>> scoreFutures = Arrays.asList(points).stream()
                 .map(p -> executorService.submit(() -> {
@@ -88,10 +85,9 @@ public class StupidParallelMeLiF extends BasicMeLiF {
                 runStats.getBestResult().getF1Score(),
                 runStats.getBestResult().getPoint().getCoordinates()
         );
-        LocalDateTime finishTime = LocalDateTime.now();
-        runStats.setFinishTime(finishTime);
-        LOGGER.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
-        LOGGER.info("Working time: {} seconds", ChronoUnit.SECONDS.between(startTime, finishTime));
+        runStats.setFinishTime(LocalDateTime.now());
+        LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());
+        LOGGER.info("Working time: {} seconds", runStats.getWorkTime());
         if (shutdown) {
             getExecutorService().shutdown();
         }

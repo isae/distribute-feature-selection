@@ -24,15 +24,15 @@ public class UCB1 extends BanditStrategy {
     public void processPoint(Function<Integer, Double> action) {
         int arm;
         synchronized (getHolder()) {
-            if (tries < getArms()) {
-                arm = tries;
-            } else {
-                arm = IntStream.range(0, getArms())
-                        .mapToObj(i -> i)
-                        .sorted(Comparator.comparingDouble(i -> mu(i) + sqrt(2 * log(tries) / getVisitedNumber()[i])))
-                        .findFirst()
-                        .get();
-            }
+            //if (tries < getArms()) {
+            //  arm = tries;
+            //} else {
+            arm = IntStream.range(0, getArms())
+                    .mapToObj(i -> i)
+                    .sorted(Comparator.comparingDouble(i -> mu(i) + sqrt(2 * log(tries) / getVisitedNumber()[i])))
+                    .findFirst()
+                    .get();
+            //}
             ++getVisitedNumber()[arm];
             ++tries;
             //TODO: maybe update visitedSum temporarily while reward is not computed yet

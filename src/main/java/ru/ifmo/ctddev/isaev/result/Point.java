@@ -1,8 +1,13 @@
 package ru.ifmo.ctddev.isaev.result;
 
-import java.util.Arrays;
+import ru.ifmo.ctddev.isaev.melif.impl.FeatureSelectionAlgorithm;
+
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
+
 
 /**
  * @author iisaev
@@ -18,6 +23,11 @@ public class Point implements Comparable<Point> {
 
     public Point(Point point) {
         this(point.getCoordinates().clone());
+    }
+
+    public Point(Point point, Consumer<double[]> consumer) {
+        this(point);
+        consumer.accept(coordinates);
     }
 
     public double[] getCoordinates() {
@@ -39,6 +49,7 @@ public class Point implements Comparable<Point> {
 
     @Override
     public String toString() {
-        return Arrays.toString(coordinates);
+        List<String> doubles = DoubleStream.of(coordinates).mapToObj(FeatureSelectionAlgorithm.FORMAT::format).collect(Collectors.toList());
+        return "[" + String.join(", ", doubles) + "]";
     }
 }

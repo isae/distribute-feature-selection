@@ -2,7 +2,6 @@ package ru.ifmo.ctddev.isaev.executable;
 
 import filter.DatasetFilter;
 import filter.PreferredSizeFilter;
-import j2html.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -27,17 +26,14 @@ import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static j2html.TagCreator.*;
+import static ru.ifmo.ctddev.isaev.melif.impl.FeatureSelectionAlgorithm.FORMAT;
 
 
 /**
@@ -59,59 +55,43 @@ public class MultipleComparison extends Comparison {
         return scoreCalculator.calculateF1Score(expectedValues, actual);
     }
 
-    private static String htmlRepresentation(List<Pr<RunStats, RunStats>> executionResults) {
-        Tag[] rows = Stream.concat(
-                Stream.of(
-                        tr().with(
-                                th("Dataset"),
-                                th("Shape"),
-                                th("Features"),
-                                th("Instances"),
-                                th("Basic time"),
-                                th("Basic best point"),
-                                th("Basic score"),
-                                th("Basic visited points"),
-                                th("Parallel time"),
-                                th("Parallel best point"),
-                                th("Parallel score"),
-                                th("Parallel visited points")
-                        )
-                ),
-                executionResults.stream()
-                        .map(pr -> {
-                            return tr().with(
-                                    td(pr.getBasic().getDataSetName()),
-                                    td(String.format("%dx%d", pr.getBasic().getFeatureCount(), pr.getBasic().getInstanceCount())),
-                                    td(String.valueOf(pr.getBasic().getFeatureCount())),
-                                    td(String.valueOf(pr.getBasic().getInstanceCount())),
-                                    td(String.valueOf(pr.getBasic().getWorkTime())),
-                                    td(String.valueOf(pr.getBasic().getBestResult().getPoint())),
-                                    td(String.format("%.3f", pr.getBasic().getBestResult().getF1Score())),
-                                    td(String.valueOf(pr.getBasic().getVisitedPoints())),
-                                    td(String.valueOf(pr.getParallel().getWorkTime())),
-                                    td(String.valueOf(pr.getParallel().getScore())),
-                                    td(String.valueOf(pr.getParallel().getVisitedPoints())),
-                                    td(String.format("%.3f", pr.getParallel().getBestResult().getF1Score()))
-                            );
-                        })
-        ).collect(Collectors.toList()).toArray(new Tag[0]);
-        return html().with(
-                head().with(
-                        title("Experiment results")
-                ),
-                body().with(
-                        h1("Experiment results"),
-                        table().with(rows)
-                )
-        ).render();
+    private static String htmlRepresentation(List<List<RunStats>> executionResults) {
+        StringBuilder sb = new StringBuilder();
+        Stream<String> start = Stream.of("Dataset", "Shape", "Features", "Instances");
+        Stream<String> header = Stream.concat(start, executionResults.get(0).stream().flatMap(
+                stats -> Stream.of(
+                        String.format("%s time", stats.getAlgorithmName()),
+                        String.format("%s best point", stats.getAlgorithmName()),
+                        String.format("%s score", stats.getAlgorithmName()),
+                        String.format("%s visited points", stats.getAlgorithmName()))
+        ));
+        String headerStr = String.join(";", header.collect(Collectors.toList()));
+        sb.append(headerStr).append("\n");
+        executionResults.stream()
+                .forEach(pr -> {
+                    Stream<Object> rowStart = Stream.of(
+                            pr.get(0).getDataSetName(),
+                            String.format("%dx%d", pr.get(0).getFeatureCount(), pr.get(0).getInstanceCount()),
+                            pr.get(0).getFeatureCount(),
+                            pr.get(0).getInstanceCount());
+                    Stream<Object> row = Stream.concat(rowStart, pr.stream().flatMap(
+                            stats -> Stream.of(
+                                    stats.getWorkTime(),
+                                    stats.getBestResult().getPoint(),
+                                    FORMAT.format(stats.getBestResult().getF1Score()),
+                                    stats.getVisitedPoints())
+                    ));
+                    sb.append(String.join(";", row.map(Objects::toString).collect(Collectors.toList()))).append("\n");
+                });
+        return sb.toString();
     }
 
-    public static void main(String[] args) throws  FileNotFoundException {
-        new File("html_results").mkdir();
+    public static void main(String[] args) throws FileNotFoundException {
+        new File("table_results").mkdir();
 
         String startTimeString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH:mm"));
         MDC.put("fileName", startTimeString + "/COMMON");
-        Point[] points = new Point[]{
+        Point[] points = new Point[] {
                 new Point(1, 0, 0, 0),
                 new Point(0, 1, 0, 0),
                 new Point(0, 0, 1, 0),
@@ -133,7 +113,7 @@ public class MultipleComparison extends Comparison {
         File dataSetDir = new File(args[0]);
         assert dataSetDir.exists();
         assert dataSetDir.isDirectory();
-        RelevanceMeasure[] measures = new RelevanceMeasure[]{new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
+        RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         AlgorithmConfig config = new AlgorithmConfig(0.25, Classifiers.WEKA_SVM, measures);
         //ForkJoinPool executorService = new ForkJoinPool(threadsCount);
         ExecutorService executorService = Executors.newFixedThreadPool(threadsCount);
@@ -165,15 +145,15 @@ public class MultipleComparison extends Comparison {
                     long simpleWorkTime = ChronoUnit.SECONDS.between(startTime, simpleFinish);
                     long parallelWorkTime = ChronoUnit.SECONDS.between(simpleFinish, parallelFinish);
                     LOGGER.info("Single-threaded work time: {} seconds", simpleWorkTime);
-                    LOGGER.info("Visited {} points; best point is {} with score {}", new Object[]{
+                    LOGGER.info("Visited {} points; best point is {} with score {}", new Object[] {
                             simpleStats.getVisitedPoints(),
-                            simpleStats.getBestResult().getPoint().getCoordinates(),
+                            simpleStats.getBestResult().getPoint(),
                             simpleStats.getBestResult().getF1Score()
                     });
                     LOGGER.info("Multi-threaded work time: {} seconds", parallelWorkTime);
-                    LOGGER.info("Visited {} points; best point is {} with score {}", new Object[]{
+                    LOGGER.info("Visited {} points; best point is {} with score {}", new Object[] {
                             parallelStats.getVisitedPoints(),
-                            parallelStats.getBestResult().getPoint().getCoordinates(),
+                            parallelStats.getBestResult().getPoint(),
                             parallelStats.getBestResult().getF1Score()
                     });
                     LOGGER.info("Multi-threaded to single-threaded version speed improvement: {}%",
@@ -213,8 +193,8 @@ public class MultipleComparison extends Comparison {
         LOGGER.info("Actual values over all datasets: {}", actual);
         LOGGER.info("Spearman rank correlation: {}", new SpearmanRankCorrelation().evaluate(actual, expected));
 
-        PrintWriter writer = new PrintWriter("html_results/" + startTimeString + ".html");
-        writer.println(htmlRepresentation(executionResults));
+        PrintWriter writer = new PrintWriter("table_results/" + startTimeString + ".csv");
+        writer.println(htmlRepresentation(executionResults.stream().map(pr -> Arrays.asList(pr.getBasic(), pr.getParallel())).collect(Collectors.toList())));
         writer.close();
     }
 }

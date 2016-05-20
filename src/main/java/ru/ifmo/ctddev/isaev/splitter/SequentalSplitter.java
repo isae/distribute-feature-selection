@@ -11,8 +11,11 @@ import java.util.Random;
 
 
 /**
+ * Use {@link OrderSplitter} instead
+ *
  * @author iisaev
  */
+@Deprecated
 public class SequentalSplitter extends AbstractDatasetSplitter {
     private final Random random = new Random();
 
