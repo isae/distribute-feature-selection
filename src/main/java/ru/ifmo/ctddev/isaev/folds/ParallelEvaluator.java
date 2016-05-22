@@ -27,11 +27,11 @@ import java.util.stream.Collectors;
 public class ParallelEvaluator extends FoldsEvaluator {
     private final ExecutorService executorService;
 
-    public ParallelEvaluator(Classifiers classifiers, DataSetSplitter datasetSplitter, DataSetFilter dataSetFilter, int threads) {
-        this(classifiers, datasetSplitter, dataSetFilter, Executors.newFixedThreadPool(threads));
+    public ParallelEvaluator(Classifiers classifiers, DataSetFilter dataSetFilter, DataSetSplitter datasetSplitter, int threads) {
+        this(classifiers, dataSetFilter, datasetSplitter, Executors.newFixedThreadPool(threads));
     }
 
-    public ParallelEvaluator(Classifiers classifiers, DataSetSplitter dataSetSplitter, DataSetFilter dataSetFilter, ExecutorService executorService) {
+    public ParallelEvaluator(Classifiers classifiers, DataSetFilter dataSetFilter, DataSetSplitter dataSetSplitter, ExecutorService executorService) {
         super(classifiers, dataSetSplitter, dataSetFilter);
         this.executorService = executorService;
     }
@@ -60,5 +60,10 @@ public class ParallelEvaluator extends FoldsEvaluator {
         } catch (InterruptedException e) {
             throw new IllegalStateException("Waiting on latch interrupted! ", e);
         }
+    }
+
+    @Override
+    public String getName() {
+        return "Par";
     }
 }

@@ -32,7 +32,7 @@ public class StupidParallelMeLiF extends BasicMeLiF {
 
     protected final Set<Point> visitedPoints = new ConcurrentSkipListSet<>();
 
-    public StupidParallelMeLiF(AlgorithmConfig config, DataSet dataSet, int threads) {
+    public StupidParallelMeLiF(AlgorithmConfig config, DataSet dataSet) {
         this(config, dataSet, Executors.newFixedThreadPool(5));
     }
 
@@ -59,6 +59,7 @@ public class StupidParallelMeLiF extends BasicMeLiF {
         });
 
         RunStats runStats = new RunStats(config, dataSet, name);
+        logger.info("Started {} at {}", name, runStats.getStartTime());
 
         LOGGER.info("Started {} at {}", getClass().getSimpleName(), runStats.getStartTime());
         CountDownLatch pointsLatch = new CountDownLatch(points.length);

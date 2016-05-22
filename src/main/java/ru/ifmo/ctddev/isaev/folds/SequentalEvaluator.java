@@ -29,4 +29,9 @@ public class SequentalEvaluator extends FoldsEvaluator {
         stats.updateBestResult(result);
         return result;
     }
+
+    @Override
+    public String getName() {
+        return "Seq";
+    }
 }

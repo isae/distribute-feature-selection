@@ -57,6 +57,7 @@ public class StupidParallelMeLiF2 extends ParallelMeLiF {
         });
 
         RunStats runStats = new RunStats(config, dataSet, name);
+        logger.info("Started {} at {}", name, runStats.getStartTime());
 
         logger.info("Started {} at {}", getClass().getSimpleName(), runStats.getStartTime());
         List<SelectionResult> scores = Arrays.asList(points).stream()
@@ -85,44 +86,5 @@ public class StupidParallelMeLiF2 extends ParallelMeLiF {
             return score;
         }
         return bestResult;
-    }
-
-    protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
-        SelectionResult bestScore = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
-        visitedPoints.add(point);
-        if (runStats.getBestResult() != null && runStats.getScore() > bestScore.getF1Score()) {
-            bestScore = runStats.getBestResult();
-        }
-
-        boolean smthChanged = true;
-        double[] coordinates = point.getCoordinates();
-
-        while (smthChanged) {
-            smthChanged = false;
-
-            for (int i = 0; i < coordinates.length; i++) {
-
-                Point plusDelta = new Point(coordinates);
-                plusDelta.getCoordinates()[i] += config.getDelta();
-                SelectionResult plusScore = visitPoint(plusDelta, runStats, bestScore);
-                if (plusScore.betterThan(bestScore)) {
-                    bestScore = plusScore;
-                    coordinates = plusDelta.getCoordinates();
-                    smthChanged = true;
-                    break;
-                }
-
-                Point minusDelta = new Point(coordinates);
-                minusDelta.getCoordinates()[i] -= config.getDelta();
-                SelectionResult minusScore = visitPoint(minusDelta, runStats, bestScore);
-                if (minusScore.betterThan(bestScore)) {
-                    bestScore = minusScore;
-                    coordinates = minusDelta.getCoordinates();
-                    smthChanged = true;
-                    break;
-                }
-            }
-        }
-        return bestScore;
     }
 }

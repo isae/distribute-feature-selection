@@ -103,6 +103,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
 
     public RunStats run(String name, int latchSize) {
         RunStats runStats = new RunStats(config, dataSet, name);
+        logger.info("Started {} at {}", name, runStats.getStartTime());
         CountDownLatch latch = new CountDownLatch(latchSize);
         startingPoints.forEach(point -> executorService.submit(new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), () -> {
             latch.countDown();
@@ -114,7 +115,13 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
             throw new IllegalStateException(e);
         }
         executorService.shutdownNow();
+        LOGGER.info("Max score: {} at point {}",
+                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getPoint().getCoordinates()
+        );
         runStats.setFinishTime(LocalDateTime.now());
+        LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());
+        LOGGER.info("Working time: {} seconds", runStats.getWorkTime());
         return runStats;
     }
 }

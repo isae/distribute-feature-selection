@@ -38,7 +38,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
 
         RunStats runStats = new RunStats(config, dataSet, name);
 
-        logger.info("Started {} at {}", getClass().getSimpleName(), runStats.getStartTime());
+        logger.info("Started {} at {}", name, runStats.getStartTime());
         List<SelectionResult> scores = Arrays.asList(points).stream()
                 .map(p -> performCoordinateDescend(p, runStats))
                 .collect(Collectors.toList());
@@ -50,7 +50,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
         );
         LocalDateTime finishTime = LocalDateTime.now();
         runStats.setFinishTime(finishTime);
-        logger.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
+        logger.info("Finished {} at {}", name, finishTime);
         logger.info("Working time: {} seconds", runStats.getWorkTime());
         return runStats;
     }

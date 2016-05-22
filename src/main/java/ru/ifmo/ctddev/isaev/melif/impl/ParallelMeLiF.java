@@ -59,6 +59,7 @@ public class ParallelMeLiF extends BasicMeLiF {
         });
 
         RunStats runStats = new RunStats(config, dataSet, name);
+        logger.info("Started {} at {}", name, runStats.getStartTime());
         LOGGER.info("Started {} at {}", getClass().getSimpleName(), runStats.getStartTime());
         CountDownLatch pointsLatch = new CountDownLatch(points.length);
         List<Future<SelectionResult>> scoreFutures = Arrays.asList(points).stream()

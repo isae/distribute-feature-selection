@@ -56,6 +56,8 @@ public abstract class FoldsEvaluator {
         return result;
     }
 
+    public abstract String getName();
+
     protected double getF1Score(FeatureDataSet filteredDs) {
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
         List<Double> f1Scores = dataSetSplitter.split(instanceDataSet)
@@ -76,7 +78,7 @@ public abstract class FoldsEvaluator {
     public DataSetSplitter getDataSetSplitter() {
         return dataSetSplitter;
     }
-    
+
     public Classifiers getClassifiers() {
         return classifiers;
     }
