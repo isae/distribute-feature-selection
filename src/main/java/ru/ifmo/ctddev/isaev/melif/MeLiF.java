@@ -9,4 +9,5 @@ import ru.ifmo.ctddev.isaev.result.RunStats;
  */
 public interface MeLiF {
     RunStats run(Point[] points);
+    RunStats run(String name,Point[] points);
 }

@@ -13,7 +13,7 @@ import java.util.stream.IntStream;
 /**
  * @author iisaev
  */
-public class RandomSplitter implements DatasetSplitter {
+public class RandomSplitter {
     private final Random random = new Random();
 
     public RandomSplitter(int testPercent, int times) {

@@ -11,7 +11,7 @@ import ru.ifmo.ctddev.isaev.filter.DataSetFilter;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.result.SelectionResult;
-import ru.ifmo.ctddev.isaev.splitter.DatasetSplitter;
+import ru.ifmo.ctddev.isaev.splitter.DataSetSplitter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,14 +26,14 @@ public abstract class FoldsEvaluator {
 
     public abstract SelectionResult getSelectionResult(DataSet dataSet, Point point, RunStats stats);
 
-    protected final DatasetSplitter datasetSplitter;
+    protected final DataSetSplitter dataSetSplitter;
 
     protected final Classifiers classifiers;
 
     protected static final ScoreCalculator scoreCalculator = new ScoreCalculator();
 
-    public FoldsEvaluator(Classifiers classifiers, DatasetSplitter datasetSplitter, DataSetFilter dataSetFilter) {
-        this.datasetSplitter = datasetSplitter;
+    public FoldsEvaluator(Classifiers classifiers, DataSetSplitter dataSetSplitter, DataSetFilter dataSetFilter) {
+        this.dataSetSplitter = dataSetSplitter;
         this.dataSetFilter = dataSetFilter;
         this.classifiers = classifiers;
     }
@@ -58,7 +58,7 @@ public abstract class FoldsEvaluator {
 
     protected double getF1Score(FeatureDataSet filteredDs) {
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
-        List<Double> f1Scores = datasetSplitter.split(instanceDataSet)
+        List<Double> f1Scores = dataSetSplitter.split(instanceDataSet)
                 .stream().map(this::getF1Score)
                 .collect(Collectors.toList());
         return f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
@@ -67,16 +67,16 @@ public abstract class FoldsEvaluator {
     protected double getF1Score(DataSet dataSet, Point point, RelevanceMeasure[] measures) {
         FeatureDataSet filteredDs = dataSetFilter.filterDataSet(dataSet.toFeatureSet(), point, measures);
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
-        List<Double> f1Scores = datasetSplitter.split(instanceDataSet)
+        List<Double> f1Scores = dataSetSplitter.split(instanceDataSet)
                 .stream().map(this::getF1Score)
                 .collect(Collectors.toList());
         return f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
     }
 
-    public DatasetSplitter getDatasetSplitter() {
-        return datasetSplitter;
+    public DataSetSplitter getDataSetSplitter() {
+        return dataSetSplitter;
     }
-
+    
     public Classifiers getClassifiers() {
         return classifiers;
     }

@@ -1,8 +1,9 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
-import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.result.SelectionResult;
@@ -11,25 +12,44 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 
 /**
- * Core single-threaded MeLiF implementation
+ * Implementation, that evaluates each point in separate thread
  *
  * @author iisaev
  */
-public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
+public class StupidParallelMeLiF2 extends ParallelMeLiF {
 
-    protected final Set<Point> visitedPoints = new TreeSet<>();
+    private static final Logger LOGGER = LoggerFactory.getLogger(StupidParallelMeLiF2.class);
 
-    public BasicMeLiF(AlgorithmConfig config, DataSet dataSet) {
-        super(config, dataSet);
+
+    protected final Set<Point> visitedPoints = new ConcurrentSkipListSet<>();
+
+    public StupidParallelMeLiF2(AlgorithmConfig config, DataSet dataSet) {
+        this(config, dataSet, Executors.newFixedThreadPool(100 / config.getFoldsEvaluator().getDataSetSplitter().getTestPercent()));
+    }
+
+    public StupidParallelMeLiF2(AlgorithmConfig config, DataSet dataSet, ExecutorService executorService) {
+        super(config, dataSet, executorService);
     }
 
     @Override
     public RunStats run(String name, Point[] points) {
+        return run(name, points, true);
+    }
+
+    @Override
+    public RunStats run(Point[] points) {
+        return run("Stupid", points, true);
+    }
+
+    @Override
+    public RunStats run(String name, Point[] points, boolean shutdown) {
         Arrays.asList(points).forEach(p -> {
             if (p.getCoordinates().length != config.getMeasures().length) {
                 throw new IllegalArgumentException("Each point must have same coordinates number as number of measures");
@@ -52,12 +72,10 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
         runStats.setFinishTime(finishTime);
         logger.info("Finished {} at {}", getClass().getSimpleName(), finishTime);
         logger.info("Working time: {} seconds", runStats.getWorkTime());
+        if (shutdown) {
+            executorService.shutdown();
+        }
         return runStats;
-    }
-
-    @Override
-    public RunStats run(Point[] points) {
-        return run("Basic", points);
     }
 
     protected SelectionResult visitPoint(Point point, RunStats measures, SelectionResult bestResult) {

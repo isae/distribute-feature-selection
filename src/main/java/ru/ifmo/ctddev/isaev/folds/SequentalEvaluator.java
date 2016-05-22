@@ -8,7 +8,7 @@ import ru.ifmo.ctddev.isaev.melif.impl.FeatureSelectionAlgorithm;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.result.SelectionResult;
-import ru.ifmo.ctddev.isaev.splitter.DatasetSplitter;
+import ru.ifmo.ctddev.isaev.splitter.DataSetSplitter;
 
 
 /**
@@ -16,8 +16,8 @@ import ru.ifmo.ctddev.isaev.splitter.DatasetSplitter;
  */
 public class SequentalEvaluator extends FoldsEvaluator {
 
-    public SequentalEvaluator(Classifiers classifiers, DataSetFilter dataSetFilter, DatasetSplitter datasetSplitter) {
-        super(classifiers, datasetSplitter, dataSetFilter);
+    public SequentalEvaluator(Classifiers classifiers, DataSetFilter dataSetFilter, DataSetSplitter dataSetSplitter) {
+        super(classifiers, dataSetSplitter, dataSetFilter);
     }
 
 

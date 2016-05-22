@@ -41,20 +41,24 @@ public class StupidParallelMeLiF extends BasicMeLiF {
         this.executorService = executorService;
     }
 
+    @Override
+    public RunStats run(String name, Point[] points) {
+        return run(name, points, true);
+    }
 
     @Override
     public RunStats run(Point[] points) {
-        return run(points, true);
+        return run("Stupid", points, true);
     }
 
-    public RunStats run(Point[] points, boolean shutdown) {
+    public RunStats run(String name, Point[] points, boolean shutdown) {
         Arrays.asList(points).forEach(p -> {
             if (p.getCoordinates().length != config.getMeasures().length) {
                 throw new IllegalArgumentException("Each point must have same coordinates number as number of measures");
             }
         });
 
-        RunStats runStats = new RunStats(config, dataSet, "Stupid");
+        RunStats runStats = new RunStats(config, dataSet, name);
 
         LOGGER.info("Started {} at {}", getClass().getSimpleName(), runStats.getStartTime());
         CountDownLatch pointsLatch = new CountDownLatch(points.length);

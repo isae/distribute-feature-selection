@@ -9,7 +9,7 @@ import ru.ifmo.ctddev.isaev.filter.DataSetFilter;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.result.SelectionResult;
-import ru.ifmo.ctddev.isaev.splitter.DatasetSplitter;
+import ru.ifmo.ctddev.isaev.splitter.DataSetSplitter;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -27,19 +27,19 @@ import java.util.stream.Collectors;
 public class ParallelEvaluator extends FoldsEvaluator {
     private final ExecutorService executorService;
 
-    public ParallelEvaluator(Classifiers classifiers, DatasetSplitter datasetSplitter, DataSetFilter dataSetFilter, int threads) {
+    public ParallelEvaluator(Classifiers classifiers, DataSetSplitter datasetSplitter, DataSetFilter dataSetFilter, int threads) {
         this(classifiers, datasetSplitter, dataSetFilter, Executors.newFixedThreadPool(threads));
     }
 
-    public ParallelEvaluator(Classifiers classifiers, DatasetSplitter datasetSplitter, DataSetFilter dataSetFilter, ExecutorService executorService) {
-        super(classifiers, datasetSplitter, dataSetFilter);
+    public ParallelEvaluator(Classifiers classifiers, DataSetSplitter dataSetSplitter, DataSetFilter dataSetFilter, ExecutorService executorService) {
+        super(classifiers, dataSetSplitter, dataSetFilter);
         this.executorService = executorService;
     }
 
     public SelectionResult getSelectionResult(DataSet dataSet, Point point, RunStats stats) {
         FeatureDataSet filteredDs = dataSetFilter.filterDataSet(dataSet.toFeatureSet(), point, stats.getMeasures());
         InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
-        List<DataSetPair> dataSetPairs = datasetSplitter.split(instanceDataSet);
+        List<DataSetPair> dataSetPairs = dataSetSplitter.split(instanceDataSet);
         CountDownLatch latch = new CountDownLatch(dataSetPairs.size());
         List<Double> f1Scores = Collections.synchronizedList(new ArrayList<>(dataSetPairs.size()));
         List<Future> futures = dataSetPairs.stream().map(ds -> executorService.submit(() -> {

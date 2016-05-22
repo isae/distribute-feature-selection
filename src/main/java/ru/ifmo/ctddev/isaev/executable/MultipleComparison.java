@@ -19,7 +19,7 @@ import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ctddev.isaev.splitter.DatasetSplitter;
+import ru.ifmo.ctddev.isaev.splitter.DataSetSplitter;
 import ru.ifmo.ctddev.isaev.splitter.OrderSplitter;
 
 import java.io.File;
@@ -112,7 +112,7 @@ public class MultipleComparison extends Comparison {
                     LOGGER.info("Starting ParallelMeliF at {}", simpleFinish);
 
                     ParallelMeLiF parallelMeLiF = new ParallelMeLiF(config, dataSet, executorService);
-                    RunStats parallelStats = parallelMeLiF.run(points, false);
+                    RunStats parallelStats = parallelMeLiF.run("Parallel", points, false);
                     LocalDateTime parallelFinish = LocalDateTime.now();
 
                     long simpleWorkTime = ChronoUnit.SECONDS.between(startTime, simpleFinish);
@@ -135,7 +135,7 @@ public class MultipleComparison extends Comparison {
 
                     executionResults.add(new Pr<>(simpleStats, parallelStats));
 
-                    DatasetSplitter tenFoldSplitter = new OrderSplitter(10, order);
+                    DataSetSplitter tenFoldSplitter = new OrderSplitter(10, order);
 
                     List<Double> basicScores = tenFoldSplitter.split(
                             dataSetFilter.filterDataSet(dataSet.toFeatureSet(), simpleStats.getBestResult().getPoint(), measures)

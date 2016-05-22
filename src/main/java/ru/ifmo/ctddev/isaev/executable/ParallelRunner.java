@@ -1,16 +1,16 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import ru.ifmo.ctddev.isaev.classifier.Classifiers;
-import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
+import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
+import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
 import ru.ifmo.ctddev.isaev.folds.FoldsEvaluator;
 import ru.ifmo.ctddev.isaev.folds.SequentalEvaluator;
-import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
+import ru.ifmo.ctddev.isaev.melif.impl.StupidParallelMeLiF2;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.splitter.OrderSplitter;
@@ -48,7 +48,7 @@ public class ParallelRunner {
         );
         AlgorithmConfig config = new AlgorithmConfig(0.1, foldsEvaluator, measures);
         LocalDateTime startTime = LocalDateTime.now();
-        ParallelMeLiF meLif = new ParallelMeLiF(config, dataSet, 20);
+        StupidParallelMeLiF2 meLif = new StupidParallelMeLiF2(config, dataSet);
         RunStats runStats = meLif.run(points);
         LocalDateTime starFinish = LocalDateTime.now();
         LOGGER.info("Finished BasicMeLiF at {}", starFinish);

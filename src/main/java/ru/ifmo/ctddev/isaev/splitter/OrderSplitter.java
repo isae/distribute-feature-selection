@@ -13,7 +13,7 @@ import java.util.stream.IntStream;
 /**
  * @author iisaev
  */
-public class OrderSplitter extends SequentalSplitter {
+public class OrderSplitter extends DataSetSplitter {
     private final Random random = new Random();
 
     public OrderSplitter(int testPercent, List<Integer> order) {
@@ -41,9 +41,7 @@ public class OrderSplitter extends SequentalSplitter {
             instances = instancesBeforeShuffle;
         }
         List<ArrayList<DataInstance>> results = new ArrayList<>();
-        IntStream.range(0, folds).forEach(i -> {
-            results.add(new ArrayList<>());
-        });
+        IntStream.range(0, folds).forEach(i -> results.add(new ArrayList<>()));
         final int[] pos = {0};
         instances.forEach(inst -> {
             results.get(pos[0]).add(inst);

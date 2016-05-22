@@ -89,6 +89,7 @@ public class GiantComparison extends Comparison {
                 })
                 .map(dataSetReader::readCsv)
                 .map(dataSet -> {
+                    
                     List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
                     Collections.shuffle(order);
                     FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
@@ -103,6 +104,7 @@ public class GiantComparison extends Comparison {
                             22 + 10 * threadsCount);
                     MDC.remove("fileName");
                     return Arrays.asList(basicStats, parallelStats, priorityStats);
+                    
                 })
                 .collect(Collectors.toList());
         MDC.put("fileName", "COMMON-" + startTimeString);

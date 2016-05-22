@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * @author iisaev
  */
 public class ParallelMeLiF extends BasicMeLiF {
-    private final ExecutorService executorService;
+    protected final ExecutorService executorService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ParallelMeLiF.class);
 
@@ -41,20 +41,24 @@ public class ParallelMeLiF extends BasicMeLiF {
         this.executorService = executorService;
     }
 
+    @Override
+    public RunStats run(String name, Point[] points) {
+        return run(name, points, true);
+    }
 
     @Override
     public RunStats run(Point[] points) {
-        return run(points, true);
+        return run("Parallel", points, true);
     }
 
-    public RunStats run(Point[] points, boolean shutdown) {
+    public RunStats run(String name, Point[] points, boolean shutdown) {
         Arrays.asList(points).forEach(p -> {
             if (p.getCoordinates().length != config.getMeasures().length) {
                 throw new IllegalArgumentException("Each point must have same coordinates number as number of measures");
             }
         });
 
-        RunStats runStats = new RunStats(config, dataSet, "Parallel");
+        RunStats runStats = new RunStats(config, dataSet, name);
         LOGGER.info("Started {} at {}", getClass().getSimpleName(), runStats.getStartTime());
         CountDownLatch pointsLatch = new CountDownLatch(points.length);
         List<Future<SelectionResult>> scoreFutures = Arrays.asList(points).stream()

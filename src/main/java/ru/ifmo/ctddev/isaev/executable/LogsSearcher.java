@@ -1,12 +1,12 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import ru.ifmo.ctddev.isaev.filter.DataSetFilter;
-import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
+import ru.ifmo.ctddev.isaev.filter.DataSetFilter;
+import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
 import ru.ifmo.ctddev.isaev.result.Point;
-import ru.ifmo.ctddev.isaev.splitter.DatasetSplitter;
+import ru.ifmo.ctddev.isaev.splitter.DataSetSplitter;
 import ru.ifmo.ctddev.isaev.splitter.OrderSplitter;
 
 import java.io.*;
@@ -42,7 +42,7 @@ public class LogsSearcher {
                         DataSet dataSet = dataSetReader.readCsv(dataSetDir.toPath().resolve(dataSetName).toFile());
                         List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
                         Collections.shuffle(order);
-                        DatasetSplitter tenFoldSplitter = new OrderSplitter(10, order);
+                        DataSetSplitter tenFoldSplitter = new OrderSplitter(10, order);
                         System.out.println(dataSetName);
                         writer.println(dataSetName);
                         List<Point> points = new ArrayList<>();
