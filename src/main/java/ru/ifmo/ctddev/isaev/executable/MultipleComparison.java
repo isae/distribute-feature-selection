@@ -1,7 +1,5 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import ru.ifmo.ctddev.isaev.filter.DatasetFilter;
-import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -13,6 +11,10 @@ import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataInstance;
 import ru.ifmo.ctddev.isaev.dataset.DataSetPair;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
+import ru.ifmo.ctddev.isaev.filter.DataSetFilter;
+import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
+import ru.ifmo.ctddev.isaev.folds.FoldsEvaluator;
+import ru.ifmo.ctddev.isaev.folds.SequentalEvaluator;
 import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
@@ -26,14 +28,14 @@ import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
-import static ru.ifmo.ctddev.isaev.melif.impl.FeatureSelectionAlgorithm.FORMAT;
 
 
 /**
@@ -53,37 +55,6 @@ public class MultipleComparison extends Comparison {
                 .collect(Collectors.toList());
         List<Integer> expectedValues = dsPair.getTestSet().toInstanceSet().getInstances().stream().map(DataInstance::getClazz).collect(Collectors.toList());
         return scoreCalculator.calculateF1Score(expectedValues, actual);
-    }
-
-    private static String htmlRepresentation(List<List<RunStats>> executionResults) {
-        StringBuilder sb = new StringBuilder();
-        Stream<String> start = Stream.of("Dataset", "Shape", "Features", "Instances");
-        Stream<String> header = Stream.concat(start, executionResults.get(0).stream().flatMap(
-                stats -> Stream.of(
-                        String.format("%s time", stats.getAlgorithmName()),
-                        String.format("%s best point", stats.getAlgorithmName()),
-                        String.format("%s score", stats.getAlgorithmName()),
-                        String.format("%s visited points", stats.getAlgorithmName()))
-        ));
-        String headerStr = String.join(";", header.collect(Collectors.toList()));
-        sb.append(headerStr).append("\n");
-        executionResults.stream()
-                .forEach(pr -> {
-                    Stream<Object> rowStart = Stream.of(
-                            pr.get(0).getDataSetName(),
-                            String.format("%dx%d", pr.get(0).getFeatureCount(), pr.get(0).getInstanceCount()),
-                            pr.get(0).getFeatureCount(),
-                            pr.get(0).getInstanceCount());
-                    Stream<Object> row = Stream.concat(rowStart, pr.stream().flatMap(
-                            stats -> Stream.of(
-                                    stats.getWorkTime(),
-                                    stats.getBestResult().getPoint(),
-                                    FORMAT.format(stats.getBestResult().getF1Score()),
-                                    stats.getVisitedPoints())
-                    ));
-                    sb.append(String.join(";", row.map(Objects::toString).collect(Collectors.toList()))).append("\n");
-                });
-        return sb.toString();
     }
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -114,7 +85,6 @@ public class MultipleComparison extends Comparison {
         assert dataSetDir.exists();
         assert dataSetDir.isDirectory();
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
-        AlgorithmConfig config = new AlgorithmConfig(0.25, Classifiers.WEKA_SVM, measures);
         //ForkJoinPool executorService = new ForkJoinPool(threadsCount);
         ExecutorService executorService = Executors.newFixedThreadPool(threadsCount);
         List<Pr<RunStats, RunStats>> executionResults = new ArrayList<>();
@@ -128,9 +98,12 @@ public class MultipleComparison extends Comparison {
                 .map(dataSet -> {
                     List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
                     Collections.shuffle(order);
-                    config.setDataSetSplitter(new OrderSplitter(testPercent, order));
-                    DatasetFilter datasetFilter = new PreferredSizeFilter(100);
-                    config.setDataSetFilter(datasetFilter);
+                    DataSetFilter dataSetFilter = new PreferredSizeFilter(100);
+                    FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
+                            Classifiers.WEKA_SVM,
+                            dataSetFilter, new OrderSplitter(10, order)
+                    );
+                    AlgorithmConfig config = new AlgorithmConfig(0.25, foldsEvaluator, measures);
                     LocalDateTime startTime = LocalDateTime.now();
                     LOGGER.info("Starting SimpleMeliF at {}", startTime);
                     BasicMeLiF basicMeLiF = new BasicMeLiF(config, dataSet);
@@ -165,13 +138,13 @@ public class MultipleComparison extends Comparison {
                     DatasetSplitter tenFoldSplitter = new OrderSplitter(10, order);
 
                     List<Double> basicScores = tenFoldSplitter.split(
-                            datasetFilter.filterDataSet(dataSet.toFeatureSet(), simpleStats.getBestResult().getPoint(), measures)
+                            dataSetFilter.filterDataSet(dataSet.toFeatureSet(), simpleStats.getBestResult().getPoint(), measures)
                     ).stream()
                             .map(MultipleComparison::getF1Score)
                             .collect(Collectors.toList());
 
                     List<Double> parallelScores = tenFoldSplitter.split(
-                            datasetFilter.filterDataSet(dataSet.toFeatureSet(), parallelStats.getBestResult().getPoint(), measures)
+                            dataSetFilter.filterDataSet(dataSet.toFeatureSet(), parallelStats.getBestResult().getPoint(), measures)
                     )
                             .stream().map(MultipleComparison::getF1Score)
                             .collect(Collectors.toList());
@@ -194,7 +167,7 @@ public class MultipleComparison extends Comparison {
         LOGGER.info("Spearman rank correlation: {}", new SpearmanRankCorrelation().evaluate(actual, expected));
 
         PrintWriter writer = new PrintWriter("table_results/" + startTimeString + ".csv");
-        writer.println(htmlRepresentation(executionResults.stream().map(pr -> Arrays.asList(pr.getBasic(), pr.getParallel())).collect(Collectors.toList())));
+        writer.println(csvRepresentation(executionResults.stream().map(pr -> Arrays.asList(pr.getBasic(), pr.getParallel())).collect(Collectors.toList())));
         writer.close();
     }
 }

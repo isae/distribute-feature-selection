@@ -32,8 +32,8 @@ public class ParallelNopMeLiF extends ParallelMeLiF {
     }
 
     @Override
-    protected SelectionResult visitPoint(Point point, RunStats measures, SelectionResult bestResult) {
-        SelectionResult score = getSelectionResult(point, measures);
+    protected SelectionResult visitPoint(Point point, RunStats runStats, SelectionResult bestResult) {
+        SelectionResult score = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
         visitedPoints.add(new Point(point));
         if (score.compareTo(bestResult) == 1) {
             return score;
@@ -42,7 +42,6 @@ public class ParallelNopMeLiF extends ParallelMeLiF {
         }
     }
 
-    @Override
     protected double getF1Score(DataSetPair dsPair) {
         int visitedPoints = visitedPointsCounter.getAndIncrement();
         if (visitedPoints < pointsToVisit) {

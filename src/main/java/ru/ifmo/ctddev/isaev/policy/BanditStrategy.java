@@ -3,7 +3,6 @@ package ru.ifmo.ctddev.isaev.policy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.concurrent.NotThreadSafe;
 import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
@@ -12,7 +11,6 @@ import java.util.function.Function;
 /**
  * @author iisaev
  */
-@NotThreadSafe
 public abstract class BanditStrategy {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 

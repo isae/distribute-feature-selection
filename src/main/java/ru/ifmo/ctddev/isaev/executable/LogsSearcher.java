@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import ru.ifmo.ctddev.isaev.filter.DatasetFilter;
+import ru.ifmo.ctddev.isaev.filter.DataSetFilter;
 import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
@@ -32,7 +32,7 @@ public class LogsSearcher {
 
         PrintWriter writer = new PrintWriter("result.out");
         
-        DatasetFilter datasetFilter = new PreferredSizeFilter(100);
+        DataSetFilter dataSetFilter = new PreferredSizeFilter(100);
         RelevanceMeasure[] measures = new RelevanceMeasure[]{new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         Arrays.asList(logsDir.listFiles()).stream()
                 .filter(f -> !f.getName().startsWith("."))
@@ -60,13 +60,13 @@ public class LogsSearcher {
                                         points.add(result);
                                     });
                             List<Double> basicScores = tenFoldSplitter.split(
-                                    datasetFilter.filterDataSet(dataSet.toFeatureSet(), points.get(0), measures)
+                                    dataSetFilter.filterDataSet(dataSet.toFeatureSet(), points.get(0), measures)
                             ).stream()
                                     .map(MultipleComparison::getF1Score)
                                     .collect(Collectors.toList());
 
                             List<Double> parallelScores = tenFoldSplitter.split(
-                                    datasetFilter.filterDataSet(dataSet.toFeatureSet(), points.get(1), measures)
+                                    dataSetFilter.filterDataSet(dataSet.toFeatureSet(), points.get(1), measures)
                             )
                                     .stream().map(MultipleComparison::getF1Score)
                                     .collect(Collectors.toList());

@@ -10,7 +10,8 @@ import ru.ifmo.ctddev.isaev.feature.measure.*;
 import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
 import ru.ifmo.ctddev.isaev.folds.FoldsEvaluator;
 import ru.ifmo.ctddev.isaev.folds.SequentalEvaluator;
-import ru.ifmo.ctddev.isaev.melif.impl.PriorityQueueMeLiF;
+import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
+import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.splitter.OrderSplitter;
 
@@ -25,13 +26,19 @@ import java.util.stream.IntStream;
 /**
  * @author iisaev
  */
-public class PriorityRunner {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PriorityRunner.class);
+public class BasicRunner {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BasicRunner.class);
 
     public static void main(String[] args) {
-        int threads = 2;
         DataSetReader dataSetReader = new DataSetReader();
         DataSet dataSet = dataSetReader.readCsv(args[0]);
+        Point[] points = new Point[] {
+                new Point(1, 0, 0, 0),
+                new Point(0, 1, 0, 0),
+                new Point(0, 0, 1, 0),
+                new Point(0, 0, 0, 1),
+                new Point(1, 1, 1, 1)
+        };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
         Collections.shuffle(order);
@@ -41,17 +48,16 @@ public class PriorityRunner {
         );
         AlgorithmConfig config = new AlgorithmConfig(0.1, foldsEvaluator, measures);
         LocalDateTime startTime = LocalDateTime.now();
-        PriorityQueueMeLiF meLif = new PriorityQueueMeLiF(config, dataSet, threads);
-        RunStats runStats = meLif.run("PriorityQueueMeLiF", 22 + 10 * threads);
+        BasicMeLiF meLif = new BasicMeLiF(config, dataSet);
+        RunStats runStats = meLif.run(points);
         LocalDateTime starFinish = LocalDateTime.now();
-        LOGGER.info("Finished PriorityQueueMeLiF at {}", starFinish);
+        LOGGER.info("Finished BasicMeLiF at {}", starFinish);
         long starWorkTime = ChronoUnit.SECONDS.between(startTime, starFinish);
-        LOGGER.info("PriorityQueueMeLiF work time: {} seconds", starWorkTime);
+        LOGGER.info("BasicMeLiF work time: {} seconds", starWorkTime);
         LOGGER.info("Visited {} points; best point is {} with score {}", new Object[] {
                 runStats.getVisitedPoints(),
                 runStats.getBestResult().getPoint(),
                 runStats.getBestResult().getF1Score()
         });
-        LOGGER.info("PriorityQueueMeLiF work time: {} sec", runStats.getWorkTime());
     }
 }

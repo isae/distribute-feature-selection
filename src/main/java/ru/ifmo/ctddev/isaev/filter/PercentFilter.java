@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 /**
  * @author iisaev
  */
-public class PercentFilter extends DatasetFilter {
+public class PercentFilter extends DataSetFilter {
     private final int percents;
 
     public PercentFilter(int percents) {

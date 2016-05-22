@@ -1,6 +1,5 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import ru.ifmo.ctddev.isaev.filter.PercentFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
@@ -8,6 +7,9 @@ import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
+import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
+import ru.ifmo.ctddev.isaev.folds.FoldsEvaluator;
+import ru.ifmo.ctddev.isaev.folds.SequentalEvaluator;
 import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
@@ -31,9 +33,6 @@ public class ThreadedVsSequentialComparison extends Comparison {
     public static void main(String[] args) {
         DataSetReader dataSetReader = new DataSetReader();
         DataSet dataSet = dataSetReader.readCsv(args[0]);
-        List<Integer> order = IntStream.range(0, dataSet.getInstanceCount())
-                .mapToObj(i -> i).collect(Collectors.toList());
-        Collections.shuffle(order);
         Point[] points = new Point[] {
                 new Point(1, 0, 0, 0),
                 new Point(0, 1, 0, 0),
@@ -47,9 +46,13 @@ public class ThreadedVsSequentialComparison extends Comparison {
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         //RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM()};
 
-        AlgorithmConfig config = new AlgorithmConfig(0.1, Classifiers.WEKA_SVM, measures);
-        config.setDataSetSplitter(new OrderSplitter(20, order));
-        config.setDataSetFilter(new PercentFilter(1));
+        List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
+        Collections.shuffle(order);
+        FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
+                Classifiers.WEKA_SVM,
+                new PreferredSizeFilter(100), new OrderSplitter(10, order)
+        );
+        AlgorithmConfig config = new AlgorithmConfig(0.25, foldsEvaluator, measures);
         int threads = 20;
         LocalDateTime startTime = LocalDateTime.now();
         LOGGER.info("Starting SimpleMeliF at {}", startTime);

@@ -38,7 +38,7 @@ public class RunStats implements Comparable<RunStats> {
 
     public RunStats(AlgorithmConfig config, DataSet dataSet, String algorithmName) {
         this.measures = config.getMeasures();
-        this.usedClassifier = config.getClassifiers();
+        this.usedClassifier = config.getFoldsEvaluator().getClassifiers();
         this.dataSetName = dataSet.getName();
         this.featureCount = dataSet.getFeatureCount();
         this.instanceCount = dataSet.getInstanceCount();

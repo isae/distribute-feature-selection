@@ -36,7 +36,7 @@ import java.util.stream.IntStream;
 /**
  * @author iisaev
  */
-public class MultipleComparison2 extends Comparison {
+public class GiantComparison extends Comparison {
     private static final Logger LOGGER = LoggerFactory.getLogger(MultipleComparison.class);
 
     private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
@@ -80,6 +80,7 @@ public class MultipleComparison2 extends Comparison {
         assert dataSetDir.exists();
         assert dataSetDir.isDirectory();
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
+        
         List<List<RunStats>> results = Arrays.asList(dataSetDir.listFiles()).stream()
                 .filter(f -> f.getAbsolutePath().endsWith(".csv"))
                 .map(file -> {
@@ -95,7 +96,7 @@ public class MultipleComparison2 extends Comparison {
                             new PreferredSizeFilter(100), new OrderSplitter(10, order)
                     );
                     AlgorithmConfig config = new AlgorithmConfig(0.25, foldsEvaluator, measures);
-
+                    
                     RunStats basicStats = new BasicMeLiF(config, dataSet).run(points);
                     RunStats parallelStats = new ParallelMeLiF(config, dataSet, threadsCount).run(points);
                     RunStats priorityStats = new PriorityQueueMeLiF(config, dataSet, threadsCount).run("PriorityQueueMeLiF",

@@ -1,13 +1,15 @@
 package ru.ifmo.ctddev.isaev.executable;
 
+import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
-import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
+import ru.ifmo.ctddev.isaev.folds.FoldsEvaluator;
+import ru.ifmo.ctddev.isaev.folds.SequentalEvaluator;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
@@ -38,11 +40,13 @@ public class ParallelRunner {
                 new Point(1, 1, 1, 1)
         };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
-        AlgorithmConfig config = new AlgorithmConfig(0.3, Classifiers.WEKA_SVM, measures);
-        config.setDataSetFilter(new PreferredSizeFilter(100));
         List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
         Collections.shuffle(order);
-        config.setDataSetSplitter(new OrderSplitter(20, order));
+        FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
+                Classifiers.WEKA_SVM,
+                new PreferredSizeFilter(100), new OrderSplitter(10, order)
+        );
+        AlgorithmConfig config = new AlgorithmConfig(0.1, foldsEvaluator, measures);
         LocalDateTime startTime = LocalDateTime.now();
         ParallelMeLiF meLif = new ParallelMeLiF(config, dataSet, 20);
         RunStats runStats = meLif.run(points);

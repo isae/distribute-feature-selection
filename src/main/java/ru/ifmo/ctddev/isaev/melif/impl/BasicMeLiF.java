@@ -57,7 +57,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
 
     protected SelectionResult visitPoint(Point point, RunStats measures, SelectionResult bestResult) {
         if (!visitedPoints.contains(point)) {
-            SelectionResult score = getSelectionResult(point, measures);
+            SelectionResult score = foldsEvaluator.getSelectionResult(dataSet, point, measures);
             visitedPoints.add(new Point(point));
             return score;
         }
@@ -65,7 +65,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
     }
 
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
-        SelectionResult bestScore = getSelectionResult(point, runStats);
+        SelectionResult bestScore = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
         visitedPoints.add(point);
         if (runStats.getBestResult() != null && runStats.getScore() > bestScore.getF1Score()) {
             bestScore = runStats.getBestResult();

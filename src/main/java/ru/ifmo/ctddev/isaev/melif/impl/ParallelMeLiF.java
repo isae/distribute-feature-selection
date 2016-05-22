@@ -4,15 +4,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
-import ru.ifmo.ctddev.isaev.dataset.DataSetPair;
-import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
-import ru.ifmo.ctddev.isaev.dataset.InstanceDataSet;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
@@ -55,7 +54,7 @@ public class ParallelMeLiF extends BasicMeLiF {
             }
         });
 
-        RunStats runStats = new RunStats(config,dataSet, "Parallel");
+        RunStats runStats = new RunStats(config, dataSet, "Parallel");
         LOGGER.info("Started {} at {}", getClass().getSimpleName(), runStats.getStartTime());
         CountDownLatch pointsLatch = new CountDownLatch(points.length);
         List<Future<SelectionResult>> scoreFutures = Arrays.asList(points).stream()
@@ -87,7 +86,7 @@ public class ParallelMeLiF extends BasicMeLiF {
         );
         runStats.setFinishTime(LocalDateTime.now());
         LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());
-        LOGGER.info("Working time: {} seconds",runStats.getWorkTime());
+        LOGGER.info("Working time: {} seconds", runStats.getWorkTime());
         if (shutdown) {
             getExecutorService().shutdown();
         }
@@ -95,14 +94,14 @@ public class ParallelMeLiF extends BasicMeLiF {
     }
 
     @Override
-    protected SelectionResult visitPoint(Point point, RunStats measures, SelectionResult bestResult) {
-        SelectionResult score = getSelectionResult(point, measures);
+    protected SelectionResult visitPoint(Point point, RunStats runStats, SelectionResult bestResult) {
+        SelectionResult score = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
         visitedPoints.add(new Point(point));
         return score;
     }
 
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
-        SelectionResult bestScore = getSelectionResult(point, runStats);
+        SelectionResult bestScore = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
         visitedPoints.add(point);
         if (runStats.getBestResult() != null && runStats.getScore() > bestScore.getF1Score()) {
             bestScore = runStats.getBestResult();
@@ -168,29 +167,5 @@ public class ParallelMeLiF extends BasicMeLiF {
         return plusDeltaScore;
     }
 
-    protected SelectionResult getSelectionResult(Point point, RunStats stats) {
-        FeatureDataSet filteredDs = datasetFilter.filterDataSet(dataSet.toFeatureSet(), point, stats.getMeasures());
-        InstanceDataSet instanceDataSet = filteredDs.toInstanceSet();
-        List<DataSetPair> dataSetPairs = datasetSplitter.split(instanceDataSet);
-        CountDownLatch latch = new CountDownLatch(dataSetPairs.size());
-        List<Double> f1Scores = Collections.synchronizedList(new ArrayList<>(dataSetPairs.size()));
-        List<Future> futures = dataSetPairs.stream().map(ds -> executorService.submit(() -> {
-            double score = getF1Score(ds);
-            f1Scores.add(score);
-            latch.countDown();
-        })).collect(Collectors.toList());
-        try {
-            latch.await();
-            futures.forEach(f -> {
-                assert f.isDone();
-            });
-            double f1Score = f1Scores.stream().mapToDouble(d -> d).average().getAsDouble();
-            LOGGER.debug("Point {}; F1 score: {}", point, f1Score);
-            SelectionResult result = new SelectionResult(filteredDs.getFeatures(), point, f1Score);
-            stats.updateBestResult(result);
-            return result;
-        } catch (InterruptedException e) {
-            throw new IllegalStateException("Waiting on latch interrupted! ", e);
-        }
-    }
+
 }

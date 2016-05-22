@@ -8,6 +8,8 @@ import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
 import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
+import ru.ifmo.ctddev.isaev.folds.FoldsEvaluator;
+import ru.ifmo.ctddev.isaev.folds.SequentalEvaluator;
 import ru.ifmo.ctddev.isaev.melif.impl.MultiArmedBanditMeLiF;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 import ru.ifmo.ctddev.isaev.splitter.OrderSplitter;
@@ -27,17 +29,21 @@ public class MultiArmedRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(MultiArmedRunner.class);
 
     public static void main(String[] args) {
+        int threads = 2;
+        int splitNumber = 2;
         DataSetReader dataSetReader = new DataSetReader();
         DataSet dataSet = dataSetReader.readCsv(args[0]);
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
-        AlgorithmConfig config = new AlgorithmConfig(0.3, Classifiers.WEKA_SVM, measures);
-        config.setDataSetFilter(new PreferredSizeFilter(100));
         List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
         Collections.shuffle(order);
-        config.setDataSetSplitter(new OrderSplitter(20, order));
+        FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
+                Classifiers.WEKA_SVM,
+                new PreferredSizeFilter(100), new OrderSplitter(10, order)
+        );
+        AlgorithmConfig config = new AlgorithmConfig(0.1, foldsEvaluator, measures);
         LocalDateTime startTime = LocalDateTime.now();
-        MultiArmedBanditMeLiF meLif = new MultiArmedBanditMeLiF(config, dataSet, 20, 2);
-        RunStats runStats = meLif.run();
+        MultiArmedBanditMeLiF meLif = new MultiArmedBanditMeLiF(config, dataSet, threads, splitNumber);
+        RunStats runStats = meLif.run("MultiArmedMeLiF", meLif.getPointQueuesNumber() + (int) (12.5 * Math.sqrt(threads)));
         LocalDateTime starFinish = LocalDateTime.now();
         LOGGER.info("Finished MultiArmedBanditMeLiF at {}", starFinish);
         long starWorkTime = ChronoUnit.SECONDS.between(startTime, starFinish);

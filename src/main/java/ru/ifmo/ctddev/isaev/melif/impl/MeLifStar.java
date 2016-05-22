@@ -30,7 +30,7 @@ public class MeLifStar extends ParallelMeLiF {
     }
 
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
-        SelectionResult result = getSelectionResult(point, runStats);
+        SelectionResult result = foldsEvaluator.getSelectionResult(dataSet,point, runStats);
         visitedPoints.add(point);
         return processChildren(result, runStats);
     }
@@ -43,7 +43,7 @@ public class MeLifStar extends ParallelMeLiF {
             if (!visitedPoints.contains(p)) {
                 visitedPoints.add(p);
                 getExecutorService().submit(() -> {
-                    results.add(getSelectionResult(p, runStats));
+                    results.add(foldsEvaluator.getSelectionResult(dataSet,p, runStats));
                     latch.countDown();
                 });
             } else {

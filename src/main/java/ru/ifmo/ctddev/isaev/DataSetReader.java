@@ -49,7 +49,7 @@ public class DataSetReader {
                     features.add(new Feature("feature" + (++counter[0]), parsedRow));
                 }
             });
-            logger.debug("Read dataset by path {}; {} classes; {} features", new Object[] {file.getAbsoluteFile(), classes.size(), features.size()});
+            logger.debug("Read dataset by path {}; {} objects; {} features", new Object[] {file.getAbsoluteFile(), classes.size(), features.size()});
             return new FeatureDataSet(features, classes, file.getName());
         } catch (FileNotFoundException e) {
             throw new IllegalArgumentException("File not found", e);

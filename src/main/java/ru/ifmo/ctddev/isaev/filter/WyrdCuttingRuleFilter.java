@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 /**
  * @author iisaev
  */
-public class WyrdCuttingRuleFilter extends DatasetFilter {
+public class WyrdCuttingRuleFilter extends DataSetFilter {
 
     public FeatureDataSet filterDataSet(FeatureDataSet original, Point measureCosts,
                                         RelevanceMeasure[] measures) {

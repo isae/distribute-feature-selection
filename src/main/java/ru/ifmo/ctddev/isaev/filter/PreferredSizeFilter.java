@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 /**
  * @author iisaev
  */
-public class PreferredSizeFilter extends DatasetFilter {
+public class PreferredSizeFilter extends DataSetFilter {
     private final int preferredSize;
 
     public PreferredSizeFilter(int preferredSize) {

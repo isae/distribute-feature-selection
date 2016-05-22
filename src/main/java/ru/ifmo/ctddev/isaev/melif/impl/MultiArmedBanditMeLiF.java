@@ -27,6 +27,8 @@ import java.util.stream.IntStream;
 public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
     private final ExecutorService executorService;
 
+    private final int threads;
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MultiArmedBanditMeLiF.class);
 
     private final BanditStrategy banditStrategy;
@@ -41,6 +43,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
 
     public MultiArmedBanditMeLiF(AlgorithmConfig config, DataSet dataSet, int threads, int splitNumber) {
         super(config, dataSet);
+        this.threads = threads;
         int dimension = config.getMeasures().length;
 
         Map<Integer, Point> spaces = generateStartingPoints(dimension, splitNumber);
@@ -55,6 +58,10 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
         this.pointsQueues = Collections.unmodifiableMap(pointQueues);
         this.executorService = Executors.newFixedThreadPool(threads);
         this.banditStrategy = new UCB1(pointQueues.size(), 1.0);
+    }
+
+    public int getPointQueuesNumber() {
+        return pointsQueues.size();
     }
 
     private Map<Integer, Point> generateStartingPoints(int dimension, int splitNumber) {
@@ -130,12 +137,12 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
                 return;
             }
             banditStrategy.processPoint(i -> {
-                logger.warn("Requested point from queue {};\n {} visited", new Object[] {
+                /*logger.warn("Requested point from queue {};\n {} visited", new Object[] {
                         i,
                         IntStream.range(0, banditStrategy.getArms()).mapToObj(j ->
-                                "" + banditStrategy.getVisitedSum()[j] + "/" + banditStrategy.getVisitedNumber()[j]
-                        ).map(FeatureSelectionAlgorithm.FORMAT::format).toArray()
-                });
+                                "" + FeatureSelectionAlgorithm.FORMAT.format(banditStrategy.getVisitedSum()[j]) + "/" + banditStrategy.getVisitedNumber()[j]
+                        ).toArray()
+                });*/
                 PriorityBlockingQueue<PriorityPoint> queue = pointsQueues.get(i);
                 try {
                     PriorityPoint point = queue.poll(1, TimeUnit.MILLISECONDS);
@@ -149,7 +156,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
                     }
 
                     logger.info("Processing point {}", point);
-                    SelectionResult res = getSelectionResult(point, runStats);
+                    SelectionResult res = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
                     visitedPoints.add(point);
                     List<Point> neighbours = getNeighbours(point);
                     double award = res.getF1Score();
@@ -164,14 +171,10 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
         }
     }
 
-    public RunStats run() {
-        return run(true);
-    }
+    public RunStats run(String name, int latchSize) {
+        RunStats runStats = new RunStats(config, dataSet, name);
 
-    public RunStats run(boolean shutdown) {
-        RunStats runStats = new RunStats(config, dataSet, "MultiArmedBandit");
-
-        CountDownLatch latch = new CountDownLatch(100);
+        CountDownLatch latch = new CountDownLatch(latchSize);
         pointsQueues.values().forEach(queue -> executorService.submit(new PointProcessingTask(() -> {
             latch.countDown();
             return latch.getCount() == 0;
@@ -181,9 +184,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
         } catch (InterruptedException e) {
             throw new IllegalStateException(e);
         }
-        if (shutdown) {
-            executorService.shutdownNow();
-        }
+        executorService.shutdownNow();
         runStats.setFinishTime(LocalDateTime.now());
         return runStats;
     }

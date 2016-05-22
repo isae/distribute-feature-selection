@@ -1,6 +1,5 @@
 package ru.ifmo.ctddev.isaev.policy;
 
-import javax.annotation.concurrent.ThreadSafe;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
@@ -13,7 +12,6 @@ import static java.lang.Math.sqrt;
 /**
  * @author iisaev
  */
-@ThreadSafe
 public class UCB1 extends BanditStrategy {
 
     private int tries = 0;
@@ -32,7 +30,7 @@ public class UCB1 extends BanditStrategy {
 
     private double armCost(int i) {
         return mu(i) + sqrt(
-                2 * log(tries) / (getVisitedNumber()[i] * lambda)
+                2 * log(tries) / (getVisitedNumber()[i])
         );
     }
 
@@ -49,12 +47,12 @@ public class UCB1 extends BanditStrategy {
                         .findFirst()
                         .get();
             }
-            ++getVisitedNumber()[arm];
             ++tries;
             //TODO: maybe update visitedSum temporarily while reward is not computed yet?
         }
         action.apply(arm).ifPresent(reward -> {
             synchronized (getHolder()) {
+                ++getVisitedNumber()[arm];
                 getVisitedSum()[arm] += reward;
             }
         });

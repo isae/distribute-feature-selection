@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 /**
  * @author iisaev
  */
-public abstract class DatasetFilter {
+public abstract class DataSetFilter {
     private final MeasureEvaluator measureEvaluator = new MeasureEvaluator();
 
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());

@@ -21,12 +21,12 @@ import java.util.stream.IntStream;
 
 
 /**
- * Implementation, that evaluates each point in separate thread
- *
  * @author iisaev
  */
 public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
     private final PriorityThreadPoolExecutor executorService;
+
+    private final int threads;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PriorityQueueMeLiF.class);
 
@@ -40,6 +40,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
 
     public PriorityQueueMeLiF(AlgorithmConfig config, DataSet dataSet, int threads) {
         super(config, dataSet);
+        this.threads = threads;
         int dimension = config.getMeasures().length;
 
         double[] allEqual = new double[dimension];
@@ -88,7 +89,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
                 return 0.0;
             }
             logger.info("Processing point {}", point);
-            SelectionResult res = getSelectionResult(point, runStats);
+            SelectionResult res = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
             visitedPoints.add(point);
             List<Point> neighbours = getNeighbours(point);
             neighbours.forEach(p -> {
@@ -100,14 +101,9 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
         }
     }
 
-    public RunStats run() {
-        return run(true);
-    }
-
-    public RunStats run(boolean shutdown) {
-        RunStats runStats = new RunStats(config, dataSet, "PriorityQueue");
-
-        CountDownLatch latch = new CountDownLatch(100);
+    public RunStats run(String name, int latchSize) {
+        RunStats runStats = new RunStats(config, dataSet, name);
+        CountDownLatch latch = new CountDownLatch(latchSize);
         startingPoints.forEach(point -> executorService.submit(new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), () -> {
             latch.countDown();
             return latch.getCount() == 0;
@@ -117,9 +113,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
         } catch (InterruptedException e) {
             throw new IllegalStateException(e);
         }
-        if (shutdown) {
-            executorService.shutdownNow();
-        }
+        executorService.shutdownNow();
         runStats.setFinishTime(LocalDateTime.now());
         return runStats;
     }
