@@ -1,16 +1,26 @@
 package ru.ifmo.ctddev.isaev.policy;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.annotation.concurrent.NotThreadSafe;
+import java.util.Arrays;
+import java.util.Optional;
 import java.util.function.Function;
+
 
 /**
  * @author iisaev
  */
 @NotThreadSafe
 public abstract class BanditStrategy {
+    protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+
     protected class Holder {
         protected final int[] visitedNumber;
+
         protected final double[] visitedSum;
+
         protected final int arms;
 
         public Holder(int arms) {
@@ -24,6 +34,15 @@ public abstract class BanditStrategy {
 
     public int[] getVisitedNumber() {
         return holder.visitedNumber;
+    }
+
+    public double[] getVisitedSumCopy() {
+        return Arrays.copyOf(holder.visitedSum, getArms());
+    }
+
+
+    public int[] getVisitedNumberCopy() {
+        return Arrays.copyOf(holder.visitedNumber, getArms());
     }
 
     public double[] getVisitedSum() {
@@ -46,7 +65,7 @@ public abstract class BanditStrategy {
         holder = new Holder(arms);
     }
 
-    public abstract void processPoint(Function<Integer, Double> action);
+    public abstract void processPoint(Function<Integer, Optional<Double>> action);
 
     protected double mu(int i) {
         return holder.visitedSum[i] / holder.visitedNumber[i];

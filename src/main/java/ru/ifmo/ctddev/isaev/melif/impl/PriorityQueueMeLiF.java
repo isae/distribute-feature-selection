@@ -90,7 +90,6 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
             logger.info("Processing point {}", point);
             SelectionResult res = getSelectionResult(point, runStats);
             visitedPoints.add(point);
-            runStats.updateBestResult(res);
             List<Point> neighbours = getNeighbours(point);
             neighbours.forEach(p -> {
                 if (!visitedPoints.contains(p)) {

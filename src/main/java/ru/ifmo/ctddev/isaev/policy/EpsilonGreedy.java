@@ -1,15 +1,18 @@
 package ru.ifmo.ctddev.isaev.policy;
 
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.IntStream;
+
 
 /**
  * @author iisaev
  */
 public class EpsilonGreedy extends BanditStrategy {
     private final double epsilon;
+
     private static final Random RANDOM = new Random();
 
     public EpsilonGreedy(double epsilon, int arms) {
@@ -21,7 +24,7 @@ public class EpsilonGreedy extends BanditStrategy {
     }
 
     @Override
-    public void processPoint(Function<Integer, Double> action) {
+    public void processPoint(Function<Integer, Optional<Double>> action) {
         int arm;
         if (RANDOM.nextDouble() < epsilon) {
             arm = RANDOM.nextInt(getArms());
@@ -32,7 +35,9 @@ public class EpsilonGreedy extends BanditStrategy {
                     .findFirst()
                     .get();
         }
-        double result = action.apply(arm);
+        double result = action.apply(arm).orElseThrow(() ->
+                new IllegalStateException("Optional.EMPTY is not supported in eps-greedy")
+        );
         ++getVisitedNumber()[arm];
         getVisitedSum()[arm] += result;
     }
