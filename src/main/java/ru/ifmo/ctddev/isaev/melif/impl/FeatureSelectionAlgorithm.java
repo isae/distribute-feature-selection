@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
-import filter.DatasetFilter;
+import ru.ifmo.ctddev.isaev.filter.DatasetFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;

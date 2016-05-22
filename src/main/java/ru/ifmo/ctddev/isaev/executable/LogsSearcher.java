@@ -1,7 +1,7 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import filter.DatasetFilter;
-import filter.PreferredSizeFilter;
+import ru.ifmo.ctddev.isaev.filter.DatasetFilter;
+import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.*;

@@ -8,6 +8,7 @@ import java.util.stream.IntStream;
 import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
 
+
 /**
  * @author iisaev
  */
@@ -24,18 +25,18 @@ public class UCB1 extends BanditStrategy {
     public void processPoint(Function<Integer, Double> action) {
         int arm;
         synchronized (getHolder()) {
-            //if (tries < getArms()) {
-            //  arm = tries;
-            //} else {
-            arm = IntStream.range(0, getArms())
-                    .mapToObj(i -> i)
-                    .sorted(Comparator.comparingDouble(i -> mu(i) + sqrt(2 * log(tries) / getVisitedNumber()[i])))
-                    .findFirst()
-                    .get();
-            //}
+            if (tries < getArms()) {
+                arm = tries;
+            } else {
+                arm = IntStream.range(0, getArms())
+                        .mapToObj(i -> i)
+                        .sorted(Comparator.comparingDouble(i -> mu(i) + sqrt(2 * log(tries) / getVisitedNumber()[i])))
+                        .findFirst()
+                        .get();
+            }
             ++getVisitedNumber()[arm];
             ++tries;
-            //TODO: maybe update visitedSum temporarily while reward is not computed yet
+            //TODO: maybe update visitedSum temporarily while reward is not computed yet?
         }
         double reward = action.apply(arm);
         synchronized (getHolder()) {

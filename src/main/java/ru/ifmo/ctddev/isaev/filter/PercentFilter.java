@@ -1,4 +1,4 @@
-package filter;
+package ru.ifmo.ctddev.isaev.filter;
 
 import ru.ifmo.ctddev.isaev.dataset.Feature;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;

@@ -84,7 +84,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
             IntStream.range(0, splitParts).forEach(i -> result.add(new ArrayList<>()));
             return result;
         }
-        double gridStep = 1.0 / splitParts;
+        double gridStep = 2.0 / splitParts; // from -1 to 1
         return IntStream.range(0, splitParts)
                 .mapToDouble(i -> 1.0 - gridStep * i)
                 .mapToObj(d -> d)

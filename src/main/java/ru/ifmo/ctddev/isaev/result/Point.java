@@ -17,8 +17,8 @@ public class Point implements Comparable<Point> {
 
     public Point(double... coordinates) {
         this.coordinates = coordinates.clone();
-        double sum = DoubleStream.of(coordinates).sum();
-        IntStream.range(0, coordinates.length).forEach(i -> this.coordinates[i] /= sum); // normalization
+        double modulus = Math.sqrt(DoubleStream.of(coordinates).map(d -> d * d).sum());
+        IntStream.range(0, coordinates.length).forEach(i -> this.coordinates[i] /= modulus); // normalization
     }
 
     public Point(Point point) {

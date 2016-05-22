@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import filter.PercentFilter;
+import ru.ifmo.ctddev.isaev.filter.PercentFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
