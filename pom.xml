@@ -42,7 +42,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <mainClass>ru.ifmo.ctddev.isaev.executable.MultipleComparison2
+                            <mainClass>ru.ifmo.ctddev.isaev.executable.GiantComparison
                             </mainClass>
                         </manifest>
                     </archive>
