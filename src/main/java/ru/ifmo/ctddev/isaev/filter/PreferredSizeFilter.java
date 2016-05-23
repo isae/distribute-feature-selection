@@ -20,6 +20,10 @@ public class PreferredSizeFilter extends DataSetFilter {
         logger.info("Initialized dataset filter with preferred size {}", preferredSize);
     }
 
+    public int getPreferredSize() {
+        return preferredSize;
+    }
+
     public FeatureDataSet filterDataSet(FeatureDataSet original, Point measureCosts,
                                         RelevanceMeasure[] measures) {
         List<Feature> filteredFeatures = evaluateFeatures(original, measureCosts, measures)

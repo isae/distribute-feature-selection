@@ -82,26 +82,28 @@ public class GiantComparison extends Comparison {
                 .map(dataSet -> {
                     List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
                     Collections.shuffle(order);
-                    DataSetFilter dataSetFilter = new PreferredSizeFilter(100);
                     DataSetSplitter dataSetSplitter = new OrderSplitter(10, order);
                     List<RunStats> allStats = new ArrayList<>();
-                    for (Integer threads : Arrays.asList(availableProcessors, (int) (1.5 * availableProcessors))) {
-                        for (Integer testPercent : Arrays.asList(10, 20)) {
-                            for (Double delta : Arrays.asList(0.1, 0.25)) {
-                                for (FoldsEvaluator foldsEvaluator : Arrays.asList(
-                                        new SequentalEvaluator(
-                                                Classifiers.WEKA_SVM,
-                                                dataSetFilter, dataSetSplitter
-                                        ),
-                                        new ParallelEvaluator(
-                                                Classifiers.WEKA_SVM,
-                                                dataSetFilter, dataSetSplitter, 100 / testPercent
-                                        )
-                                )) {
-                                    allStats.add(getBasicStats(delta, foldsEvaluator, points, dataSet));
-                                    allStats.addAll(getStupidParallelStats(delta, foldsEvaluator, points, dataSet));
-                                    allStats.addAll(getPriorityStats(threads, delta, foldsEvaluator, dataSet));
-                                    allStats.addAll(getMultiArmedStats(threads, delta, foldsEvaluator, dataSet));
+                    for (Integer featuresToSelect : Arrays.asList(50, 100, 200, 500)) {
+                        DataSetFilter dataSetFilter = new PreferredSizeFilter(featuresToSelect);
+                        for (Integer threads : Arrays.asList(availableProcessors, (int) (1.5 * availableProcessors))) {
+                            for (Integer testPercent : Arrays.asList(10, 20)) {
+                                for (Double delta : Arrays.asList(0.1, 0.25)) {
+                                    for (FoldsEvaluator foldsEvaluator : Arrays.asList(
+                                            new SequentalEvaluator(
+                                                    Classifiers.WEKA_SVM,
+                                                    dataSetFilter, dataSetSplitter
+                                            ),
+                                            new ParallelEvaluator(
+                                                    Classifiers.WEKA_SVM,
+                                                    dataSetFilter, dataSetSplitter, 100 / testPercent
+                                            )
+                                    )) {
+                                        allStats.add(getBasicStats(delta, foldsEvaluator, points, dataSet));
+                                        allStats.addAll(getStupidParallelStats(delta, foldsEvaluator, points, dataSet));
+                                        allStats.addAll(getPriorityStats(threads, delta, foldsEvaluator, dataSet));
+                                        allStats.addAll(getMultiArmedStats(threads, delta, foldsEvaluator, dataSet));
+                                    }
                                 }
                             }
                         }
@@ -124,21 +126,24 @@ public class GiantComparison extends Comparison {
         for (Integer splitNumber : Arrays.asList(2, 3)) {
             MultiArmedBanditMeLiF meLiF1 = new MultiArmedBanditMeLiF(config, dataSet, threads, splitNumber);
             RunStats f10sqrtStats = meLiF1.run(
-                    String.format("MultiArmedD%sE%sT%sF10sqrt",
+                    String.format("MultiArmedF%sD%sE%sT%sF10sqrt",
+                            ((PreferredSizeFilter) foldsEvaluator.getDataSetFilter()).getPreferredSize(),
                             FeatureSelectionAlgorithm.FORMAT.format(delta),
                             foldsEvaluator.getName(),
                             foldsEvaluator.getDataSetSplitter().getTestPercent())
                     , meLiF1.getPointQueuesNumber() + (int) (10 * Math.sqrt(threads)));
             MultiArmedBanditMeLiF meLiF2 = new MultiArmedBanditMeLiF(config, dataSet, threads, splitNumber);
             RunStats f20sqrtStats = meLiF2.run(
-                    String.format("MultiArmedD%sE%sT%sF20sqrt",
+                    String.format("MultiArmedF%sD%sE%sT%sF20sqrt",
+                            ((PreferredSizeFilter) foldsEvaluator.getDataSetFilter()).getPreferredSize(),
                             FeatureSelectionAlgorithm.FORMAT.format(delta),
                             foldsEvaluator.getName(),
                             foldsEvaluator.getDataSetSplitter().getTestPercent())
                     , meLiF2.getPointQueuesNumber() + (int) (20 * Math.sqrt(threads)));
             MultiArmedBanditMeLiF meLiF3 = new MultiArmedBanditMeLiF(config, dataSet, threads, splitNumber);
             RunStats f10linStats = meLiF3.run(
-                    String.format("MultiArmedD%sE%sT%sF10lin",
+                    String.format("MultiArmedF%sD%sE%sT%sF10lin",
+                            ((PreferredSizeFilter) foldsEvaluator.getDataSetFilter()).getPreferredSize(),
                             FeatureSelectionAlgorithm.FORMAT.format(delta),
                             foldsEvaluator.getName(),
                             foldsEvaluator.getDataSetSplitter().getTestPercent())
@@ -153,13 +158,15 @@ public class GiantComparison extends Comparison {
     private static Collection<RunStats> getPriorityStats(Integer threads, Double delta, FoldsEvaluator foldsEvaluator, FeatureDataSet dataSet) {
         AlgorithmConfig config = new AlgorithmConfig(delta, foldsEvaluator, MEASURES);
         RunStats f10Stats = new PriorityQueueMeLiF(config, dataSet, threads).run(
-                String.format("PrQueueD%sE%sT%sF10",
+                String.format("PrQueueF%sD%sE%sT%sF10",
+                        ((PreferredSizeFilter) foldsEvaluator.getDataSetFilter()).getPreferredSize(),
                         FeatureSelectionAlgorithm.FORMAT.format(delta),
                         foldsEvaluator.getName(),
                         foldsEvaluator.getDataSetSplitter().getTestPercent())
                 , 22 + 10 * threads);
         RunStats f5Stats = new PriorityQueueMeLiF(config, dataSet, threads).run(
-                String.format("PrQueueD%sE%sT%sF5",
+                String.format("PrQueueF%sD%sE%sT%sF5",
+                        ((PreferredSizeFilter) foldsEvaluator.getDataSetFilter()).getPreferredSize(),
                         FeatureSelectionAlgorithm.FORMAT.format(delta),
                         foldsEvaluator.getName(),
                         foldsEvaluator.getDataSetSplitter().getTestPercent())
@@ -170,13 +177,15 @@ public class GiantComparison extends Comparison {
     private static Collection<? extends RunStats> getStupidParallelStats(Double delta, FoldsEvaluator foldsEvaluator, Point[] points, FeatureDataSet dataSet) {
         AlgorithmConfig config = new AlgorithmConfig(delta, foldsEvaluator, MEASURES);
         RunStats stupidParallel = new StupidParallelMeLiF(config, dataSet).run(
-                String.format("StupidD%sE%sT%s",
+                String.format("StupidF%sD%sE%sT%s",
+                        ((PreferredSizeFilter) foldsEvaluator.getDataSetFilter()).getPreferredSize(),
                         FeatureSelectionAlgorithm.FORMAT.format(delta),
                         foldsEvaluator.getName(),
                         foldsEvaluator.getDataSetSplitter().getTestPercent())
                 , points);
         RunStats stupidParallel2 = new StupidParallelMeLiF2(config, dataSet).run(
-                String.format("Stupid2D%sE%sT%s",
+                String.format("Stupid2F%sD%sE%sT%s",
+                        ((PreferredSizeFilter) foldsEvaluator.getDataSetFilter()).getPreferredSize(),
                         FeatureSelectionAlgorithm.FORMAT.format(delta),
                         foldsEvaluator.getName(),
                         foldsEvaluator.getDataSetSplitter().getTestPercent())
@@ -188,7 +197,8 @@ public class GiantComparison extends Comparison {
 
         AlgorithmConfig config = new AlgorithmConfig(delta, foldsEvaluator, MEASURES);
         return new BasicMeLiF(config, dataSet).run(
-                String.format("BasicD%sE%sT%s",
+                String.format("BasicF%sD%sE%sT%s",
+                        ((PreferredSizeFilter) foldsEvaluator.getDataSetFilter()).getPreferredSize(),
                         FeatureSelectionAlgorithm.FORMAT.format(delta),
                         foldsEvaluator.getName(),
                         foldsEvaluator.getDataSetSplitter().getTestPercent())
