@@ -118,16 +118,18 @@ public class ParallelMeLiF extends BasicMeLiF {
         double[] coordinates = point.getCoordinates();
         boolean smthChanged = true;
 
+
+        int gen = 0;
         while (smthChanged) {
             smthChanged = false;
             for (int i = 0; i < coordinates.length; i++) {
                 CountDownLatch latch = new CountDownLatch(2);
 
-                Point plusDelta = new Point(coordinates);
+                Point plusDelta = new Point(gen, coordinates);
                 plusDelta.getCoordinates()[i] += config.getDelta();
                 Future<SelectionResult> plusDeltaScore = getSelectionResultFuture(runStats, bestScore, plusDelta, latch);
 
-                Point minusDelta = new Point(coordinates);
+                Point minusDelta = new Point(gen, coordinates);
                 minusDelta.getCoordinates()[i] -= config.getDelta();
                 Future<SelectionResult> minusDeltaScore = getSelectionResultFuture(runStats, bestScore, minusDelta, latch);
 
@@ -156,6 +158,7 @@ public class ParallelMeLiF extends BasicMeLiF {
                     throw new RuntimeException(e);
                 }
             }
+            ++gen;
         }
         return bestScore;
     }

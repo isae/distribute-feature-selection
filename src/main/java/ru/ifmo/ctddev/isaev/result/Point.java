@@ -15,11 +15,18 @@ import java.util.stream.IntStream;
 public class Point implements Comparable<Point> {
     private final double[] coordinates;
 
+    private final int generation;
+
     public Point(double... coordinates) {
+        this(0, coordinates);
+    }
+
+    public Point(int gen, double... coordinates) {
         this.coordinates = coordinates.clone();
         //double modulus = Math.sqrt(DoubleStream.of(coordinates).map(d -> d * d).sum());
         double modulus = DoubleStream.of(coordinates).sum();
         IntStream.range(0, coordinates.length).forEach(i -> this.coordinates[i] /= modulus); // normalization
+        this.generation = gen;
     }
 
     public Point(Point point) {
@@ -27,8 +34,12 @@ public class Point implements Comparable<Point> {
     }
 
     public Point(Point point, Consumer<double[]> consumer) {
-        this(point);
+        this.coordinates = point.getCoordinates().clone();
         consumer.accept(coordinates);
+        //double modulus = Math.sqrt(DoubleStream.of(coordinates).map(d -> d * d).sum());
+        double modulus = DoubleStream.of(coordinates).sum();
+        IntStream.range(0, coordinates.length).forEach(i -> this.coordinates[i] /= modulus); // normalization
+        this.generation = point.generation + 1;
     }
 
     public double[] getCoordinates() {
@@ -51,6 +62,6 @@ public class Point implements Comparable<Point> {
     @Override
     public String toString() {
         List<String> doubles = DoubleStream.of(coordinates).mapToObj(FeatureSelectionAlgorithm.FORMAT::format).collect(Collectors.toList());
-        return "[" + String.join(", ", doubles) + "]";
+        return "[" + String.join(", ", doubles) + "]/" + generation;
     }
 }

@@ -1,5 +1,8 @@
 package ru.ifmo.ctddev.isaev.executor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.concurrent.*;
 
 
@@ -11,19 +14,23 @@ public class PriorityThreadPoolExecutor extends ThreadPoolExecutor {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
     }
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(PriorityThreadPoolExecutor.class);
     @Override
     public Future<?> submit(Runnable task) {
-        return submit(task, null, 1.0);
+        LOGGER.error("Do not use submit without priority");
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
-        return submit(task, null, 1.0);
+        LOGGER.error("Do not use submit without priority");
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public <T> Future<T> submit(Callable<T> task) {
-        return submit(task, 1.0);
+        LOGGER.error("Do not use submit without priority");
+        throw new UnsupportedOperationException();
     }
 
     public <T> Future<T> submit(Runnable task, T result, double priority) {
@@ -50,5 +57,17 @@ public class PriorityThreadPoolExecutor extends ThreadPoolExecutor {
 
     private <T> RunnableFuture<T> newTaskFor(Callable<T> callable, double priority) {
         return new PriorityFutureTask<>(callable, priority);
+    }
+
+    @Override
+    protected <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
+        LOGGER.error("Do not use newTaskFor without priority");
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
+        LOGGER.error("Do not use newTaskFor without priority");
+        throw new UnsupportedOperationException();
     }
 }

@@ -78,7 +78,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
 
         boolean smthChanged = true;
         double[] coordinates = point.getCoordinates();
-
+        int gen = 0;
         while (smthChanged) {
             smthChanged = false;
 
@@ -86,7 +86,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
                 if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
                     return runStats.getBestResult();
                 }
-                Point plusDelta = new Point(coordinates);
+                Point plusDelta = new Point(gen, coordinates);
                 plusDelta.getCoordinates()[i] += config.getDelta();
                 SelectionResult plusScore = visitPoint(plusDelta, runStats, bestScore);
 
@@ -97,7 +97,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
                     break;
                 }
 
-                Point minusDelta = new Point(coordinates);
+                Point minusDelta = new Point(gen, coordinates);
                 minusDelta.getCoordinates()[i] -= config.getDelta();
                 SelectionResult minusScore = visitPoint(minusDelta, runStats, bestScore);
                 if (minusScore.betterThan(bestScore)) {
@@ -107,6 +107,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
                     break;
                 }
             }
+            ++gen;
         }
         return bestScore;
     }
