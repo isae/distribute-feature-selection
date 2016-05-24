@@ -63,6 +63,11 @@ public class ParallelEvaluator extends FoldsEvaluator {
     }
 
     @Override
+    public SelectionResult getSelectionResultPar(DataSet dataSet, Point point, RunStats stats, ExecutorService executorService) {
+        throw new UnsupportedOperationException("Method is not implemented");
+    }
+
+    @Override
     public String getName() {
         return "Par";
     }

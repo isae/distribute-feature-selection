@@ -15,6 +15,7 @@ import ru.ifmo.ctddev.isaev.splitter.DataSetSplitter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 
@@ -25,6 +26,7 @@ public abstract class FoldsEvaluator {
     protected final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     public abstract SelectionResult getSelectionResult(DataSet dataSet, Point point, RunStats stats);
+    public abstract SelectionResult getSelectionResultPar(DataSet dataSet, Point point, RunStats stats, ExecutorService executorService);
 
     protected final DataSetSplitter dataSetSplitter;
 

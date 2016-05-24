@@ -12,10 +12,8 @@ import ru.ifmo.ctddev.isaev.dataset.DataInstance;
 import ru.ifmo.ctddev.isaev.dataset.DataSetPair;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
 import ru.ifmo.ctddev.isaev.feature.measure.*;
-import ru.ifmo.ctddev.isaev.filter.DataSetFilter;
 import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
 import ru.ifmo.ctddev.isaev.folds.FoldsEvaluator;
-import ru.ifmo.ctddev.isaev.folds.ParallelEvaluator;
 import ru.ifmo.ctddev.isaev.folds.SequentalEvaluator;
 import ru.ifmo.ctddev.isaev.melif.impl.*;
 import ru.ifmo.ctddev.isaev.result.Point;
@@ -84,30 +82,28 @@ public class GiantComparison extends Comparison {
                     Collections.shuffle(order);
                     DataSetSplitter dataSetSplitter = new OrderSplitter(10, order);
                     List<RunStats> allStats = new ArrayList<>();
-                    for (Integer featuresToSelect : Arrays.asList(50, 100, 200, 500)) {
-                        DataSetFilter dataSetFilter = new PreferredSizeFilter(featuresToSelect);
-                        for (Integer threads : Arrays.asList(availableProcessors, (int) (1.5 * availableProcessors))) {
-                            for (Integer testPercent : Arrays.asList(10, 20)) {
-                                for (Double delta : Arrays.asList(0.1, 0.25)) {
-                                    for (FoldsEvaluator foldsEvaluator : Arrays.asList(
-                                            new SequentalEvaluator(
-                                                    Classifiers.WEKA_SVM,
-                                                    dataSetFilter, dataSetSplitter
-                                            ),
-                                            new ParallelEvaluator(
-                                                    Classifiers.WEKA_SVM,
-                                                    dataSetFilter, dataSetSplitter, 100 / testPercent
-                                            )
-                                    )) {
-                                        allStats.add(getBasicStats(delta, foldsEvaluator, points, dataSet));
-                                        allStats.addAll(getStupidParallelStats(delta, foldsEvaluator, points, dataSet));
-                                        allStats.addAll(getPriorityStats(threads, delta, foldsEvaluator, dataSet));
-                                        allStats.addAll(getMultiArmedStats(threads, delta, foldsEvaluator, dataSet));
-                                    }
-                                }
-                            }
-                        }
+                    double delta = 0.1;
+                    int threads = Runtime.getRuntime().availableProcessors() - 1;
+                    LOGGER.info("Threads {}", threads);
+                    for (Integer featuresToSelect : Arrays.asList(100, 500)) {
+                        AlgorithmConfig config = new AlgorithmConfig(delta,
+                                new SequentalEvaluator(Classifiers.WEKA_SVM,
+                                        new PreferredSizeFilter(featuresToSelect),
+                                        dataSetSplitter), MEASURES);
+                        allStats.add(new BasicMeLiF(config, dataSet).run(String.format("Basic%s", featuresToSelect), points));
+                        System.gc();
+                        allStats.add(new ParallelMeLiF(config, dataSet, 31).run(String.format("Parallel%s", featuresToSelect), points));
+                        System.gc();
+                        allStats.add(new PriorityQueueMeLiF(config, dataSet, 31).run(String.format("Queue%s|150", featuresToSelect), 150));
+                        System.gc();
+                        allStats.add(new PriorityQueueMeLiF(config, dataSet, 31).run(String.format("Queue%s|500", featuresToSelect), 500));
+                        System.gc();
+                        allStats.add(new MultiArmedBanditMeLiF(config, dataSet, 31, 2).run(String.format("MultiArmed%s|150", featuresToSelect), 150));
+                        System.gc();
+                        allStats.add(new MultiArmedBanditMeLiF(config, dataSet, 31, 2).run(String.format("MultiArmed%s|500", featuresToSelect), 500));
+                        System.gc();
                     }
+
                     MDC.remove("fileName");
                     return allStats;
 

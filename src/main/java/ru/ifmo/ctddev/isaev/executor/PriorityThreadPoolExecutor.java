@@ -13,17 +13,17 @@ public class PriorityThreadPoolExecutor extends ThreadPoolExecutor {
 
     @Override
     public Future<?> submit(Runnable task) {
-        throw new UnsupportedOperationException("Use overloads with priority");
+        return submit(task, null, 1.0);
     }
 
     @Override
     public <T> Future<T> submit(Runnable task, T result) {
-        throw new UnsupportedOperationException("Use overloads with priority");
+        return submit(task, null, 1.0);
     }
 
     @Override
     public <T> Future<T> submit(Callable<T> task) {
-        throw new UnsupportedOperationException("Use overloads with priority");
+        return submit(task, 1.0);
     }
 
     public <T> Future<T> submit(Runnable task, T result, double priority) {
@@ -50,15 +50,5 @@ public class PriorityThreadPoolExecutor extends ThreadPoolExecutor {
 
     private <T> RunnableFuture<T> newTaskFor(Callable<T> callable, double priority) {
         return new PriorityFutureTask<>(callable, priority);
-    }
-
-    @Override
-    protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
-        throw new UnsupportedOperationException("Use overloads with priority");
-    }
-
-    @Override
-    protected <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
-        throw new UnsupportedOperationException("Use overloads with priority");
     }
 }

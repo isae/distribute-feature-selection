@@ -132,6 +132,12 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
 
         @Override
         public void run() {
+            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
+                while (!stopCondition.get()){
+                    //do nothing
+                }
+                return;
+            }
             if (stopCondition.get()) {
                 logger.warn("Must stop; do nothing");
                 return;

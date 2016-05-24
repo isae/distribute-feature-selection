@@ -100,6 +100,9 @@ public class ParallelMeLiF extends BasicMeLiF {
 
     @Override
     protected SelectionResult visitPoint(Point point, RunStats runStats, SelectionResult bestResult) {
+        if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
+            return runStats.getBestResult();
+        }
         SelectionResult score = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
         visitedPoints.add(new Point(point));
         return score;
