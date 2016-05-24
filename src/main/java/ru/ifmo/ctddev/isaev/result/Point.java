@@ -22,7 +22,13 @@ public class Point implements Comparable<Point> {
     }
 
     public Point(int gen, double... coordinates) {
+        this(gen, (d) -> {
+        }, coordinates);
+    }
+
+    public Point(int gen, Consumer<double[]> consumer, double... coordinates) {
         this.coordinates = coordinates.clone();
+        consumer.accept(this.coordinates);
         //double modulus = Math.sqrt(DoubleStream.of(coordinates).map(d -> d * d).sum());
         double modulus = DoubleStream.of(coordinates).sum();
         IntStream.range(0, coordinates.length).forEach(i -> this.coordinates[i] /= modulus); // normalization

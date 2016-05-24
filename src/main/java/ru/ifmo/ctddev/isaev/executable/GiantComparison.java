@@ -94,7 +94,7 @@ public class GiantComparison extends Comparison {
                         System.gc();
                         allStats.add(new ParallelMeLiF(config, dataSet, 31).run(String.format("Parallel%s", featuresToSelect), points));
                         System.gc();
-                        allStats.add(new PriorityQueueMeLiF(config, dataSet, 31).run(String.format("Queue%s|150", featuresToSelect), 150));
+                        allStats.add(new PriorityQueueMeLiF(config, dataSet, 31).run(String.format("Queue%s|100", featuresToSelect), 100));
                         System.gc();
                         allStats.add(new PriorityQueueMeLiF(config, dataSet, 31).run(String.format("Queue%s|500", featuresToSelect), 500));
                         System.gc();

@@ -125,12 +125,11 @@ public class ParallelMeLiF extends BasicMeLiF {
             for (int i = 0; i < coordinates.length; i++) {
                 CountDownLatch latch = new CountDownLatch(2);
 
-                Point plusDelta = new Point(gen, coordinates);
-                plusDelta.getCoordinates()[i] += config.getDelta();
+                final int finalI = i;
+                Point plusDelta = new Point(gen, (c) -> c[finalI] += config.getDelta(), coordinates);
                 Future<SelectionResult> plusDeltaScore = getSelectionResultFuture(runStats, bestScore, plusDelta, latch);
 
-                Point minusDelta = new Point(gen, coordinates);
-                minusDelta.getCoordinates()[i] -= config.getDelta();
+                Point minusDelta = new Point(gen, (c) -> c[finalI] -= config.getDelta(), coordinates);
                 Future<SelectionResult> minusDeltaScore = getSelectionResultFuture(runStats, bestScore, minusDelta, latch);
 
                 try {

@@ -86,8 +86,8 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
                 if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
                     return runStats.getBestResult();
                 }
-                Point plusDelta = new Point(gen, coordinates);
-                plusDelta.getCoordinates()[i] += config.getDelta();
+                final int finalI = i;
+                Point plusDelta = new Point(gen, (c) -> c[finalI] += config.getDelta(), coordinates);
                 SelectionResult plusScore = visitPoint(plusDelta, runStats, bestScore);
 
                 if (plusScore.betterThan(bestScore)) {
@@ -97,8 +97,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
                     break;
                 }
 
-                Point minusDelta = new Point(gen, coordinates);
-                minusDelta.getCoordinates()[i] -= config.getDelta();
+                Point minusDelta = new Point(gen, (c) -> c[finalI] -= config.getDelta(), coordinates);
                 SelectionResult minusScore = visitPoint(minusDelta, runStats, bestScore);
                 if (minusScore.betterThan(bestScore)) {
                     bestScore = minusScore;
