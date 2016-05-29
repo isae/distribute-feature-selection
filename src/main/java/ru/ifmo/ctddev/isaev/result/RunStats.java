@@ -88,10 +88,16 @@ public class RunStats implements Comparable<RunStats> {
         return instanceCount;
     }
 
+    public int getNoImprove() {
+        return holder.noImprove;
+    }
+
     private static final class StatsHolder {
         private SelectionResult bestResult = null;
 
-        private volatile long visitedPoints;
+        private volatile int visitedPoints;
+
+        private volatile int noImprove = 0;
     }
 
     private final StatsHolder holder = new StatsHolder();
@@ -112,12 +118,15 @@ public class RunStats implements Comparable<RunStats> {
 
     private void updateBestResultUnsafe(SelectionResult bestResult) {
         ++holder.visitedPoints;
+        ++holder.noImprove;
         if (holder.bestResult != null) {
             if (holder.bestResult.compareTo(bestResult) == -1) {
                 holder.bestResult = bestResult;
+                holder.noImprove = 0;
             }
         } else {
             holder.bestResult = bestResult;
+            holder.noImprove = 0;
         }
     }
 

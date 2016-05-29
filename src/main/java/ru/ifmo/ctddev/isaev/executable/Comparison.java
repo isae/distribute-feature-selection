@@ -25,10 +25,20 @@ public class Comparison {
         return diff / prev * 100;
     }
 
-    protected static String csvRepresentation(List<List<RunStats>> executionResults) {
+    protected static String fullCsvRepresentation(List<List<RunStats>> executionResults) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(csvHeader(executionResults.get(0)));
+        executionResults.stream()
+                .forEach(pr -> {
+                    sb.append(csvRepresentation(pr));
+                });
+        return sb.toString();
+    }
+
+    protected static String csvHeader(List<RunStats> executionResults) {
         StringBuilder sb = new StringBuilder();
         Stream<String> start = Stream.of("Dataset", "Shape", "Features", "Instances");
-        Stream<String> header = Stream.concat(start, executionResults.get(0).stream().flatMap(
+        Stream<String> header = Stream.concat(start, executionResults.stream().flatMap(
                 stats -> Stream.of(
                         String.format("%s time", stats.getAlgorithmName()),
                         String.format("%s best point", stats.getAlgorithmName()),
@@ -37,22 +47,24 @@ public class Comparison {
         ));
         String headerStr = String.join(";", header.collect(Collectors.toList()));
         sb.append(headerStr).append("\n");
-        executionResults.stream()
-                .forEach(pr -> {
-                    Stream<Object> rowStart = Stream.of(
-                            pr.get(0).getDataSetName(),
-                            String.format("%dx%d", pr.get(0).getFeatureCount(), pr.get(0).getInstanceCount()),
-                            pr.get(0).getFeatureCount(),
-                            pr.get(0).getInstanceCount());
-                    Stream<Object> row = Stream.concat(rowStart, pr.stream().flatMap(
-                            stats -> Stream.of(
-                                    stats.getWorkTime(),
-                                    stats.getBestResult().getPoint(),
-                                    FORMAT.format(stats.getBestResult().getF1Score()),
-                                    stats.getVisitedPoints())
-                    ));
-                    sb.append(String.join(";", row.map(Objects::toString).collect(Collectors.toList()))).append("\n");
-                });
+        return sb.toString();
+    }
+
+    protected static String csvRepresentation(List<RunStats> pr) {
+        StringBuilder sb = new StringBuilder();
+        Stream<Object> rowStart = Stream.of(
+                pr.get(0).getDataSetName(),
+                String.format("%dx%d", pr.get(0).getFeatureCount(), pr.get(0).getInstanceCount()),
+                pr.get(0).getFeatureCount(),
+                pr.get(0).getInstanceCount());
+        Stream<Object> row = Stream.concat(rowStart, pr.stream().flatMap(
+                stats -> Stream.of(
+                        stats.getWorkTime(),
+                        stats.getBestResult().getPoint(),
+                        FORMAT.format(stats.getBestResult().getF1Score()),
+                        stats.getVisitedPoints())
+        ));
+        sb.append(String.join(";", row.map(Objects::toString).collect(Collectors.toList()))).append("\n");
         return sb.toString();
     }
 

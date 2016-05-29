@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.policy;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -16,6 +17,6 @@ public class UCBTuned extends BanditStrategy {
     }
 
     @Override
-    public void processPoint(Function<Integer, Optional<Double>> action) {
+    public void processPoint(Collection lastTries, Function<Integer, Optional<Double>> action) {
     }
 }

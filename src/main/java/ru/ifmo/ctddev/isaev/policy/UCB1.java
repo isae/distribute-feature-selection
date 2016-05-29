@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.policy;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
@@ -35,13 +36,14 @@ public class UCB1 extends BanditStrategy {
     }
 
     @Override
-    public void processPoint(Function<Integer, Optional<Double>> action) {
+    public void processPoint(Collection lastTries, Function<Integer, Optional<Double>> action) {
         int arm;
         synchronized (getHolder()) {
             if (tries < getArms()) {
                 arm = tries;
             } else {
                 arm = IntStream.range(0, getArms())
+                        .filter(i -> lastTries.size() != 0)
                         .mapToObj(i -> i)
                         .sorted(Comparator.comparingDouble(i -> -armCost(i)))
                         .findFirst()

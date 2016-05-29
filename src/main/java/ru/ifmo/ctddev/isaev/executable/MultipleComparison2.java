@@ -107,7 +107,7 @@ public class MultipleComparison2 extends Comparison {
         MDC.put("fileName", "COMMON-" + startTimeString);
 
         PrintWriter writer = new PrintWriter("table_results/" + startTimeString + ".csv");
-        writer.println(csvRepresentation(results));
+        writer.println(fullCsvRepresentation(results));
         writer.close();
     }
 }

@@ -23,6 +23,7 @@ import ru.ifmo.ctddev.isaev.splitter.OrderSplitter;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -70,6 +71,7 @@ public class GiantComparison extends Comparison {
         File dataSetDir = new File(args[0]);
         assert dataSetDir.exists();
         assert dataSetDir.isDirectory();
+        final boolean[] firstTime = {true};
         List<List<RunStats>> results = Arrays.asList(dataSetDir.listFiles()).stream()
                 .filter(f -> f.getAbsolutePath().endsWith(".csv"))
                 .map(file -> {
@@ -83,25 +85,40 @@ public class GiantComparison extends Comparison {
                     DataSetSplitter dataSetSplitter = new OrderSplitter(10, order);
                     List<RunStats> allStats = new ArrayList<>();
                     double delta = 0.1;
-                    int threads = Runtime.getRuntime().availableProcessors() - 1;
+                    int threads = 2;
                     LOGGER.info("Threads {}", threads);
-                    for (Integer featuresToSelect : Arrays.asList(100, 500)) {
+                    for (Integer featuresToSelect : Arrays.asList(100)) {
                         AlgorithmConfig config = new AlgorithmConfig(delta,
                                 new SequentalEvaluator(Classifiers.WEKA_SVM,
                                         new PreferredSizeFilter(featuresToSelect),
                                         dataSetSplitter), MEASURES);
-                        allStats.add(new BasicMeLiF(config, dataSet).run(String.format("Basic%s", featuresToSelect), points));
+                        allStats.add(new PriorityQueueMeLiF(config, dataSet, threads).run(String.format("Q%s|75", featuresToSelect), 75));
                         System.gc();
-                        allStats.add(new ParallelMeLiF(config, dataSet, 31).run(String.format("Parallel%s", featuresToSelect), points));
+                        allStats.add(new PriorityQueueMeLiF(config, dataSet, threads).run(String.format("Q%s|100", featuresToSelect), 100));
                         System.gc();
-                        allStats.add(new PriorityQueueMeLiF(config, dataSet, 31).run(String.format("Queue%s|100", featuresToSelect), 100));
+                        allStats.add(new PriorityQueueMeLiF(config, dataSet, threads).run2(String.format("Q%s|noImprove", featuresToSelect), Math.max(20,threads)));
                         System.gc();
-                        allStats.add(new PriorityQueueMeLiF(config, dataSet, 31).run(String.format("Queue%s|500", featuresToSelect), 500));
+                        allStats.add(new MultiArmedBanditMeLiF(config, dataSet, threads, 2).run(String.format("MA%s|75", featuresToSelect), 75));
                         System.gc();
-                        allStats.add(new MultiArmedBanditMeLiF(config, dataSet, 31, 2).run(String.format("MultiArmed%s|150", featuresToSelect), 150));
+                        allStats.add(new MultiArmedBanditMeLiF(config, dataSet, threads, 2).run(String.format("MA%s|100", featuresToSelect), 100));
                         System.gc();
-                        allStats.add(new MultiArmedBanditMeLiF(config, dataSet, 31, 2).run(String.format("MultiArmed%s|500", featuresToSelect), 500));
+                        allStats.add(new MultiArmedBanditMeLiF(config, dataSet, threads, 2).run(String.format("MA%s|125", featuresToSelect), 125));
                         System.gc();
+                        allStats.add(new MultiArmedBanditMeLiF(config, dataSet, threads, 2).run2(String.format("MA%s|noImprove", featuresToSelect), Math.max(20,threads)));
+                        System.gc();
+                    }
+                    PrintWriter writer = null;
+                    try {
+                        writer = new PrintWriter(new FileOutputStream("table_results/" + startTimeString + ".csv", true));
+                        if (firstTime[0]) {
+                            writer.append(csvHeader(allStats));
+                            firstTime[0] = false;
+                        }
+
+                        printResults(writer, allStats);
+                        writer.close();
+                    } catch (FileNotFoundException e) {
+                        throw new IllegalArgumentException(e);
                     }
 
                     MDC.remove("fileName");
@@ -112,8 +129,12 @@ public class GiantComparison extends Comparison {
         MDC.put("fileName", "COMMON-" + startTimeString);
 
         PrintWriter writer = new PrintWriter("table_results/" + startTimeString + ".csv");
-        writer.println(csvRepresentation(results));
+        writer.println(fullCsvRepresentation(results));
         writer.close();
+    }
+
+    private static void printResults(PrintWriter writer, List<RunStats> allStats) {
+        writer.append(csvRepresentation(allStats));
     }
 
     private static Collection<RunStats> getMultiArmedStats(Integer threads, Double delta, FoldsEvaluator foldsEvaluator, FeatureDataSet dataSet) {

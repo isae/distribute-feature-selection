@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.policy;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.function.Function;
@@ -21,7 +22,7 @@ public class SoftMax extends BanditStrategy {
     }
 
     @Override
-    public void processPoint(Function<Integer, Optional<Double>> action) {
+    public void processPoint(Collection lastTries, Function<Integer, Optional<Double>> action) {
         int arm;
         double expSum = IntStream.range(0, getArms())
                 .mapToDouble(i -> Math.exp(mu(i) / tau)).sum();

@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -63,7 +64,7 @@ public abstract class BanditStrategy {
         holder = new Holder(arms);
     }
 
-    public abstract void processPoint(Function<Integer, Optional<Double>> action);
+    public abstract void processPoint(Collection lastTries, Function<Integer, Optional<Double>> action);
 
     protected double mu(int i) {
         return holder.visitedSum[i] / holder.visitedNumber[i];

@@ -130,4 +130,35 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
         LOGGER.info("Working time: {} seconds", runStats.getWorkTime());
         return runStats;
     }
+
+    public RunStats run2(String name, int untilStop) {
+        RunStats runStats = new RunStats(config, dataSet, name);
+        logger.info("Started {} at {}", name, runStats.getStartTime());
+        CountDownLatch latch = new CountDownLatch(1);
+        startingPoints.forEach(point -> executorService.submit(new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), () -> {
+            if(latch.getCount()==0){
+                return true;
+            }
+            if (runStats.getNoImprove() > untilStop) {
+                latch.countDown();
+                return true;
+            } else {
+                return false;
+            }
+        }, runStats), 1.0));
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
+        executorService.shutdownNow();
+        LOGGER.info("Max score: {} at point {}",
+                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getPoint().getCoordinates()
+        );
+        runStats.setFinishTime(LocalDateTime.now());
+        LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());
+        LOGGER.info("Working time: {} seconds", runStats.getWorkTime());
+        return runStats;
+    }
 }

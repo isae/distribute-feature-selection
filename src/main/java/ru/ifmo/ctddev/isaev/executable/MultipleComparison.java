@@ -167,7 +167,7 @@ public class MultipleComparison extends Comparison {
         LOGGER.info("Spearman rank correlation: {}", new SpearmanRankCorrelation().evaluate(actual, expected));
 
         PrintWriter writer = new PrintWriter("table_results/" + startTimeString + ".csv");
-        writer.println(csvRepresentation(executionResults.stream().map(pr -> Arrays.asList(pr.getBasic(), pr.getParallel())).collect(Collectors.toList())));
+        writer.println(fullCsvRepresentation(executionResults.stream().map(pr -> Arrays.asList(pr.getBasic(), pr.getParallel())).collect(Collectors.toList())));
         writer.close();
     }
 }

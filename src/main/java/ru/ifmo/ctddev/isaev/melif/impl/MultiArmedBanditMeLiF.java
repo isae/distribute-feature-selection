@@ -133,7 +133,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
         @Override
         public void run() {
             if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
-                while (!stopCondition.get()){
+                while (!stopCondition.get()) {
                     //do nothing
                 }
                 return;
@@ -142,18 +142,12 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
                 logger.warn("Must stop; do nothing");
                 return;
             }
-            banditStrategy.processPoint(i -> {
-                /*logger.warn("Requested point from queue {};\n {} visited", new Object[] {
-                        i,
-                        IntStream.range(0, banditStrategy.getArms()).mapToObj(j ->
-                                "" + FeatureSelectionAlgorithm.FORMAT.format(banditStrategy.getVisitedSum()[j]) + "/" + banditStrategy.getVisitedNumber()[j]
-                        ).toArray()
-                });*/
+            banditStrategy.processPoint(pointsQueues.values(), i -> {
                 PriorityBlockingQueue<PriorityPoint> queue = pointsQueues.get(i);
                 try {
                     PriorityPoint point = queue.poll(1, TimeUnit.MILLISECONDS);
                     if (point == null) {//no points in queue for now
-                        logger.warn("Queue {} is empty", i);
+                        logger.error("Queue {} is empty", i);
                         return Optional.empty();
                     }
                     if (visitedPoints.contains(point)) {
@@ -161,12 +155,16 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
                         return Optional.empty();
                     }
 
-                    logger.info("Processing point {}", point);
+                    logger.info("Processing point {} in queue {}", point, i);
                     SelectionResult res = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
                     visitedPoints.add(point);
                     List<Point> neighbours = getNeighbours(point);
                     double award = res.getF1Score();
-                    neighbours.forEach(p -> queue.add(new PriorityPoint(award, p.getCoordinates())));
+                    neighbours.forEach(p -> {
+                        if (!visitedPoints.contains(p)) {
+                            queue.add(new PriorityPoint(award, p.getCoordinates()));
+                        }
+                    });
                     return Optional.of(award);
                 } catch (InterruptedException ignored) {
                     logger.warn("Queue poll is interrupted");
@@ -185,6 +183,39 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
         pointsQueues.values().forEach(queue -> executorService.submit(new PointProcessingTask(() -> {
             latch.countDown();
             return latch.getCount() == 0;
+        }, runStats)));
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
+        executorService.shutdownNow();
+        LOGGER.info("Max score: {} at point {}",
+                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getPoint().getCoordinates()
+        );
+        runStats.setFinishTime(LocalDateTime.now());
+        LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());
+        LOGGER.info("Working time: {} seconds", runStats.getWorkTime());
+        return runStats;
+    }
+
+
+    public RunStats run2(String name, int untilStop) {
+        RunStats runStats = new RunStats(config, dataSet, name);
+        logger.info("Started {} at {}", name, runStats.getStartTime());
+
+        CountDownLatch latch = new CountDownLatch(1);
+        pointsQueues.values().forEach(queue -> executorService.submit(new PointProcessingTask(() -> {
+            if(latch.getCount()==0){
+                return true;
+            }
+            if (runStats.getNoImprove() > untilStop) {
+                latch.countDown();
+                return true;
+            } else {
+                return false;
+            }
         }, runStats)));
         try {
             latch.await();

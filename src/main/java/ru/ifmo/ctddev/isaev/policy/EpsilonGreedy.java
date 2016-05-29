@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.policy;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Random;
@@ -24,7 +25,7 @@ public class EpsilonGreedy extends BanditStrategy {
     }
 
     @Override
-    public void processPoint(Function<Integer, Optional<Double>> action) {
+    public void processPoint(Collection lastTries, Function<Integer, Optional<Double>> action) {
         int arm;
         if (RANDOM.nextDouble() < epsilon) {
             arm = RANDOM.nextInt(getArms());
