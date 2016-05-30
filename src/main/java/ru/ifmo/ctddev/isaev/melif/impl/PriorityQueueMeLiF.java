@@ -88,12 +88,6 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
                 logger.warn("Point is already processed");
                 return 0.0;
             }
-            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
-                while (!stopCondition.get()) {
-                    //do nothing
-                }
-                return 0.0;
-            }
             logger.info("Processing point {}", point);
             SelectionResult res = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
             visitedPoints.add(point);
@@ -136,6 +130,11 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
         logger.info("Started {} at {}", name, runStats.getStartTime());
         CountDownLatch latch = new CountDownLatch(1);
         startingPoints.forEach(point -> executorService.submit(new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), () -> {
+            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
+                while (latch.getCount()!=0) {
+                    latch.countDown();
+                }
+            }
             if(latch.getCount()==0){
                 return true;
             }
