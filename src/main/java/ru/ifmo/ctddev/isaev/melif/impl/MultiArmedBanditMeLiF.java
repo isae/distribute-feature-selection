@@ -4,8 +4,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
-import ru.ifmo.ctddev.isaev.policy.BanditStrategy;
-import ru.ifmo.ctddev.isaev.policy.UCB1;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.PriorityPoint;
 import ru.ifmo.ctddev.isaev.result.RunStats;
@@ -17,6 +15,9 @@ import java.util.concurrent.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import static java.lang.Math.log;
+import static java.lang.Math.sqrt;
 
 
 /**
@@ -31,8 +32,6 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MultiArmedBanditMeLiF.class);
 
-    private final BanditStrategy banditStrategy;
-
     public ExecutorService getExecutorService() {
         return executorService;
     }
@@ -40,6 +39,10 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
     protected final Set<Point> visitedPoints = new ConcurrentSkipListSet<>();
 
     private final Map<Integer, PriorityBlockingQueue<PriorityPoint>> pointsQueues;
+
+    private final Holder holder;
+
+    private int tries = 0;
 
     public MultiArmedBanditMeLiF(AlgorithmConfig config, DataSet dataSet, int threads, int splitNumber) {
         super(config, dataSet);
@@ -57,7 +60,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
         });
         this.pointsQueues = Collections.unmodifiableMap(pointQueues);
         this.executorService = Executors.newFixedThreadPool(threads);
-        this.banditStrategy = new UCB1(pointQueues.size(), 1.0);
+        holder = new Holder(pointQueues.size());
     }
 
     public int getPointQueuesNumber() {
@@ -119,6 +122,30 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
         return points;
     }
 
+    protected double mu(int i) {
+        return holder.visitedSum[i] / holder.visitedNumber[i];
+    }
+
+    private double armCost(int i) {
+        return mu(i) + sqrt(
+                2 * log(tries) / (holder.visitedNumber[i])
+        );
+    }
+
+    protected class Holder {
+        protected final int[] visitedNumber;
+
+        protected final double[] visitedSum;
+
+        protected final int arms;
+
+        public Holder(int arms) {
+            this.visitedNumber = new int[arms];
+            this.visitedSum = new double[arms];
+            this.arms = arms;
+        }
+    }
+
     class PointProcessingTask implements Runnable {
 
         Supplier<Boolean> stopCondition;
@@ -142,35 +169,54 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
                 logger.warn("Must stop; do nothing");
                 return;
             }
-            banditStrategy.processPoint(pointsQueues.values(), i -> {
-                PriorityBlockingQueue<PriorityPoint> queue = pointsQueues.get(i);
-                try {
-                    PriorityPoint point = queue.poll(1, TimeUnit.MILLISECONDS);
-                    if (point == null) {//no points in queue for now
-                        logger.error("Queue {} is empty", i);
-                        return Optional.empty();
-                    }
-                    if (visitedPoints.contains(point)) {
-                        logger.warn("Point is already processed: {}", point);
-                        return Optional.empty();
-                    }
 
-                    logger.info("Processing point {} in queue {}", point, i);
-                    SelectionResult res = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
-                    visitedPoints.add(point);
-                    List<Point> neighbours = getNeighbours(point);
-                    double award = res.getF1Score();
-                    neighbours.forEach(p -> {
-                        if (!visitedPoints.contains(p)) {
-                            queue.add(new PriorityPoint(award, p.getCoordinates()));
+            try {
+                int arm;
+                PriorityPoint point;
+                synchronized (holder) {
+                    if (tries < holder.arms) {
+                        arm = tries;
+                        point = pointsQueues.get(arm).poll(1, TimeUnit.MILLISECONDS);
+                    } else {
+                        synchronized (pointsQueues) {
+                            arm = IntStream.range(0, holder.arms)
+                                    .filter(i -> pointsQueues.get(i).size() != 0)
+                                    .mapToObj(i -> i)
+                                    .max(Comparator.comparingDouble(i -> armCost(i)))
+                                    .get();
+                            point = pointsQueues.get(arm).poll(1, TimeUnit.MILLISECONDS);
                         }
-                    });
-                    return Optional.of(award);
-                } catch (InterruptedException ignored) {
-                    logger.warn("Queue poll is interrupted");
-                    return Optional.empty();
+                    }
+                    ++tries;
                 }
-            });
+                if (point == null) {//no points in queue for now
+                    logger.error("Queue {} is empty", arm);
+                    return;
+                }
+                if (visitedPoints.contains(point)) {
+                    logger.warn("Point is already processed: {}", point);
+                    return;
+                }
+
+                logger.info("Processing point {} in queue {}", point, arm);
+                SelectionResult res = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
+                visitedPoints.add(point);
+                List<Point> neighbours = getNeighbours(point);
+                double award = res.getF1Score();
+                neighbours.forEach(p -> {
+                    if (!visitedPoints.contains(p)) {
+                        pointsQueues.get(arm).add(new PriorityPoint(award, p.getCoordinates()));
+                    }
+                });
+                synchronized (holder) {
+                    ++holder.visitedNumber[arm];
+                    holder.visitedSum[arm] += award;
+                }
+            } catch (InterruptedException ignored) {
+                logger.warn("Queue poll is interrupted");
+                return;
+            }
+
             executorService.submit(new PointProcessingTask(stopCondition, runStats));
         }
     }
@@ -207,7 +253,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
 
         CountDownLatch latch = new CountDownLatch(1);
         pointsQueues.values().forEach(queue -> executorService.submit(new PointProcessingTask(() -> {
-            if(latch.getCount()==0){
+            if (latch.getCount() == 0) {
                 return true;
             }
             if (runStats.getNoImprove() > untilStop) {
