@@ -85,7 +85,7 @@ public class GiantComparison extends Comparison {
                     DataSetSplitter dataSetSplitter = new OrderSplitter(10, order);
                     List<RunStats> allStats = new ArrayList<>();
                     double delta = 0.1;
-                    int threads = 2;
+                    int threads = 32;
                     LOGGER.info("Threads {}", threads);
                     for (Integer featuresToSelect : Arrays.asList(100)) {
                         AlgorithmConfig config = new AlgorithmConfig(delta,
