@@ -107,6 +107,11 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
         CountDownLatch latch = new CountDownLatch(latchSize);
         startingPoints.forEach(point -> executorService.submit(new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), () -> {
             latch.countDown();
+            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
+                while (latch.getCount()!=0) {
+                    latch.countDown();
+                }
+            }
             return latch.getCount() == 0;
         }, runStats), 1.0));
         try {

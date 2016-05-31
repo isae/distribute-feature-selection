@@ -222,6 +222,11 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
         CountDownLatch latch = new CountDownLatch(latchSize);
         pointsQueues.values().forEach(queue -> executorService.submit(new PointProcessingTask(() -> {
             latch.countDown();
+            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
+                while (latch.getCount()!=0) {
+                    latch.countDown();
+                }
+            }
             return latch.getCount() == 0;
         }, runStats)));
         try {
