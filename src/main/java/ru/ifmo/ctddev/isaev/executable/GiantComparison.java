@@ -85,28 +85,22 @@ public class GiantComparison extends Comparison {
                     DataSetSplitter dataSetSplitter = new OrderSplitter(10, order);
                     List<RunStats> allStats = new ArrayList<>();
                     double delta = 0.1;
-                    int threads = 32;
-                    LOGGER.info("Threads {}", threads);
-                    for (Integer featuresToSelect : Arrays.asList(100)) {
+                    for (Integer threads : Arrays.asList(2, 4, 8, 16)) {
+                        LOGGER.info("Threads {}", threads);
                         AlgorithmConfig config = new AlgorithmConfig(delta,
                                 new SequentalEvaluator(Classifiers.WEKA_SVM,
-                                        new PreferredSizeFilter(featuresToSelect),
+                                        new PreferredSizeFilter(100),
                                         dataSetSplitter), MEASURES);
-                        allStats.add(new PriorityQueueMeLiF(config, dataSet, threads).run(String.format("Q%s|75", featuresToSelect), 75));
-                        System.gc();
-                        allStats.add(new PriorityQueueMeLiF(config, dataSet, threads).run(String.format("Q%s|100", featuresToSelect), 100));
-                        System.gc();
-                        allStats.add(new PriorityQueueMeLiF(config, dataSet, threads).run2(String.format("Q%s|noImprove", featuresToSelect), Math.max(20,threads)));
-                        System.gc();
-                        allStats.add(new MultiArmedBanditMeLiF(config, dataSet, threads, 2).run(String.format("MA%s|75", featuresToSelect), 75));
-                        System.gc();
-                        allStats.add(new MultiArmedBanditMeLiF(config, dataSet, threads, 2).run(String.format("MA%s|100", featuresToSelect), 100));
-                        System.gc();
-                        allStats.add(new MultiArmedBanditMeLiF(config, dataSet, threads, 2).run(String.format("MA%s|125", featuresToSelect), 125));
-                        System.gc();
-                        allStats.add(new MultiArmedBanditMeLiF(config, dataSet, threads, 2).run2(String.format("MA%s|noImprove", featuresToSelect), Math.max(20,threads)));
+                        allStats.add(new PriorityQueueMeLiF(config, dataSet, threads).run(String.format("Q%s|75", threads), 75));
                         System.gc();
                     }
+                    AlgorithmConfig config = new AlgorithmConfig(delta,
+                            new SequentalEvaluator(Classifiers.WEKA_SVM,
+                                    new PreferredSizeFilter(5000),
+                                    dataSetSplitter), MEASURES);
+                    allStats.add(new BasicMeLiF(config, dataSet).run("B5000|75", points));
+                    allStats.add(new PriorityQueueMeLiF(config, dataSet, 32).run("Q5000|75", 75));
+
                     PrintWriter writer = null;
                     try {
                         writer = new PrintWriter(new FileOutputStream("table_results/" + startTimeString + ".csv", true));
