@@ -85,21 +85,22 @@ public class GiantComparison extends Comparison {
                     DataSetSplitter dataSetSplitter = new OrderSplitter(10, order);
                     List<RunStats> allStats = new ArrayList<>();
                     double delta = 0.1;
-                    for (Integer threads : Arrays.asList(2, 4, 8, 16)) {
-                        LOGGER.info("Threads {}", threads);
-                        AlgorithmConfig config = new AlgorithmConfig(delta,
-                                new SequentalEvaluator(Classifiers.WEKA_SVM,
-                                        new PreferredSizeFilter(100),
-                                        dataSetSplitter), MEASURES);
-                        allStats.add(new PriorityQueueMeLiF(config, dataSet, threads).run(String.format("Q%s|75", threads), 75));
-                        System.gc();
-                    }
+                    Integer threads = 4;
+                    LOGGER.info("Threads {}", threads);
                     AlgorithmConfig config = new AlgorithmConfig(delta,
                             new SequentalEvaluator(Classifiers.WEKA_SVM,
-                                    new PreferredSizeFilter(5000),
+                                    new PreferredSizeFilter(100),
                                     dataSetSplitter), MEASURES);
-                    allStats.add(new BasicMeLiF(config, dataSet).run("B5000|75", points));
-                    allStats.add(new PriorityQueueMeLiF(config, dataSet, 32).run("Q5000|75", 75));
+                    allStats.add(new BasicMeLiF(config, dataSet).run(points));
+                    System.gc();
+                    allStats.add(new PriorityQueueMeLiF(config, dataSet, threads).run("Q50", 50));
+                    System.gc();
+                    allStats.add(new PriorityQueueMeLiF(config, dataSet, threads).run("Q75", 75));
+                    System.gc();
+                    allStats.add(new MultiArmedBanditMeLiF(config, dataSet, threads, 2).run("MA50", 50));
+                    System.gc();
+                    allStats.add(new MultiArmedBanditMeLiF(config, dataSet, threads, 2).run("MA75", 75));
+                    System.gc();
 
                     PrintWriter writer = null;
                     try {
