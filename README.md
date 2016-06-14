@@ -1,4 +1,4 @@
-# distributed-feature-selection
+# parallel-feature-selection
 This is my bachelor degree work in ITMO University.
 
 It is an improvement of feature selection algorithm [MeLiF](https://github.com/isae/distributed-feature-selection/raw/master/papers/melif.pdf), invented at our department, 
