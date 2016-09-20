@@ -16,6 +16,10 @@ public class Main {
 
     public static final String HELP_ARG = "help";
 
+    private static final String INPUT_ARG = "input-file";
+
+    private static final String OUTPUT_ARG = "output-file";
+
     static {
         OPTIONS.addOption(Option.builder("a")
                 .longOpt(ALGORITHM_ARG)
@@ -23,6 +27,19 @@ public class Main {
                 .argName("algorithmName")
                 .desc(String.format("Algorithm to be used; Available options: %s (case-insensitive)", Arrays.toString(Algo.values())))
                 .type(Algo.class)
+                .build());
+        OPTIONS.addOption(Option.builder("i")
+                .longOpt(INPUT_ARG)
+                .hasArg()
+                .argName("path")
+                .desc("CSV - file, containing input dataset; First line must contain objects labels (0 or 1), " +
+                        "other lines must contain a particular feature value for all objects")
+                .build());
+        OPTIONS.addOption(Option.builder("o")
+                .longOpt(OUTPUT_ARG)
+                .hasArg()
+                .argName("path")
+                .desc("Path to output directory")
                 .build());
         OPTIONS.addOption(Option.builder("help")
                 .desc("Print all available arguments")
