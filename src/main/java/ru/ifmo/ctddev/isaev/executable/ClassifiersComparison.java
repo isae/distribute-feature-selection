@@ -41,7 +41,7 @@ public class ClassifiersComparison extends Comparison {
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         List<RunStats> allStats = IntStream.range(0, Classifiers.values().length)
                 .mapToObj(i -> Classifiers.values()[i])
-                .filter(clf -> clf == Classifiers.WEKA_SVM)
+                .filter(clf -> clf == Classifiers.SVM)
                 .map(clf -> {
                     LOGGER.info("Classifier: {}", clf);
                     List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
@@ -56,11 +56,11 @@ public class ClassifiersComparison extends Comparison {
                     return result;
                 })
                 .collect(Collectors.toList());
-        RunStats svmStats = allStats.stream().filter(s -> s.getUsedClassifier() == Classifiers.WEKA_SVM).findAny().get();
+        RunStats svmStats = allStats.stream().filter(s -> s.getUsedClassifier() == Classifiers.SVM).findAny().get();
         List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
         Collections.shuffle(order);
         FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
-                Classifiers.WEKA_SVM,
+                Classifiers.SVM,
                 new PreferredSizeFilter(100), new OrderSplitter(10, order)
         );
         AlgorithmConfig nopMelifConfig = new AlgorithmConfig(0.1, foldsEvaluator, measures);

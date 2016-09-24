@@ -45,7 +45,7 @@ public class MeLiFComparison extends Comparison {
         List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
         Collections.shuffle(order);
         FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
-                Classifiers.WEKA_SVM,
+                Classifiers.SVM,
                 new PreferredSizeFilter(100), new OrderSplitter(10, order)
         );
         AlgorithmConfig config = new AlgorithmConfig(0.3, foldsEvaluator, measures);

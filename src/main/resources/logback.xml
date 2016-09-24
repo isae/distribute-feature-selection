@@ -2,7 +2,7 @@
 <configuration>
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{5} - %msg%n</pattern>
+            <pattern>%msg%n</pattern>
         </encoder>
     </appender>
 
@@ -14,7 +14,7 @@
         <!-- We will assign a value to 'logFileName' via Java code -->
         <discriminator>
             <key>fileName</key>
-            <defaultValue>generalInfo</defaultValue>
+            <defaultValue>datasetProcessing</defaultValue>
         </discriminator>
 
         <sift>

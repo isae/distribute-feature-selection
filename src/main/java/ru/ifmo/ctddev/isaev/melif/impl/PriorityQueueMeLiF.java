@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.executor.PriorityThreadPoolExecutor;
+import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.PriorityPoint;
 import ru.ifmo.ctddev.isaev.result.RunStats;
@@ -23,7 +24,7 @@ import java.util.stream.IntStream;
 /**
  * @author iisaev
  */
-public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
+public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
     private final PriorityThreadPoolExecutor executorService;
 
     private final int threads;
@@ -53,6 +54,41 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
             startingPoints.add(new PriorityPoint(1.0, coordinates));
         });
         this.executorService = new PriorityThreadPoolExecutor(threads, threads, 0L, TimeUnit.MILLISECONDS, new PriorityBlockingQueue<>(50));
+    }
+
+    @Override
+    public RunStats run(Point[] points) {
+        return run("PqMeLiF", 75);
+    }
+
+    @Override
+    public RunStats run(String name, Point[] points, int latchSize) {
+        RunStats runStats = new RunStats(config, dataSet, name);
+        logger.info("Started {} at {}", name, runStats.getStartTime());
+        CountDownLatch latch = new CountDownLatch(latchSize);
+        startingPoints.forEach(point -> executorService.submit(new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), () -> {
+            latch.countDown();
+            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
+                while (latch.getCount() != 0) {
+                    latch.countDown();
+                }
+            }
+            return latch.getCount() == 0;
+        }, runStats), 1.0));
+        try {
+            latch.await();
+        } catch (InterruptedException e) {
+            throw new IllegalStateException(e);
+        }
+        executorService.shutdownNow();
+        LOGGER.info("Max score: {} at point {}",
+                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getPoint().getCoordinates()
+        );
+        runStats.setFinishTime(LocalDateTime.now());
+        LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());
+        LOGGER.info("Working time: {} seconds", runStats.getWorkTime());
+        return runStats;
     }
 
     private List<Point> getNeighbours(Point point) {
@@ -102,32 +138,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
     }
 
     public RunStats run(String name, int latchSize) {
-        RunStats runStats = new RunStats(config, dataSet, name);
-        logger.info("Started {} at {}", name, runStats.getStartTime());
-        CountDownLatch latch = new CountDownLatch(latchSize);
-        startingPoints.forEach(point -> executorService.submit(new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), () -> {
-            latch.countDown();
-            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
-                while (latch.getCount()!=0) {
-                    latch.countDown();
-                }
-            }
-            return latch.getCount() == 0;
-        }, runStats), 1.0));
-        try {
-            latch.await();
-        } catch (InterruptedException e) {
-            throw new IllegalStateException(e);
-        }
-        executorService.shutdownNow();
-        LOGGER.info("Max score: {} at point {}",
-                runStats.getBestResult().getF1Score(),
-                runStats.getBestResult().getPoint().getCoordinates()
-        );
-        runStats.setFinishTime(LocalDateTime.now());
-        LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());
-        LOGGER.info("Working time: {} seconds", runStats.getWorkTime());
-        return runStats;
+        return run(name, null, latchSize);
     }
 
     public RunStats run2(String name, int untilStop) {
@@ -136,11 +147,11 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm {
         CountDownLatch latch = new CountDownLatch(1);
         startingPoints.forEach(point -> executorService.submit(new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), () -> {
             if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
-                while (latch.getCount()!=0) {
+                while (latch.getCount() != 0) {
                     latch.countDown();
                 }
             }
-            if(latch.getCount()==0){
+            if (latch.getCount() == 0) {
                 return true;
             }
             if (runStats.getNoImprove() > untilStop) {

@@ -42,7 +42,7 @@ public class MultipleComparison2 extends Comparison {
     private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
 
     protected static double getF1Score(DataSetPair dsPair) {
-        Classifier classifier = Classifiers.WEKA_SVM.newClassifier();
+        Classifier classifier = Classifiers.SVM.newClassifier();
         classifier.train(dsPair.getTrainSet());
         List<Integer> actual = classifier.test(dsPair.getTestSet())
                 .stream()
@@ -91,7 +91,7 @@ public class MultipleComparison2 extends Comparison {
                     List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
                     Collections.shuffle(order);
                     FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
-                            Classifiers.WEKA_SVM,
+                            Classifiers.SVM,
                             new PreferredSizeFilter(100), new OrderSplitter(10, order)
                     );
                     AlgorithmConfig config = new AlgorithmConfig(0.25, foldsEvaluator, measures);

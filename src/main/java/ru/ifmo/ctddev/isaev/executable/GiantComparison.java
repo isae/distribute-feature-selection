@@ -44,7 +44,7 @@ public class GiantComparison extends Comparison {
 
 
     protected static double getF1Score(DataSetPair dsPair) {
-        Classifier classifier = Classifiers.WEKA_SVM.newClassifier();
+        Classifier classifier = Classifiers.SVM.newClassifier();
         classifier.train(dsPair.getTrainSet());
         List<Integer> actual = classifier.test(dsPair.getTestSet())
                 .stream()
@@ -88,7 +88,7 @@ public class GiantComparison extends Comparison {
                     Integer threads = 4;
                     LOGGER.info("Threads {}", threads);
                     AlgorithmConfig config = new AlgorithmConfig(delta,
-                            new SequentalEvaluator(Classifiers.WEKA_SVM,
+                            new SequentalEvaluator(Classifiers.SVM,
                                     new PreferredSizeFilter(100),
                                     dataSetSplitter), MEASURES);
                     allStats.add(new BasicMeLiF(config, dataSet).run(points));
@@ -194,14 +194,14 @@ public class GiantComparison extends Comparison {
                         FeatureSelectionAlgorithm.FORMAT.format(delta),
                         foldsEvaluator.getName(),
                         foldsEvaluator.getDataSetSplitter().getTestPercent())
-                , points);
+                , points, 0);
         RunStats stupidParallel2 = new StupidParallelMeLiF2(config, dataSet).run(
                 String.format("Stupid2F%sD%sE%sT%s",
                         ((PreferredSizeFilter) foldsEvaluator.getDataSetFilter()).getPreferredSize(),
                         FeatureSelectionAlgorithm.FORMAT.format(delta),
                         foldsEvaluator.getName(),
                         foldsEvaluator.getDataSetSplitter().getTestPercent())
-                , points);
+                , points, 0);
         return Arrays.asList(stupidParallel, stupidParallel2);
     }
 
@@ -214,6 +214,6 @@ public class GiantComparison extends Comparison {
                         FeatureSelectionAlgorithm.FORMAT.format(delta),
                         foldsEvaluator.getName(),
                         foldsEvaluator.getDataSetSplitter().getTestPercent())
-                , points);
+                , points, 0);
     }
 }

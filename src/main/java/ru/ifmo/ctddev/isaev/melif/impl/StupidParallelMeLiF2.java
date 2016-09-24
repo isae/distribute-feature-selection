@@ -39,7 +39,7 @@ public class StupidParallelMeLiF2 extends ParallelMeLiF {
     }
 
     @Override
-    public RunStats run(String name, Point[] points) {
+    public RunStats run(String name, Point[] points, int pointsToVisit) {
         return run(name, points, true);
     }
 

@@ -68,6 +68,6 @@ public class Point implements Comparable<Point> {
     @Override
     public String toString() {
         List<String> doubles = DoubleStream.of(coordinates).mapToObj(FeatureSelectionAlgorithm.FORMAT::format).collect(Collectors.toList());
-        return "[" + String.join(", ", doubles) + "]/" + generation;
+        return "[" + String.join(", ", doubles) + "]/" + (generation != 0 ? generation : "");
     }
 }

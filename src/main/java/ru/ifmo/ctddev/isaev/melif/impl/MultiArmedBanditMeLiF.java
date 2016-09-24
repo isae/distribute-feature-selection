@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
+import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.PriorityPoint;
 import ru.ifmo.ctddev.isaev.result.RunStats;
@@ -25,7 +26,7 @@ import static java.lang.Math.sqrt;
  *
  * @author iisaev
  */
-public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
+public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
     private final ExecutorService executorService;
 
     private final int threads;
@@ -65,6 +66,11 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
 
     public int getPointQueuesNumber() {
         return pointsQueues.size();
+    }
+
+    @Override
+    public RunStats run(Point[] points) {
+        return run("MultiArmedMeLiF", 75);
     }
 
     private Map<Integer, Point> generateStartingPoints(int dimension, int splitNumber) {
@@ -215,7 +221,8 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
         }
     }
 
-    public RunStats run(String name, int latchSize) {
+    @Override
+    public RunStats run(String name, Point[] unused, int latchSize) {
         RunStats runStats = new RunStats(config, dataSet, name);
         logger.info("Started {} at {}", name, runStats.getStartTime());
 
@@ -223,7 +230,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
         pointsQueues.values().forEach(queue -> executorService.submit(new PointProcessingTask(() -> {
             latch.countDown();
             if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
-                while (latch.getCount()!=0) {
+                while (latch.getCount() != 0) {
                     latch.countDown();
                 }
             }
@@ -245,6 +252,10 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
         return runStats;
     }
 
+    public RunStats run(String name, int latchSize) {
+        return run(name, null, latchSize);
+    }
+
 
     public RunStats run2(String name, int untilStop) {
         RunStats runStats = new RunStats(config, dataSet, name);
@@ -253,7 +264,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm {
         CountDownLatch latch = new CountDownLatch(1);
         pointsQueues.values().forEach(queue -> executorService.submit(new PointProcessingTask(() -> {
             if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
-                while (latch.getCount()!=0) {
+                while (latch.getCount() != 0) {
                     latch.countDown();
                 }
             }

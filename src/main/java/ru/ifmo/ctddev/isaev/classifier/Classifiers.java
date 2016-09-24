@@ -7,15 +7,15 @@ import ru.ifmo.ctddev.isaev.classifier.weka.*;
  * @author iisaev
  */
 public enum Classifiers {
-    WEKA_HOEFD(WekaHoeffdingTree.class),
-    WEKA_J48(WekaJ48.class),
-    WEKA_KNN(WekaKNN.class),
-    WEKA_LMT(WekaLMT.class),
-    WEKA_PERCEPTRON(WekaMultilayerPerceptron.class),
-    WEKA_PART(WekaPART.class),
-    WEKA_RAND_FOREST(WekaRandomForest.class),
-    WEKA_SVM(WekaSVM.class),
-    WEKA_NAIVE_BAYES(WekaNaiveBayes.class);
+    HOEFD(WekaHoeffdingTree.class),
+    J48(WekaJ48.class),
+    KNN(WekaKNN.class),
+    LMT(WekaLMT.class),
+    PERCEPTRON(WekaMultilayerPerceptron.class),
+    PART(WekaPART.class),
+    RAND_FOREST(WekaRandomForest.class),
+    SVM(WekaSVM.class),
+    NAIVE_BAYES(WekaNaiveBayes.class);
 
     private Class<? extends Classifier> typeToken;
 

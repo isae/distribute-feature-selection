@@ -29,7 +29,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
     }
 
     @Override
-    public RunStats run(String name, Point[] points) {
+    public RunStats run(String name, Point[] points, int pointsToVisit) {
         Arrays.asList(points).forEach(p -> {
             if (p.getCoordinates().length != config.getMeasures().length) {
                 throw new IllegalArgumentException("Each point must have same coordinates number as number of measures");
@@ -57,7 +57,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
 
     @Override
     public RunStats run(Point[] points) {
-        return run("Basic", points);
+        return run("Basic", points, 0);
     }
 
     protected SelectionResult visitPoint(Point point, RunStats measures, SelectionResult bestResult) {

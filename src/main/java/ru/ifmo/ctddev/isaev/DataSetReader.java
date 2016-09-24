@@ -52,7 +52,7 @@ public class DataSetReader {
             logger.debug("Read dataset by path {}; {} objects; {} features", new Object[] {file.getAbsoluteFile(), classes.size(), features.size()});
             return new FeatureDataSet(features, classes, file.getName());
         } catch (FileNotFoundException e) {
-            throw new IllegalArgumentException("File not found", e);
+            throw new IllegalArgumentException("File not found: " + file.getName(), e);
         }
     }
 }
