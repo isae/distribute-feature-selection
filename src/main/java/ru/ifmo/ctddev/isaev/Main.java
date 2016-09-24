@@ -322,12 +322,12 @@ public class Main {
 
                 PrintWriter printWriter = new PrintWriter(outputFileName);
                 printWriter.println(
-                        String.join(" ", dataSet.toFeatureSet().getClasses().stream().map(String::valueOf).collect(Collectors.toList()))
+                        String.join(", ", dataSet.toFeatureSet().getClasses().stream().map(String::valueOf).collect(Collectors.toList()))
                 );
                 List<Feature> selectedFeatures = runStats.getBestResult().getSelectedFeatures();
                 for (Feature feature : selectedFeatures) {
                     printWriter.println(
-                            String.join(" ", feature.getValues().stream().map(String::valueOf).collect(Collectors.toList()))
+                            String.join(", ", feature.getValues().stream().map(String::valueOf).collect(Collectors.toList()))
                     );
                 }
                 printWriter.close();
@@ -335,7 +335,7 @@ public class Main {
         } catch (ParseException exp) {
             System.err.println("Invalid usage: " + exp.getMessage());
         } catch (Exception e) {
-            System.err.println("Error: " + e.getMessage());
+            LOGGER.error("Error: " + e.getMessage(), e);
         }
     }
 }
