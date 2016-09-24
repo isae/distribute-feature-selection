@@ -55,7 +55,7 @@ public class Main {
 
     private static final Integer DEFAULT_FEATURES_NUMBER = 250;
 
-    private static final String FOLDS_ARG = "folds";
+    private static final String TEST_SIZE_ARG = "test_size";
 
     private static final Integer DEFAULT_FOLDS_NUMBER = 20;
 
@@ -139,8 +139,8 @@ public class Main {
                 .desc("Coordinate descent step size; Default is " + DEFAULT_STEP_SIZE)
                 .type(Double.class)
                 .build());
-        OPTIONS.addOption(Option.builder("k")
-                .longOpt(FOLDS_ARG)
+        OPTIONS.addOption(Option.builder("t")
+                .longOpt(TEST_SIZE_ARG)
                 .hasArg()
                 .argName("test size")
                 .desc("Percent of instances that will be used for test; Default is " + DEFAULT_FOLDS_NUMBER)
@@ -262,7 +262,7 @@ public class Main {
                 LOGGER.info("{} features to select", featuresToSelect);
                 DataSetFilter dataSetFilter = new PreferredSizeFilter(featuresToSelect);
 
-                int testPercent = Optional.ofNullable(arguments.getOptionValue(FOLDS_ARG)).map(Integer::valueOf).orElse(DEFAULT_FOLDS_NUMBER);
+                int testPercent = Optional.ofNullable(arguments.getOptionValue(TEST_SIZE_ARG)).map(Integer::valueOf).orElse(DEFAULT_FOLDS_NUMBER);
                 LOGGER.info("{} percent of data will be used for testing", testPercent);
 
                 double delta = Optional.ofNullable(arguments.getOptionValue(DELTA_ARG)).map(Double::valueOf).orElse(DEFAULT_STEP_SIZE);
