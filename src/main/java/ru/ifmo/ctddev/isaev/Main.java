@@ -25,7 +25,6 @@ import ru.ifmo.ctddev.isaev.splitter.OrderSplitter;
 import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -315,10 +314,6 @@ public class Main {
                 }
 
                 RunStats runStats = meLif.run(algo.name(), points, latchSize);
-                LocalDateTime finishTime = LocalDateTime.now();
-                LOGGER.info("Finished {} at {}", algo, finishTime);
-                long workTime = ChronoUnit.SECONDS.between(startTime, finishTime);
-                LOGGER.info("Work time: {} seconds", workTime);
                 LOGGER.info("Visited {} points; best point is {} with score {}", new Object[] {
                         runStats.getVisitedPoints(),
                         runStats.getBestResult().getPoint(),
