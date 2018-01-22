@@ -96,7 +96,7 @@ public class MultipleComparison2 extends Comparison {
                     Collections.shuffle(order);
                     FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
                             Classifiers.SVM,
-                            new PreferredSizeFilter(100), new OrderSplitter(10, order)
+                            new PreferredSizeFilter(100), new OrderSplitter(10, order), new ScoreCalculator()
                     );
                     AlgorithmConfig config = new AlgorithmConfig(0.25, foldsEvaluator, measures);
 

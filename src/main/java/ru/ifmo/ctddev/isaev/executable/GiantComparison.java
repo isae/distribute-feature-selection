@@ -94,7 +94,7 @@ public class GiantComparison extends Comparison {
                     AlgorithmConfig config = new AlgorithmConfig(delta,
                             new SequentalEvaluator(Classifiers.SVM,
                                     new PreferredSizeFilter(100),
-                                    dataSetSplitter), MEASURES);
+                                    dataSetSplitter, new ScoreCalculator()), MEASURES);
                     allStats.add(new BasicMeLiF(config, dataSet).run(points));
                     System.gc();
                     allStats.add(new PriorityQueueMeLiF(config, dataSet, threads).run("Q50", 50));

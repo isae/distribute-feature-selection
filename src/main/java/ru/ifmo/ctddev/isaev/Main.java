@@ -290,7 +290,7 @@ public class Main {
                 Collections.shuffle(order);
                 FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
                         classifier,
-                        dataSetFilter, new OrderSplitter(testPercent, order)
+                        dataSetFilter, new OrderSplitter(testPercent, order), new ScoreCalculator()
                 );
 
                 AlgorithmConfig config = new AlgorithmConfig(delta, foldsEvaluator, measures);

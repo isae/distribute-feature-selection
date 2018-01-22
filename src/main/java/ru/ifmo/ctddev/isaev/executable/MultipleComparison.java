@@ -105,7 +105,7 @@ public class MultipleComparison extends Comparison {
                     DataSetFilter dataSetFilter = new PreferredSizeFilter(100);
                     FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
                             Classifiers.SVM,
-                            dataSetFilter, new OrderSplitter(10, order)
+                            dataSetFilter, new OrderSplitter(10, order), new ScoreCalculator()
                     );
                     AlgorithmConfig config = new AlgorithmConfig(0.25, foldsEvaluator, measures);
                     LocalDateTime startTime = LocalDateTime.now();

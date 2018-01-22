@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
+import ru.ifmo.ctddev.isaev.ScoreCalculator;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.FitCriterion;
@@ -52,7 +53,7 @@ public class ClassifiersComparison extends Comparison {
                     Collections.shuffle(order);
                     FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
                             clf,
-                            new PreferredSizeFilter(100), new OrderSplitter(10, order)
+                            new PreferredSizeFilter(100), new OrderSplitter(10, order), new ScoreCalculator()
                     );
                     AlgorithmConfig config = new AlgorithmConfig(0.1, foldsEvaluator, measures);
                     ParallelMeLiF meLiF = new ParallelMeLiF(config, dataSet, 20);
@@ -65,7 +66,7 @@ public class ClassifiersComparison extends Comparison {
         Collections.shuffle(order);
         FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
                 Classifiers.SVM,
-                new PreferredSizeFilter(100), new OrderSplitter(10, order)
+                new PreferredSizeFilter(100), new OrderSplitter(10, order), new ScoreCalculator()
         );
         AlgorithmConfig nopMelifConfig = new AlgorithmConfig(0.1, foldsEvaluator, measures);
         RunStats nopMelifStats = new ParallelNopMeLiF(nopMelifConfig, 20, (int) svmStats.getVisitedPoints()).run(points);
