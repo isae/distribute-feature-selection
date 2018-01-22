@@ -3,7 +3,7 @@ package ru.ifmo.ctddev.isaev.result;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
-import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
+import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

@@ -15,6 +15,10 @@ import java.util.stream.Collectors;
 public class SymmetricUncertainty extends CorrelationBasedMeasure {
     private static final double LOG_2 = Math.log(2);
 
+    public SymmetricUncertainty() {
+        super();
+    }
+
     @Override
     public double evaluate(Feature feature, List<Integer> classes) {
         double xPriorEntropy = getPriorEntropy(calculateDistribution(feature.getValues()));

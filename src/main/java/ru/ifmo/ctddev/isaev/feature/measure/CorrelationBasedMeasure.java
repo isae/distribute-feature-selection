@@ -1,6 +1,7 @@
 package ru.ifmo.ctddev.isaev.feature.measure;
 
 import ru.ifmo.ctddev.isaev.dataset.Feature;
+import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure;
 
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +13,10 @@ import java.util.stream.Collectors;
  * @author iisaev
  */
 public abstract class CorrelationBasedMeasure extends RelevanceMeasure {
+    public CorrelationBasedMeasure() {
+        super();
+    }
+
     protected class Distribution {
         private int sum;
 

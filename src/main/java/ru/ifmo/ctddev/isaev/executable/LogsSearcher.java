@@ -2,7 +2,11 @@ package ru.ifmo.ctddev.isaev.executable;
 
 import ru.ifmo.ctddev.isaev.DataSetReader;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
-import ru.ifmo.ctddev.isaev.feature.measure.*;
+import ru.ifmo.ctddev.isaev.feature.FitCriterion;
+import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure;
+import ru.ifmo.ctddev.isaev.feature.SpearmanRankCorrelation;
+import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty;
+import ru.ifmo.ctddev.isaev.feature.measure.VDM;
 import ru.ifmo.ctddev.isaev.filter.DataSetFilter;
 import ru.ifmo.ctddev.isaev.filter.PreferredSizeFilter;
 import ru.ifmo.ctddev.isaev.result.Point;

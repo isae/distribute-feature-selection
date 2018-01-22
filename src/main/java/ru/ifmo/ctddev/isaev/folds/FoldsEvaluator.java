@@ -6,7 +6,7 @@ import ru.ifmo.ctddev.isaev.ScoreCalculator;
 import ru.ifmo.ctddev.isaev.classifier.Classifier;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.*;
-import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
+import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure;
 import ru.ifmo.ctddev.isaev.filter.DataSetFilter;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;

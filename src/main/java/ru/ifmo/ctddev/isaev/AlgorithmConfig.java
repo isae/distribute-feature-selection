@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev;
 
-import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
+import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure;
 import ru.ifmo.ctddev.isaev.folds.FoldsEvaluator;
 
 
