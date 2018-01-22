@@ -23,7 +23,9 @@ public class MeasureEvaluator {
             throw new IllegalArgumentException("Number of given measures mismatch with measureCosts dimension");
         }
         return features.map(feature -> {
-            List<Double> measureValues = Arrays.stream(measures).map(m -> m.evaluate(feature, classes)).collect(Collectors.toList());
+            List<Double> measureValues = Arrays.stream(measures)
+                    .map(m -> m.evaluate(feature, classes))
+                    .collect(Collectors.toList());
             double result = 0.0;
             for (int i = 0; i < measureCosts.getCoordinates().length; ++i) {
                 result += measureCosts.getCoordinates()[i] * measureValues.get(i);

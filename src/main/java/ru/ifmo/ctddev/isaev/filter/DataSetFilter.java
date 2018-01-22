@@ -8,6 +8,7 @@ import ru.ifmo.ctddev.isaev.feature.measure.RelevanceMeasure;
 import ru.ifmo.ctddev.isaev.result.EvaluatedFeature;
 import ru.ifmo.ctddev.isaev.result.Point;
 
+import java.util.Comparator;
 import java.util.stream.Stream;
 
 
@@ -27,13 +28,7 @@ public abstract class DataSetFilter {
                         original.getClasses(),
                         measureCosts,
                         measures
-                ).sorted((o1, o2) -> {
-                    if (o1.getMeasure() == o2.getMeasure()) {
-                        return 0;
-                    } else {
-                        return o1.getMeasure() < o2.getMeasure() ? 1 : -1;
-                    }
-                });
+                ).sorted(Comparator.comparingDouble(EvaluatedFeature::getMeasure));
     }
 
     public abstract FeatureDataSet filterDataSet(FeatureDataSet original, Point measureCosts,
