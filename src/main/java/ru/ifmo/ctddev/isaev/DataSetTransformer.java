@@ -2,7 +2,10 @@ package ru.ifmo.ctddev.isaev;
 
 import ru.ifmo.ctddev.isaev.dataset.DataInstance;
 import ru.ifmo.ctddev.isaev.dataset.InstanceDataSet;
-import weka.core.*;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
+import weka.core.Instances;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -30,7 +33,7 @@ public class DataSetTransformer {
         ds.getInstances().forEach(inst -> {
             Instance instance = new DenseInstance(inst.getValues().size() + 1);
             instance.setDataset(result);
-            instance.setValue(0, inst.getClazz().toString());
+            instance.setValue(0, String.valueOf(inst.getClazz()));
             IntStream.range(0, inst.getValues().size()).forEach(i -> {
                 instance.setValue(i + 1, (double) inst.getValues().get(i));
             });

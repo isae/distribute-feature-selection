@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
-import ru.ifmo.ctddev.isaev.*;
+import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.result.OptimizationPoint;
 import ru.ifmo.ctddev.isaev.result.Point;

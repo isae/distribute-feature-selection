@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.result;
 
+
 import ru.ifmo.ctddev.isaev.dataset.Feature;
 
 
