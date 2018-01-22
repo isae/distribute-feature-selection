@@ -1,11 +1,11 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -43,9 +43,9 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
                 .map(p -> performCoordinateDescend(p, runStats))
                 .collect(Collectors.toList());
         logger.info("Total scores: ");
-        scores.stream().mapToDouble(SelectionResult::getF1Score).forEach(System.out::println);
+        scores.stream().mapToDouble(SelectionResult::getScore).forEach(System.out::println);
         logger.info("Max score: {} at point {}",
-                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getScore(),
                 runStats.getBestResult().getPoint().getCoordinates()
         );
         LocalDateTime finishTime = LocalDateTime.now();
@@ -72,7 +72,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
         SelectionResult bestScore = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
         visitedPoints.add(point);
-        if (runStats.getBestResult() != null && runStats.getScore() > bestScore.getF1Score()) {
+        if (runStats.getBestResult() != null && runStats.getScore() > bestScore.getScore()) {
             bestScore = runStats.getBestResult();
         }
 
@@ -83,7 +83,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
             smthChanged = false;
 
             for (int i = 0; i < coordinates.length; i++) {
-                if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
+                if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getScore() - 1.0) < 0.0001) {
                     return runStats.getBestResult();
                 }
                 final int finalI = i;

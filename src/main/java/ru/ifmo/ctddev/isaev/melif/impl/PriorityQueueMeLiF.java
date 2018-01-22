@@ -3,13 +3,13 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.executor.PriorityThreadPoolExecutor;
 import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.PriorityPoint;
 import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -68,7 +68,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
         CountDownLatch latch = new CountDownLatch(latchSize);
         startingPoints.forEach(point -> executorService.submit(new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), () -> {
             latch.countDown();
-            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
+            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getScore() - 1.0) < 0.0001) {
                 while (latch.getCount() != 0) {
                     latch.countDown();
                 }
@@ -82,7 +82,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
         }
         executorService.shutdownNow();
         LOGGER.info("Max score: {} at point {}",
-                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getScore(),
                 runStats.getBestResult().getPoint().getCoordinates()
         );
         runStats.setFinishTime(LocalDateTime.now());
@@ -130,10 +130,10 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
             List<Point> neighbours = getNeighbours(point);
             neighbours.forEach(p -> {
                 if (!visitedPoints.contains(p)) {
-                    executorService.submit(new PointProcessingTask(new PriorityPoint(res.getF1Score(), p.getCoordinates()), stopCondition, runStats), res.getF1Score());
+                    executorService.submit(new PointProcessingTask(new PriorityPoint(res.getScore(), p.getCoordinates()), stopCondition, runStats), res.getScore());
                 }
             });
-            return res.getF1Score();
+            return res.getScore();
         }
     }
 
@@ -146,7 +146,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
         logger.info("Started {} at {}", name, runStats.getStartTime());
         CountDownLatch latch = new CountDownLatch(1);
         startingPoints.forEach(point -> executorService.submit(new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), () -> {
-            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
+            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getScore() - 1.0) < 0.0001) {
                 while (latch.getCount() != 0) {
                     latch.countDown();
                 }
@@ -168,7 +168,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
         }
         executorService.shutdownNow();
         LOGGER.info("Max score: {} at point {}",
-                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getScore(),
                 runStats.getBestResult().getPoint().getCoordinates()
         );
         runStats.setFinishTime(LocalDateTime.now());

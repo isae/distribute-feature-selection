@@ -3,11 +3,11 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.dataset.DataSetPair;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -42,7 +42,7 @@ public class ParallelNopMeLiF extends ParallelMeLiF {
         }
     }
 
-    protected double getF1Score(DataSetPair dsPair) {
+    protected double getScore(DataSetPair dsPair) {
         int visitedPoints = visitedPointsCounter.getAndIncrement();
         if (visitedPoints < pointsToVisit) {
             return (double) visitedPoints / pointsToVisit;

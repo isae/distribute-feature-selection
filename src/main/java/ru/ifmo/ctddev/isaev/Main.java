@@ -290,7 +290,7 @@ public class Main {
                 Collections.shuffle(order);
                 FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
                         classifier,
-                        dataSetFilter, new OrderSplitter(testPercent, order), new ScoreCalculator()
+                        dataSetFilter, new OrderSplitter(testPercent, order), new F1Score()
                 );
 
                 AlgorithmConfig config = new AlgorithmConfig(delta, foldsEvaluator, measures);
@@ -321,7 +321,7 @@ public class Main {
                 LOGGER.info("Visited {} points; best point is {} with score {}", new Object[] {
                         runStats.getVisitedPoints(),
                         runStats.getBestResult().getPoint(),
-                        runStats.getBestResult().getF1Score()
+                        runStats.getBestResult().getScore()
                 });
 
                 PrintWriter printWriter = new PrintWriter(outputFileName);

@@ -5,9 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
-import ru.ifmo.ctddev.isaev.ScoreCalculator;
+import ru.ifmo.ctddev.isaev.F1Score;
+import ru.ifmo.ctddev.isaev.Score;
 import ru.ifmo.ctddev.isaev.classifier.Classifier;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
+import ru.ifmo.ctddev.isaev.classifier.TrainedClassifier;
 import ru.ifmo.ctddev.isaev.dataset.DataInstance;
 import ru.ifmo.ctddev.isaev.dataset.DataSetPair;
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
@@ -42,20 +44,20 @@ import java.util.stream.IntStream;
 public class GiantComparison extends Comparison {
     private static final Logger LOGGER = LoggerFactory.getLogger(MultipleComparison.class);
 
-    private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
+    private static final Score score = new F1Score();
 
     private static final RelevanceMeasure[] MEASURES = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
 
 
-    protected static double getF1Score(DataSetPair dsPair) {
+    protected static double getScore(DataSetPair dsPair) {
         Classifier classifier = Classifiers.SVM.newClassifier();
-        classifier.train(dsPair.getTrainSet());
-        List<Integer> actual = classifier.test(dsPair.getTestSet())
+        TrainedClassifier trained = classifier.train(dsPair.getTrainSet());
+        List<Integer> actual = trained.test(dsPair.getTestSet())
                 .stream()
                 .map(d -> (int) Math.round(d))
                 .collect(Collectors.toList());
         List<Integer> expectedValues = dsPair.getTestSet().toInstanceSet().getInstances().stream().map(DataInstance::getClazz).collect(Collectors.toList());
-        return scoreCalculator.calculateF1Score(expectedValues, actual);
+        return score.calculate(expectedValues, actual);
     }
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -94,7 +96,7 @@ public class GiantComparison extends Comparison {
                     AlgorithmConfig config = new AlgorithmConfig(delta,
                             new SequentalEvaluator(Classifiers.SVM,
                                     new PreferredSizeFilter(100),
-                                    dataSetSplitter, new ScoreCalculator()), MEASURES);
+                                    dataSetSplitter, new F1Score()), MEASURES);
                     allStats.add(new BasicMeLiF(config, dataSet).run(points));
                     System.gc();
                     allStats.add(new PriorityQueueMeLiF(config, dataSet, threads).run("Q50", 50));

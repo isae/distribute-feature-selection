@@ -2,11 +2,11 @@ package ru.ifmo.ctddev.isaev.filter
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import ru.ifmo.ctddev.isaev.EvaluatedFeature
 import ru.ifmo.ctddev.isaev.dataset.Feature
 import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet
 import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure
 import ru.ifmo.ctddev.isaev.feature.evaluateMeasures
-import ru.ifmo.ctddev.isaev.result.EvaluatedFeature
 import ru.ifmo.ctddev.isaev.result.Point
 import java.util.*
 

@@ -5,9 +5,10 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
-import ru.ifmo.ctddev.isaev.ScoreCalculator;
+import ru.ifmo.ctddev.isaev.F1Score;
 import ru.ifmo.ctddev.isaev.classifier.Classifier;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
+import ru.ifmo.ctddev.isaev.classifier.TrainedClassifier;
 import ru.ifmo.ctddev.isaev.dataset.DataInstance;
 import ru.ifmo.ctddev.isaev.dataset.DataSetPair;
 import ru.ifmo.ctddev.isaev.feature.FitCriterion;
@@ -48,17 +49,17 @@ import java.util.stream.IntStream;
 public class MultipleComparison extends Comparison {
     private static final Logger LOGGER = LoggerFactory.getLogger(MultipleComparison.class);
 
-    private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
+    private static final F1Score score = new F1Score();
 
-    protected static double getF1Score(DataSetPair dsPair) {
+    protected static double getScore(DataSetPair dsPair) {
         Classifier classifier = Classifiers.SVM.newClassifier();
-        classifier.train(dsPair.getTrainSet());
-        List<Integer> actual = classifier.test(dsPair.getTestSet())
+        TrainedClassifier trainedClassifier = classifier.train(dsPair.getTrainSet());
+        List<Integer> actual = trainedClassifier.test(dsPair.getTestSet())
                 .stream()
                 .map(d -> (int) Math.round(d))
                 .collect(Collectors.toList());
         List<Integer> expectedValues = dsPair.getTestSet().toInstanceSet().getInstances().stream().map(DataInstance::getClazz).collect(Collectors.toList());
-        return scoreCalculator.calculateF1Score(expectedValues, actual);
+        return score.calculate(expectedValues, actual);
     }
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -105,7 +106,7 @@ public class MultipleComparison extends Comparison {
                     DataSetFilter dataSetFilter = new PreferredSizeFilter(100);
                     FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
                             Classifiers.SVM,
-                            dataSetFilter, new OrderSplitter(10, order), new ScoreCalculator()
+                            dataSetFilter, new OrderSplitter(10, order), score
                     );
                     AlgorithmConfig config = new AlgorithmConfig(0.25, foldsEvaluator, measures);
                     LocalDateTime startTime = LocalDateTime.now();
@@ -125,13 +126,13 @@ public class MultipleComparison extends Comparison {
                     LOGGER.info("Visited {} points; best point is {} with score {}", new Object[] {
                             simpleStats.getVisitedPoints(),
                             simpleStats.getBestResult().getPoint(),
-                            simpleStats.getBestResult().getF1Score()
+                            simpleStats.getBestResult().getScore()
                     });
                     LOGGER.info("Multi-threaded work time: {} seconds", parallelWorkTime);
                     LOGGER.info("Visited {} points; best point is {} with score {}", new Object[] {
                             parallelStats.getVisitedPoints(),
                             parallelStats.getBestResult().getPoint(),
-                            parallelStats.getBestResult().getF1Score()
+                            parallelStats.getBestResult().getScore()
                     });
                     LOGGER.info("Multi-threaded to single-threaded version speed improvement: {}%",
                             getSpeedImprovementPercent(simpleStats.getWorkTime(), parallelStats.getWorkTime()));
@@ -144,13 +145,13 @@ public class MultipleComparison extends Comparison {
                     List<Double> basicScores = tenFoldSplitter.split(
                             dataSetFilter.filterDataSet(dataSet.toFeatureSet(), simpleStats.getBestResult().getPoint(), measures)
                     ).stream()
-                            .map(MultipleComparison::getF1Score)
+                            .map(MultipleComparison::getScore)
                             .collect(Collectors.toList());
 
                     List<Double> parallelScores = tenFoldSplitter.split(
                             dataSetFilter.filterDataSet(dataSet.toFeatureSet(), parallelStats.getBestResult().getPoint(), measures)
                     )
-                            .stream().map(MultipleComparison::getF1Score)
+                            .stream().map(MultipleComparison::getScore)
                             .collect(Collectors.toList());
                     assert basicScores.size() == parallelScores.size();
                     return new Pr<>(basicScores, parallelScores);

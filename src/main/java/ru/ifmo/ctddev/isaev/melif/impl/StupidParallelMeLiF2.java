@@ -3,10 +3,10 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -64,9 +64,9 @@ public class StupidParallelMeLiF2 extends ParallelMeLiF {
                 .map(p -> performCoordinateDescend(p, runStats))
                 .collect(Collectors.toList());
         logger.info("Total scores: ");
-        scores.stream().mapToDouble(SelectionResult::getF1Score).forEach(System.out::println);
+        scores.stream().mapToDouble(SelectionResult::getScore).forEach(System.out::println);
         logger.info("Max score: {} at point {}",
-                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getScore(),
                 runStats.getBestResult().getPoint().getCoordinates()
         );
         LocalDateTime finishTime = LocalDateTime.now();

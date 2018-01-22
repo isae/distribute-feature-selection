@@ -3,10 +3,10 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -84,9 +84,9 @@ public class ParallelMeLiF extends BasicMeLiF {
             }
         }).collect(Collectors.toList());
         LOGGER.info("Total scores: ");
-        scores.stream().mapToDouble(SelectionResult::getF1Score).forEach(System.out::println);
+        scores.stream().mapToDouble(SelectionResult::getScore).forEach(System.out::println);
         LOGGER.info("Max score: {} at point {}",
-                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getScore(),
                 runStats.getBestResult().getPoint().getCoordinates()
         );
         runStats.setFinishTime(LocalDateTime.now());
@@ -100,7 +100,7 @@ public class ParallelMeLiF extends BasicMeLiF {
 
     @Override
     protected SelectionResult visitPoint(Point point, RunStats runStats, SelectionResult bestResult) {
-        if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
+        if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getScore() - 1.0) < 0.0001) {
             return runStats.getBestResult();
         }
         SelectionResult score = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
@@ -111,7 +111,7 @@ public class ParallelMeLiF extends BasicMeLiF {
     protected SelectionResult performCoordinateDescend(Point point, RunStats runStats) {
         SelectionResult bestScore = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
         visitedPoints.add(point);
-        if (runStats.getBestResult() != null && runStats.getScore() > bestScore.getF1Score()) {
+        if (runStats.getBestResult() != null && runStats.getScore() > bestScore.getScore()) {
             bestScore = runStats.getBestResult();
         }
 

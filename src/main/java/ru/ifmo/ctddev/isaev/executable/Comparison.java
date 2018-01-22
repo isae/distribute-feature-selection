@@ -61,7 +61,7 @@ public class Comparison {
                 stats -> Stream.of(
                         stats.getWorkTime(),
                         stats.getBestResult().getPoint(),
-                        FORMAT.format(stats.getBestResult().getF1Score()),
+                        FORMAT.format(stats.getBestResult().getScore()),
                         stats.getVisitedPoints())
         ));
         sb.append(String.join(";", row.map(Objects::toString).collect(Collectors.toList()))).append("\n");

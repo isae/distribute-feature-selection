@@ -1,6 +1,7 @@
 package ru.ifmo.ctddev.isaev.result;
 
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure;
@@ -25,7 +26,7 @@ public class RunStats implements Comparable<RunStats> {
     private final int instanceCount;
 
     public double getScore() {
-        return getBestResult().getF1Score() / workTime;
+        return getBestResult().getScore() / workTime;
     }
 
     private final Classifiers usedClassifier;

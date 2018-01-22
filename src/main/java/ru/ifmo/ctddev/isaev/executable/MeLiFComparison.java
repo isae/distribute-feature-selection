@@ -4,7 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
-import ru.ifmo.ctddev.isaev.ScoreCalculator;
+import ru.ifmo.ctddev.isaev.F1Score;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.FitCriterion;
@@ -51,7 +51,7 @@ public class MeLiFComparison extends Comparison {
         Collections.shuffle(order);
         FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
                 Classifiers.SVM,
-                new PreferredSizeFilter(100), new OrderSplitter(10, order), new ScoreCalculator()
+                new PreferredSizeFilter(100), new OrderSplitter(10, order), new F1Score()
         );
         AlgorithmConfig config = new AlgorithmConfig(0.3, foldsEvaluator, measures);
         //int threads = Runtime.getRuntime().availableProcessors();

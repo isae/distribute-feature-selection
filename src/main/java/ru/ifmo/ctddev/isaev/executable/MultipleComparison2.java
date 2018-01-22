@@ -5,9 +5,11 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSetReader;
-import ru.ifmo.ctddev.isaev.ScoreCalculator;
+import ru.ifmo.ctddev.isaev.F1Score;
+import ru.ifmo.ctddev.isaev.Score;
 import ru.ifmo.ctddev.isaev.classifier.Classifier;
 import ru.ifmo.ctddev.isaev.classifier.Classifiers;
+import ru.ifmo.ctddev.isaev.classifier.TrainedClassifier;
 import ru.ifmo.ctddev.isaev.dataset.DataInstance;
 import ru.ifmo.ctddev.isaev.dataset.DataSetPair;
 import ru.ifmo.ctddev.isaev.feature.FitCriterion;
@@ -43,17 +45,17 @@ import java.util.stream.IntStream;
 public class MultipleComparison2 extends Comparison {
     private static final Logger LOGGER = LoggerFactory.getLogger(MultipleComparison.class);
 
-    private static final ScoreCalculator scoreCalculator = new ScoreCalculator();
+    private static final Score score = new F1Score();
 
-    protected static double getF1Score(DataSetPair dsPair) {
+    protected static double getScore(DataSetPair dsPair) {
         Classifier classifier = Classifiers.SVM.newClassifier();
-        classifier.train(dsPair.getTrainSet());
-        List<Integer> actual = classifier.test(dsPair.getTestSet())
+        TrainedClassifier trained = classifier.train(dsPair.getTrainSet());
+        List<Integer> actual = trained.test(dsPair.getTestSet())
                 .stream()
                 .map(d -> (int) Math.round(d))
                 .collect(Collectors.toList());
         List<Integer> expectedValues = dsPair.getTestSet().toInstanceSet().getInstances().stream().map(DataInstance::getClazz).collect(Collectors.toList());
-        return scoreCalculator.calculateF1Score(expectedValues, actual);
+        return score.calculate(expectedValues, actual);
     }
 
     public static void main(String[] args) throws FileNotFoundException {
@@ -96,7 +98,7 @@ public class MultipleComparison2 extends Comparison {
                     Collections.shuffle(order);
                     FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
                             Classifiers.SVM,
-                            new PreferredSizeFilter(100), new OrderSplitter(10, order), new ScoreCalculator()
+                            new PreferredSizeFilter(100), new OrderSplitter(10, order), score
                     );
                     AlgorithmConfig config = new AlgorithmConfig(0.25, foldsEvaluator, measures);
 

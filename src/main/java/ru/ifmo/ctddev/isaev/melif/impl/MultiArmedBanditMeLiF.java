@@ -3,12 +3,12 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.PriorityPoint;
 import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -202,7 +202,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
                 SelectionResult res = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
                 visitedPoints.add(point);
                 List<Point> neighbours = getNeighbours(point);
-                double award = res.getF1Score();
+                double award = res.getScore();
                 neighbours.forEach(p -> {
                     if (!visitedPoints.contains(p)) {
                         pointsQueues.get(arm).add(new PriorityPoint(award, p.getCoordinates()));
@@ -229,7 +229,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
         CountDownLatch latch = new CountDownLatch(latchSize);
         pointsQueues.values().forEach(queue -> executorService.submit(new PointProcessingTask(() -> {
             latch.countDown();
-            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
+            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getScore() - 1.0) < 0.0001) {
                 while (latch.getCount() != 0) {
                     latch.countDown();
                 }
@@ -243,7 +243,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
         }
         executorService.shutdownNow();
         LOGGER.info("Max score: {} at point {}",
-                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getScore(),
                 runStats.getBestResult().getPoint().getCoordinates()
         );
         runStats.setFinishTime(LocalDateTime.now());
@@ -263,7 +263,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
 
         CountDownLatch latch = new CountDownLatch(1);
         pointsQueues.values().forEach(queue -> executorService.submit(new PointProcessingTask(() -> {
-            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getF1Score() - 1.0) < 0.0001) {
+            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getScore() - 1.0) < 0.0001) {
                 while (latch.getCount() != 0) {
                     latch.countDown();
                 }
@@ -285,7 +285,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
         }
         executorService.shutdownNow();
         LOGGER.info("Max score: {} at point {}",
-                runStats.getBestResult().getF1Score(),
+                runStats.getBestResult().getScore(),
                 runStats.getBestResult().getPoint().getCoordinates()
         );
         runStats.setFinishTime(LocalDateTime.now());

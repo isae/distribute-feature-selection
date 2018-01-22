@@ -1,11 +1,11 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.result.OptimizationPoint;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ctddev.isaev.result.SelectionResult;
 
 import java.util.Comparator;
 import java.util.List;
@@ -55,9 +55,9 @@ public class MeLifStar extends ParallelMeLiF {
             return Stream.concat(
                     Stream.of(parent),
                     results.stream()
-                            .filter(res -> res.getF1Score() > parent.getF1Score())
+                            .filter(res -> res.getScore() > parent.getScore())
                             .map(ep -> processChildren(ep, runStats))
-            ).min(Comparator.comparingDouble(SelectionResult::getF1Score)).get();
+            ).min(Comparator.comparingDouble(SelectionResult::getScore)).get();
         } catch (InterruptedException e) {
             throw new RuntimeException("Operation was interrupted", e);
         }

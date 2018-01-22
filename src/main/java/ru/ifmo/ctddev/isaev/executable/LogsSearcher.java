@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+
 /**
  * @author iisaev
  */
@@ -35,9 +36,9 @@ public class LogsSearcher {
         DataSetReader dataSetReader = new DataSetReader();
 
         PrintWriter writer = new PrintWriter("result.out");
-        
+
         DataSetFilter dataSetFilter = new PreferredSizeFilter(100);
-        RelevanceMeasure[] measures = new RelevanceMeasure[]{new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
+        RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
         Arrays.asList(logsDir.listFiles()).stream()
                 .filter(f -> !f.getName().startsWith("."))
                 .forEach(file -> {
@@ -66,16 +67,16 @@ public class LogsSearcher {
                             List<Double> basicScores = tenFoldSplitter.split(
                                     dataSetFilter.filterDataSet(dataSet.toFeatureSet(), points.get(0), measures)
                             ).stream()
-                                    .map(MultipleComparison::getF1Score)
+                                    .map(MultipleComparison::getScore)
                                     .collect(Collectors.toList());
 
                             List<Double> parallelScores = tenFoldSplitter.split(
                                     dataSetFilter.filterDataSet(dataSet.toFeatureSet(), points.get(1), measures)
                             )
-                                    .stream().map(MultipleComparison::getF1Score)
+                                    .stream().map(MultipleComparison::getScore)
                                     .collect(Collectors.toList());
                             assert basicScores.size() == parallelScores.size();
-                            System.out.format("Size: %d\n",basicScores.size());
+                            System.out.format("Size: %d\n", basicScores.size());
                             System.out.println(Arrays.toString(basicScores.toArray()));
                             writer.println(Arrays.toString(basicScores.toArray()));
                             System.out.println(Arrays.toString(parallelScores.toArray()));

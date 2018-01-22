@@ -1,7 +1,5 @@
 package ru.ifmo.ctddev.isaev.classifier;
 
-import ru.ifmo.ctddev.isaev.classifier.weka.*;
-
 
 /**
  * @author iisaev

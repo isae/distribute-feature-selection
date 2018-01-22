@@ -2,7 +2,8 @@ package ru.ifmo.ctddev.isaev.folds
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import ru.ifmo.ctddev.isaev.ScoreCalculator
+import ru.ifmo.ctddev.isaev.Score
+import ru.ifmo.ctddev.isaev.SelectionResult
 import ru.ifmo.ctddev.isaev.classifier.Classifiers
 import ru.ifmo.ctddev.isaev.dataset.DataSet
 import ru.ifmo.ctddev.isaev.dataset.DataSetPair
@@ -12,7 +13,6 @@ import ru.ifmo.ctddev.isaev.filter.DataSetFilter
 import ru.ifmo.ctddev.isaev.melif.impl.FeatureSelectionAlgorithm
 import ru.ifmo.ctddev.isaev.result.Point
 import ru.ifmo.ctddev.isaev.result.RunStats
-import ru.ifmo.ctddev.isaev.result.SelectionResult
 import ru.ifmo.ctddev.isaev.splitter.DataSetSplitter
 import java.util.*
 import java.util.concurrent.CountDownLatch
@@ -26,20 +26,20 @@ abstract class FoldsEvaluator(val name: String,
                               val classifiers: Classifiers,
                               val dataSetSplitter: DataSetSplitter,
                               val dataSetFilter: DataSetFilter,
-                              private val scoreCalculator: ScoreCalculator) {
+                              private val score: Score) {
     protected val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
     abstract fun getSelectionResult(dataSet: DataSet, point: Point, stats: RunStats): SelectionResult
     abstract fun getSelectionResultPar(dataSet: DataSet, point: Point, stats: RunStats, executorService: ExecutorService): SelectionResult
 
-    protected fun getF1Score(dsPair: DataSetPair): Double {
+    protected fun getScore(dsPair: DataSetPair): Double {
         val classifier = classifiers.newClassifier()
-        classifier.train(dsPair.trainSet)
-        val actual = classifier.test(dsPair.testSet)
+        val trained = classifier.train(dsPair.trainSet)
+        val actual = trained.test(dsPair.testSet)
                 .map { Math.round(it).toInt() }
         val expectedValues = dsPair.testSet.toInstanceSet().instances
                 .map { it.clazz }
-        val result = scoreCalculator.calculateF1Score(expectedValues, actual)
+        val result = score.calculate(expectedValues, actual)
         if (logger.isTraceEnabled) {
             logger.trace("Expected values: {}", Arrays.toString(expectedValues.toTypedArray()))
             logger.trace("Actual values: {}", Arrays.toString(actual.toTypedArray()))
@@ -47,28 +47,28 @@ abstract class FoldsEvaluator(val name: String,
         return result
     }
 
-    protected fun getF1Score(filteredDs: FeatureDataSet): Double {
+    protected fun getScore(filteredDs: FeatureDataSet): Double {
         val instanceDataSet = filteredDs.toInstanceSet()
         val f1Scores = dataSetSplitter.split(instanceDataSet)
-                .map { this.getF1Score(it) }
+                .map { this.getScore(it) }
         return f1Scores.average()
     }
 
-    protected fun getF1Score(dataSet: DataSet, point: Point, measures: Array<RelevanceMeasure>): Double {
+    protected fun getScore(dataSet: DataSet, point: Point, measures: Array<RelevanceMeasure>): Double {
         val filteredDs = dataSetFilter.filterDataSet(dataSet.toFeatureSet(), point, measures)
         val instanceDataSet = filteredDs.toInstanceSet()
         val f1Scores = dataSetSplitter.split(instanceDataSet)
-                .map { this.getF1Score(it) }
+                .map { this.getScore(it) }
         return f1Scores.average()
     }
 }
 
-class SequentalEvaluator(classifiers: Classifiers, dataSetFilter: DataSetFilter, dataSetSplitter: DataSetSplitter, scoreCalculator: ScoreCalculator)
-    : FoldsEvaluator("Seq", classifiers, dataSetSplitter, dataSetFilter, scoreCalculator) {
+class SequentalEvaluator(classifiers: Classifiers, dataSetFilter: DataSetFilter, dataSetSplitter: DataSetSplitter, score: Score)
+    : FoldsEvaluator("Seq", classifiers, dataSetSplitter, dataSetFilter, score) {
 
     override fun getSelectionResult(dataSet: DataSet, point: Point, stats: RunStats): SelectionResult {
         val filteredDs = dataSetFilter.filterDataSet(dataSet.toFeatureSet(), point, stats.measures)
-        val f1Score = getF1Score(dataSet, point, stats.measures)
+        val f1Score = getScore(dataSet, point, stats.measures)
         logger.debug("Point {}; F1 score: {}", point, FeatureSelectionAlgorithm.FORMAT.format(f1Score))
         val result = SelectionResult(filteredDs.features, point, f1Score)
         stats.updateBestResult(result)
@@ -83,7 +83,7 @@ class SequentalEvaluator(classifiers: Classifiers, dataSetFilter: DataSetFilter,
         val f1Scores = Collections.synchronizedList(ArrayList<Double>(dataSetPairs.size))
         val futures = dataSetPairs.map { ds ->
             executorService.submit {
-                val score = getF1Score(ds)
+                val score = getScore(ds)
                 f1Scores.add(score)
                 latch.countDown()
             }
@@ -104,11 +104,11 @@ class SequentalEvaluator(classifiers: Classifiers, dataSetFilter: DataSetFilter,
 }
 
 class ParallelEvaluator(classifiers: Classifiers, dataSetFilter: DataSetFilter, dataSetSplitter: DataSetSplitter,
-                        private val executorService: ExecutorService, scoreCalculator: ScoreCalculator)
-    : FoldsEvaluator("Par", classifiers, dataSetSplitter, dataSetFilter, scoreCalculator) {
+                        private val executorService: ExecutorService, score: Score)
+    : FoldsEvaluator("Par", classifiers, dataSetSplitter, dataSetFilter, score) {
 
-    constructor(classifiers: Classifiers, dataSetFilter: DataSetFilter, datasetSplitter: DataSetSplitter, scoreCalculator: ScoreCalculator, threads: Int)
-            : this(classifiers, dataSetFilter, datasetSplitter, Executors.newFixedThreadPool(threads), scoreCalculator)
+    constructor(classifiers: Classifiers, dataSetFilter: DataSetFilter, datasetSplitter: DataSetSplitter, score: Score, threads: Int)
+            : this(classifiers, dataSetFilter, datasetSplitter, Executors.newFixedThreadPool(threads), score)
 
     override fun getSelectionResult(dataSet: DataSet, point: Point, stats: RunStats): SelectionResult {
         val filteredDs = dataSetFilter.filterDataSet(dataSet.toFeatureSet(), point, stats.measures)
@@ -119,7 +119,7 @@ class ParallelEvaluator(classifiers: Classifiers, dataSetFilter: DataSetFilter, 
         val futures = dataSetPairs
                 .map { ds ->
                     executorService.submit {
-                        val score = getF1Score(ds)
+                        val score = getScore(ds)
                         f1Scores.add(score)
                         latch.countDown()
                     }
