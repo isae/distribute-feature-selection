@@ -40,23 +40,28 @@ class DataSetReader {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     fun readCsv(path: String): FeatureDataSet {
-        return readDataset(File(path), ",")
+        return readDataSet(File(path), ",")
     }
 
     fun readCsv(file: File): FeatureDataSet {
-        return readDataset(file, ",")
+        return readDataSet(file, ",")
     }
 
-    private fun readDataset(file: File, delimiter: String): FeatureDataSet {
+    private fun readDataSet(file: File, delimiter: String): FeatureDataSet {
+        fun parseRow(line: String): List<Int> {
+            return line.split(delimiter.toRegex())
+                    .dropLastWhile { it.isEmpty() }
+                    .map({ Integer.valueOf(it) })
+        }
         try {
             val reader = BufferedReader(FileReader(file))
             val counter = intArrayOf(0)
             val goodLines = Sequence { reader.lines().iterator() }
                     .filter { l -> !l.contains("NaN") }
-            val classes = parseRow(goodLines.first(), delimiter)
+            val classes = parseRow(goodLines.first())
             val features = goodLines
-                    .map { parseRow(it, delimiter) }
-                    .map { Feature("feature ${++counter[0]}", it) }
+                    .map(::parseRow)
+                    .map { it -> Feature("feature ${++counter[0]}", it) }
             val featuresList = features.toList()
             logger.debug("Read dataset by path {}; {} objects; {} features", arrayOf(file.absoluteFile, classes.size, featuresList.size))
             return FeatureDataSet(featuresList, classes, file.name)
@@ -64,11 +69,5 @@ class DataSetReader {
             throw IllegalArgumentException("File not found: " + file.name, e)
         }
 
-    }
-
-    private fun parseRow(line: String, delimiter: String): List<Int> {
-        return line.split(delimiter.toRegex())
-                .dropLastWhile { it.isEmpty() }
-                .map({ Integer.valueOf(it) })
     }
 }

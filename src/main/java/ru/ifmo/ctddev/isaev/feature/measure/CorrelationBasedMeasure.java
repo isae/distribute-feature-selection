@@ -1,6 +1,5 @@
 package ru.ifmo.ctddev.isaev.feature.measure;
 
-import ru.ifmo.ctddev.isaev.dataset.Feature;
 import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure;
 
 import java.util.HashMap;
@@ -12,8 +11,8 @@ import java.util.stream.Collectors;
 /**
  * @author iisaev
  */
-public abstract class CorrelationBasedMeasure extends RelevanceMeasure {
-    public CorrelationBasedMeasure() {
+abstract class CorrelationBasedMeasure extends RelevanceMeasure {
+    CorrelationBasedMeasure() {
         super();
     }
 
@@ -22,11 +21,11 @@ public abstract class CorrelationBasedMeasure extends RelevanceMeasure {
 
         private Map<Integer, Integer> distribution = new HashMap<>(); //value -> number of instances having it
 
-        public int getSum() {
+        int getSum() {
             return sum;
         }
 
-        public void setSum(int sum) {
+        void setSum(int sum) {
             this.sum = sum;
         }
 
@@ -37,20 +36,13 @@ public abstract class CorrelationBasedMeasure extends RelevanceMeasure {
         public Distribution() {
         }
 
-        public void setDistribution(Map<Integer, Integer> distribution) {
-            this.distribution = distribution;
-        }
-
         public Distribution(int sum, Map<Integer, Integer> distribution) {
             this.sum = sum;
             this.distribution = distribution;
         }
     }
 
-    @Override
-    public abstract double evaluate(Feature feature, List<Integer> classes);
-
-    protected Map<Integer, Distribution> calculateDistribution(List<Integer> values, List<Integer> classes) {
+    Map<Integer, Distribution> calculateDistribution(List<Integer> values, List<Integer> classes) {
         Map<Integer, Distribution> distributions = new HashMap<>();
         classes.stream().distinct().forEach(clazz -> {
             Distribution ds = new Distribution();
@@ -67,7 +59,7 @@ public abstract class CorrelationBasedMeasure extends RelevanceMeasure {
         return distributions;
     }
 
-    protected Distribution calculateDistribution(List<Integer> values) {
+    Distribution calculateDistribution(List<Integer> values) {
         return new Distribution(values.size(), values.stream().collect(Collectors.toMap(i -> i, i -> 1, (k, v) -> k + v)));
     }
 }
