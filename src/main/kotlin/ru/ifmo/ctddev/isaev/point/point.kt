@@ -15,9 +15,10 @@ open class Point : Comparable<Point> {
 
     private val generation: Int
 
-    constructor(vararg coordinates: Double) : this(0, *coordinates) {}
+    constructor(vararg coordinates: Double) : this(0, *coordinates)
 
-    constructor(generation: Int, vararg coordinates: Double) : this(generation, Consumer {}, *coordinates)
+    constructor(generation: Int,
+                vararg coordinates: Double) : this(generation, Consumer {}, *coordinates)
 
     constructor(generation: Int,
                 modifyCoordinates: Consumer<DoubleArray>,
@@ -29,7 +30,7 @@ open class Point : Comparable<Point> {
         this.generation = generation
     }
 
-    constructor(point: Point) : this(*point.coordinates.clone()) {}
+    constructor(point: Point) : this(*point.coordinates.clone())
 
     constructor(point: Point,
                 modifyCoordinates: (DoubleArray) -> Unit) {
@@ -70,7 +71,7 @@ open class Point : Comparable<Point> {
     }
 }
 
-class PriorityPoint(var priority: Double, vararg coordinates: Double) : Point(*coordinates) {
+class PriorityPoint(var priority: Double, p: Point) : Point(p) {
 
-    constructor(value: Point) : this(1.0, *value.coordinates)
+    constructor(value: Point) : this(1.0, value)
 }

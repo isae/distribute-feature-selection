@@ -88,7 +88,7 @@ public class StupidParallelMeLiF extends BasicMeLiF {
         scores.stream().mapToDouble(SelectionResult::getScore).forEach(System.out::println);
         LOGGER.info("Max score: {} at point {}",
                 runStats.getBestResult().getScore(),
-                runStats.getBestResult().getPoint().getCoordinates()
+                runStats.getBestResult().getPoint()
         );
         runStats.setFinishTime(LocalDateTime.now());
         LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());

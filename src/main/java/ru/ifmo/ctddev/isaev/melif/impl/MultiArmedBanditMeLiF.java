@@ -203,7 +203,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
             List<Point> neighbours = point.getNeighbours(config.getDelta());
             double award = res.getScore();
             neighbours.stream()
-                    .map(p -> new PriorityPoint(award, p.getCoordinates()))
+                    .map(p -> new PriorityPoint(award, p))
                     .filter(p -> !visitedPoints.contains(p))
                     .forEach(p -> pointsQueues.get(arm).offer(p));
             synchronized (holder) {
@@ -238,7 +238,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
         executorService.shutdownNow();
         LOGGER.info("Max score: {} at point {}",
                 runStats.getBestResult().getScore(),
-                runStats.getBestResult().getPoint().getCoordinates()
+                runStats.getBestResult().getPoint()
         );
         runStats.setFinishTime(LocalDateTime.now());
         LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());
@@ -280,7 +280,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
         executorService.shutdownNow();
         LOGGER.info("Max score: {} at point {}",
                 runStats.getBestResult().getScore(),
-                runStats.getBestResult().getPoint().getCoordinates()
+                runStats.getBestResult().getPoint()
         );
         runStats.setFinishTime(LocalDateTime.now());
         LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());

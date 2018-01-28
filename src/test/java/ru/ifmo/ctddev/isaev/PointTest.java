@@ -3,6 +3,7 @@ package ru.ifmo.ctddev.isaev;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.ifmo.ctddev.isaev.point.Point;
+import ru.ifmo.ctddev.isaev.point.SpherePointKt;
 
 import java.util.Arrays;
 import java.util.List;
@@ -30,6 +31,15 @@ public class PointTest {
                 new Point(34.0000239 / 30, 17.0 / 15),
                 new Point(51.0000239 / 45, 17.0 / 15),
                 new Point(68.0000239 / 60, 17.0 / 15)
+        );
+        Assert.assertEquals("All points are equal", 1, new TreeSet<>(points).size());
+    }
+
+    @Test
+    public void testEqualSphericalPoints() {
+        List<Point> points = Arrays.asList(
+                new Point(17.0 / 15, 17.0 / 15),
+                SpherePointKt.fromSpherical(SpherePointKt.toSpherical(new Point(17.0 / 15, 17.0 / 15)))
         );
         Assert.assertEquals("All points are equal", 1, new TreeSet<>(points).size());
     }

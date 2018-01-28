@@ -63,13 +63,13 @@ public class MeLiFComparison extends Comparison {
         long starWorkTime = ChronoUnit.SECONDS.between(parallelFinish, starFinish);
         LOGGER.info("Single-threaded work time: {} seconds", simpleWorkTime);
         LOGGER.info("Visited {} points; best point is {}", simpleStats.getVisitedPoints(),
-                simpleStats.getBestResult().getPoint().getCoordinates());
+                simpleStats.getBestResult().getPoint());
         LOGGER.info("Multi-threaded work time: {} seconds", parallelWorkTime);
         LOGGER.info("Visited {} points; best point is {}", parallelStats.getVisitedPoints(),
-                parallelStats.getBestResult().getPoint().getCoordinates());
+                parallelStats.getBestResult().getPoint());
         LOGGER.info("Star work time: {} seconds", starWorkTime);
         LOGGER.info("Visited {} points; best point is {}", starStats.getVisitedPoints(),
-                starStats.getBestResult().getPoint().getCoordinates());
+                starStats.getBestResult().getPoint());
         LOGGER.info("Multi-threaded to single-threaded version speed improvement: {}%",
                 getSpeedImprovementPercent(simpleWorkTime, parallelWorkTime));
         LOGGER.info("Star to single-threaded version speed improvement: {}%",

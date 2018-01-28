@@ -67,7 +67,7 @@ public class StupidParallelMeLiF2 extends ParallelMeLiF {
         scores.stream().mapToDouble(SelectionResult::getScore).forEach(System.out::println);
         logger.info("Max score: {} at point {}",
                 runStats.getBestResult().getScore(),
-                runStats.getBestResult().getPoint().getCoordinates()
+                runStats.getBestResult().getPoint()
         );
         LocalDateTime finishTime = LocalDateTime.now();
         runStats.setFinishTime(finishTime);
