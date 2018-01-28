@@ -1,76 +1,131 @@
 package ru.ifmo.ctddev.isaev
 
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.*
 import java.util.concurrent.*
 
 /**
  * @author iisaev
  */
-class PriorityFutureTask<T> : FutureTask<T>, Runnable, Comparable<PriorityFutureTask<T>> {
-    private val priority: Double
 
-    constructor(callable: Callable<T>, priority: Double) : super(callable) {
-        this.priority = priority
-    }
+fun fail(): Nothing = throw UnsupportedOperationException("Not implemented")
 
-    constructor(runnable: Runnable, result: T, priority: Double) : super(runnable, result) {
-        this.priority = priority
-    }
-
-    override fun compareTo(other: PriorityFutureTask<T>): Int {
-        return -java.lang.Double.compare(priority, other.priority)
+interface PriorityTask : Comparable<PriorityTask> {
+    fun priority(): Double
+    fun increasePriority(priorityIncrement: Double)
+    override fun compareTo(other: PriorityTask): Int {
+        return -java.lang.Double.compare(priority(), other.priority())
     }
 }
 
-private val LOGGER = LoggerFactory.getLogger(PriorityThreadPoolExecutor::class.java)
-
-class PriorityThreadPoolExecutor(corePoolSize: Int, maximumPoolSize: Int) 
-    : ThreadPoolExecutor(corePoolSize, maximumPoolSize, 0L, TimeUnit.MILLISECONDS, PriorityBlockingQueue<Runnable>(64)) {
-
-    override fun submit(task: Runnable): Future<*> {
-        throw UnsupportedOperationException("Do not use submit without priority")
+class PriorityFutureTask<T>(callable: Callable<T>, private var priority: Double) : FutureTask<T>(callable), Runnable, PriorityTask {
+    override fun increasePriority(priorityIncrement: Double) {
+        priority += priorityIncrement
     }
 
-    override fun <T> submit(task: Runnable, result: T): Future<T> {
-        throw UnsupportedOperationException("Do not use submit without priority")
-    }
+    override fun priority(): Double = priority
+}
 
-    override fun <T> submit(task: Callable<T>): Future<T> {
-        LOGGER.error("Do not use submit without priority")
-        throw UnsupportedOperationException("Do not use submit without priority")
-    }
+class LinearSearchBlockingQueue<T>(private val capacity: Int) : BlockingQueue<T> {
+    private val list = LinkedList<T>()
+    private val semaphore = Semaphore(0)
 
-    fun <T> submitWithPriority(task: Runnable?, result: T, priority: Double): Future<T> {
-        if (task == null) {
-            throw IllegalArgumentException("Task must not be null")
+    override fun contains(element: T): Boolean = fail()
+
+    override fun addAll(elements: Collection<T>): Boolean = fail()
+
+    override fun clear() = fail()
+
+    override fun element(): T = fail()
+
+    override fun take(): T {
+        semaphore.acquire()
+        synchronized(list) {
+            val maxIndex = list.mapIndexed { i, t -> Pair(i, t as PriorityTask) }
+                    .maxBy { (_, t) -> t.priority() }?.first
+            return list.removeAt(maxIndex!!)
         }
-        val future = newTaskFor(task, result, priority)
+    }
+
+    override fun removeAll(elements: Collection<T>): Boolean = fail()
+
+    override fun add(element: T): Boolean = fail()
+
+    override fun offer(e: T): Boolean {
+        return if (remainingCapacity() != 0) {
+            synchronized(list) {
+                list.add(e)
+            }
+            semaphore.release()
+            true
+        } else {
+            false
+        }
+    }
+
+    override fun offer(e: T, timeout: Long, unit: TimeUnit): Boolean = offer(e)
+
+    override fun iterator(): MutableIterator<T> = fail()
+
+    override fun peek(): T = fail()
+
+    override fun put(e: T) = fail()
+
+    override fun isEmpty(): Boolean = list.isEmpty()
+
+    override fun remove(element: T): Boolean = fail()
+
+    override fun remove(): T = fail()
+
+    override fun containsAll(elements: Collection<T>): Boolean = fail()
+
+    override fun drainTo(c: MutableCollection<in T>): Int {
+        synchronized(list) {
+            c.addAll(list)
+            val size = list.size
+            list.clear()
+            return size
+        }
+    }
+
+    override fun drainTo(c: MutableCollection<in T>, maxElements: Int): Int = fail()
+
+    override fun retainAll(elements: Collection<T>): Boolean = fail()
+
+    override fun remainingCapacity(): Int = capacity - list.size
+
+    override fun poll(timeout: Long, unit: TimeUnit): T = fail()
+
+    override fun poll(): T = fail()
+
+    override val size: Int
+        get() = list.size
+}
+
+val LOGGER: Logger = LoggerFactory.getLogger(PriorityThreadPoolExecutor::class.java)
+
+class PriorityThreadPoolExecutor(poolSize: Int)
+    : ThreadPoolExecutor(poolSize, poolSize, 0L, TimeUnit.MILLISECONDS, LinearSearchBlockingQueue<Runnable>(64)) {
+
+    fun increaseTasksPriorities(priorityIncrement: Double) {
+        queue.map { it as PriorityTask }
+                .forEach { it.increasePriority(priorityIncrement) }
+    }
+
+    override fun submit(task: Runnable): Future<*> = fail()
+
+    override fun <T> submit(task: Runnable, result: T): Future<T> = fail()
+
+    override fun <T> submit(task: Callable<T>): Future<T> = fail()
+
+    fun <T> submitWithPriority(task: Callable<T>, priority: Double): Future<T> {
+        val future = PriorityFutureTask(task, priority)
         execute(future)
         return future
     }
 
-    fun <T> submitWithPriority(task: Callable<T>?, priority: Double): Future<T> {
-        if (task == null) {
-            throw IllegalArgumentException("Task must not be null")
-        }
-        val future = newTaskFor(task, priority)
-        execute(future)
-        return future
-    }
+    override fun <T> newTaskFor(runnable: Runnable, value: T): RunnableFuture<T> = fail()
 
-    private fun <T> newTaskFor(runnable: Runnable, result: T, priority: Double): RunnableFuture<T> {
-        return PriorityFutureTask(runnable, result, priority)
-    }
-
-    private fun <T> newTaskFor(callable: Callable<T>, priority: Double): RunnableFuture<T> {
-        return PriorityFutureTask(callable, priority)
-    }
-
-    override fun <T> newTaskFor(runnable: Runnable, value: T): RunnableFuture<T> {
-        throw UnsupportedOperationException("Do not use newTaskFor without priority")
-    }
-
-    override fun <T> newTaskFor(callable: Callable<T>): RunnableFuture<T> {
-        throw UnsupportedOperationException("Do not use newTaskFor without priority")
-    }
+    override fun <T> newTaskFor(callable: Callable<T>): RunnableFuture<T> = fail()
 }

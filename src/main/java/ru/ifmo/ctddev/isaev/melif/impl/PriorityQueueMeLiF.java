@@ -28,6 +28,9 @@ import java.util.stream.IntStream;
  * @author iisaev
  */
 public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
+
+    private static final double PRIORITY_INCREMENT = 0.1;
+
     private final PriorityThreadPoolExecutor executorService;
 
     private final int threads;
@@ -56,7 +59,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
             coordinates[dim] = 1.0;
             startingPoints.add(new PriorityPoint(1.0, coordinates));
         });
-        this.executorService = new PriorityThreadPoolExecutor(threads, threads);
+        this.executorService = new PriorityThreadPoolExecutor(threads);
     }
 
     @Override
@@ -135,6 +138,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
             SelectionResult res = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
             visitedPoints.add(point);
             List<Point> neighbours = getNeighbours(point);
+            executorService.increaseTasksPriorities(PRIORITY_INCREMENT);
             neighbours.forEach(p -> {
                 if (!visitedPoints.contains(p)) {
                     executorService.submitWithPriority(new PointProcessingTask(
