@@ -3,8 +3,8 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
-import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.DataSet;
+import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.PriorityPoint;
@@ -257,7 +257,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
     }
 
 
-    public RunStats run2(String name, int untilStop) {
+    public RunStats runUntilNoImproveOnLastN(String name, Point[] points, int lastN) {
         RunStats runStats = new RunStats(config, dataSet, name);
         logger.info("Started {} at {}", name, runStats.getStartTime());
 
@@ -271,7 +271,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
             if (latch.getCount() == 0) {
                 return true;
             }
-            if (runStats.getNoImprove() > untilStop) {
+            if (runStats.getNoImprove() > lastN) {
                 latch.countDown();
                 return true;
             } else {

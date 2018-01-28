@@ -3,9 +3,9 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
-import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.DataSet;
 import ru.ifmo.ctddev.isaev.PriorityThreadPoolExecutor;
+import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.PriorityPoint;
@@ -16,7 +16,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -66,7 +69,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
         RunStats runStats = new RunStats(config, dataSet, name);
         logger.info("Started {} at {}", name, runStats.getStartTime());
         CountDownLatch latch = new CountDownLatch(latchSize);
-        startingPoints.forEach(point -> executorService.submitWithPriority(new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), () -> {
+        final Supplier<Boolean> stopCondition = () -> {
             latch.countDown();
             if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getScore() - 1.0) < 0.0001) {
                 while (latch.getCount() != 0) {
@@ -74,7 +77,11 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
                 }
             }
             return latch.getCount() == 0;
-        }, runStats), 1.0));
+        };
+        startingPoints.forEach(point -> executorService.submitWithPriority(
+                new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), stopCondition, runStats),
+                1.0
+        ));
         try {
             latch.await();
         } catch (InterruptedException e) {
@@ -130,7 +137,10 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
             List<Point> neighbours = getNeighbours(point);
             neighbours.forEach(p -> {
                 if (!visitedPoints.contains(p)) {
-                    executorService.submitWithPriority(new PointProcessingTask(new PriorityPoint(res.getScore(), p.getCoordinates()), stopCondition, runStats), res.getScore());
+                    executorService.submitWithPriority(new PointProcessingTask(
+                                    new PriorityPoint(res.getScore(), p.getCoordinates()), stopCondition, runStats),
+                            res.getScore()
+                    );
                 }
             });
             return res.getScore();
@@ -141,11 +151,11 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
         return run(name, null, latchSize);
     }
 
-    public RunStats run2(String name, int untilStop) {
+    public RunStats runUntilNoImproveOnLastN(String name, Point[] points, int untilStop) {
         RunStats runStats = new RunStats(config, dataSet, name);
         logger.info("Started {} at {}", name, runStats.getStartTime());
         CountDownLatch latch = new CountDownLatch(1);
-        startingPoints.forEach(point -> executorService.submitWithPriority(new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), () -> {
+        final Supplier<Boolean> stopCondition = () -> {
             if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getScore() - 1.0) < 0.0001) {
                 while (latch.getCount() != 0) {
                     latch.countDown();
@@ -160,7 +170,11 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
             } else {
                 return false;
             }
-        }, runStats), 1.0));
+        };
+        startingPoints.forEach(point -> executorService.submitWithPriority(
+                new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), stopCondition, runStats),
+                1.0
+        ));
         try {
             latch.await();
         } catch (InterruptedException e) {
