@@ -2,6 +2,7 @@ package ru.ifmo.ctddev.isaev.result;
 
 import ru.ifmo.ctddev.isaev.melif.impl.FeatureSelectionAlgorithm;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -71,5 +72,16 @@ public class Point implements Comparable<Point> {
     public String toString() {
         List<String> doubles = DoubleStream.of(coordinates).mapToObj(FeatureSelectionAlgorithm.FORMAT::format).collect(Collectors.toList());
         return "[" + String.join(", ", doubles) + "]/" + (generation != 0 ? generation : "");
+    }
+
+    public List<Point> getNeighbours(double delta) {
+        List<Point> points = new ArrayList<>();
+        IntStream.range(0, coordinates.length).forEach(i -> {
+            Point plusDelta = new Point(this, coords -> coords[i] += delta);
+            Point minusDelta = new Point(this, coords -> coords[i] -= delta);
+            points.add(plusDelta);
+            points.add(minusDelta);
+        });
+        return points;
     }
 }

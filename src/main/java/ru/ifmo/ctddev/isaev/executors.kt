@@ -27,9 +27,17 @@ class PriorityFutureTask<T>(callable: Callable<T>, private var priority: Double)
     override fun priority(): Double = priority
 }
 
-class LinearSearchBlockingQueue<T>(private val capacity: Int) : BlockingQueue<T> {
+class LinearSearchPriorityBlockingQueue<T>(private val capacity: Int,
+                                           private val getPriority: (T) -> Double,
+                                           private val increasePriority: (T, Double) -> Unit) : BlockingQueue<T> {
     private val list = LinkedList<T>()
     private val semaphore = Semaphore(0)
+
+    fun increasePriorities(increment: Double) {
+        synchronized(list) {
+            list.forEach { point -> increasePriority(point, increment) }
+        }
+    }
 
     override fun contains(element: T): Boolean = fail()
 
@@ -40,10 +48,12 @@ class LinearSearchBlockingQueue<T>(private val capacity: Int) : BlockingQueue<T>
     override fun element(): T = fail()
 
     override fun take(): T {
-        semaphore.acquire()
+        if (!semaphore.tryAcquire(5, TimeUnit.SECONDS)) {
+            throw IllegalStateException("Nothing is happened for 5 seconds; failing...")
+        }
         synchronized(list) {
-            val maxIndex = list.mapIndexed { i, t -> Pair(i, t as PriorityTask) }
-                    .maxBy { (_, t) -> t.priority() }?.first
+            val maxIndex = list.mapIndexed { i, t -> Pair(i, t) }
+                    .maxBy { (_, t) -> getPriority(t) }?.first
             return list.removeAt(maxIndex!!)
         }
     }
@@ -103,14 +113,18 @@ class LinearSearchBlockingQueue<T>(private val capacity: Int) : BlockingQueue<T>
         get() = list.size
 }
 
-val LOGGER: Logger = LoggerFactory.getLogger(PriorityThreadPoolExecutor::class.java)
+val LOGGER: Logger = LoggerFactory.getLogger(PriorityExecutor::class.java)
 
-class PriorityThreadPoolExecutor(poolSize: Int)
-    : ThreadPoolExecutor(poolSize, poolSize, 0L, TimeUnit.MILLISECONDS, LinearSearchBlockingQueue<Runnable>(64)) {
+class PriorityExecutor(poolSize: Int)
+    : ThreadPoolExecutor(poolSize, poolSize, 0L, TimeUnit.MILLISECONDS,
+        LinearSearchPriorityBlockingQueue<Runnable>(64,
+                { r -> (r as PriorityTask).priority() },
+                { task, priority -> (task as PriorityTask).increasePriority(priority) }
+        )
+) {
 
-    fun increaseTasksPriorities(priorityIncrement: Double) {
-        queue.map { it as PriorityTask }
-                .forEach { it.increasePriority(priorityIncrement) }
+    fun increaseTasksPriorities(increment: Double) {
+        (queue as LinearSearchPriorityBlockingQueue).increasePriorities(increment)
     }
 
     override fun submit(task: Runnable): Future<*> = fail()

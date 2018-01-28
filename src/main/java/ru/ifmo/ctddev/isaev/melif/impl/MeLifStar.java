@@ -1,9 +1,8 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
-import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.DataSet;
-import ru.ifmo.ctddev.isaev.result.OptimizationPoint;
+import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 
@@ -13,8 +12,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ForkJoinPool;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 
@@ -36,7 +33,7 @@ public class MeLifStar extends ParallelMeLiF {
     }
 
     private SelectionResult processChildren(SelectionResult parent, RunStats runStats) {
-        List<OptimizationPoint> neighbours = getNeighbours(parent.getPoint());
+        List<Point> neighbours =parent.getPoint().getNeighbours(config.getDelta());
         CountDownLatch latch = new CountDownLatch(neighbours.size());
         Queue<SelectionResult> results = new ConcurrentLinkedQueue<>();
         neighbours.forEach(p -> {
@@ -62,18 +59,4 @@ public class MeLifStar extends ParallelMeLiF {
             throw new RuntimeException("Operation was interrupted", e);
         }
     }
-
-    List<OptimizationPoint> getNeighbours(Point point) {
-        return IntStream.range(0, point.getCoordinates().length)
-                .mapToObj(i -> i)
-                .flatMap(i -> Stream.of(
-                        new OptimizationPoint(point, (arr) -> {
-                            arr[i] += config.getDelta();
-                        }),
-                        new OptimizationPoint(point, (arr) -> {
-                            arr[i] -= config.getDelta();
-                        })
-                )).collect(Collectors.toList());
-    }
-
 }

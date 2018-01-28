@@ -4,11 +4,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSet;
-import ru.ifmo.ctddev.isaev.PriorityThreadPoolExecutor;
+import ru.ifmo.ctddev.isaev.PriorityExecutor;
 import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
-import ru.ifmo.ctddev.isaev.result.PriorityPoint;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 
 import java.time.LocalDateTime;
@@ -19,7 +18,6 @@ import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -31,15 +29,9 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
 
     private static final double PRIORITY_INCREMENT = 0.1;
 
-    private final PriorityThreadPoolExecutor executorService;
-
-    private final int threads;
+    private final PriorityExecutor executorService;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PriorityQueueMeLiF.class);
-
-    public ExecutorService getExecutorService() {
-        return executorService;
-    }
 
     protected final Set<Point> visitedPoints = new ConcurrentSkipListSet<>();
 
@@ -47,19 +39,18 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
 
     public PriorityQueueMeLiF(AlgorithmConfig config, DataSet dataSet, int threads) {
         super(config, dataSet);
-        this.threads = threads;
         int dimension = config.getMeasures().length;
 
         double[] allEqual = new double[dimension];
         Arrays.fill(allEqual, 1.0);
-        startingPoints.add(new PriorityPoint(1.0, allEqual));
+        startingPoints.add(new Point(allEqual));
 
         IntStream.range(0, dimension).forEach(dim -> {
             double[] coordinates = new double[dimension];
             coordinates[dim] = 1.0;
-            startingPoints.add(new PriorityPoint(1.0, coordinates));
+            startingPoints.add(new Point(coordinates));
         });
-        this.executorService = new PriorityThreadPoolExecutor(threads);
+        this.executorService = new PriorityExecutor(threads);
     }
 
     @Override
@@ -82,7 +73,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
             return latch.getCount() == 0;
         };
         startingPoints.forEach(point -> executorService.submitWithPriority(
-                new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), stopCondition, runStats),
+                new PointProcessingTask(point, stopCondition, runStats),
                 1.0
         ));
         try {
@@ -101,25 +92,14 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
         return runStats;
     }
 
-    private List<Point> getNeighbours(Point point) {
-        List<Point> points = new ArrayList<>();
-        IntStream.range(0, config.getMeasures().length).forEach(i -> {
-            Point plusDelta = new Point(point, coords -> coords[i] += config.getDelta());
-            Point minusDelta = new Point(point, coords -> coords[i] -= config.getDelta());
-            points.add(plusDelta);
-            points.add(minusDelta);
-        });
-        return points;
-    }
-
     class PointProcessingTask implements Callable<Double> {
-        PriorityPoint point;
+        Point point;
 
         Supplier<Boolean> stopCondition;
 
         RunStats runStats;
 
-        public PointProcessingTask(PriorityPoint point, Supplier<Boolean> stopCondition, RunStats runStats) {
+        public PointProcessingTask(Point point, Supplier<Boolean> stopCondition, RunStats runStats) {
             this.point = point;
             this.stopCondition = stopCondition;
             this.runStats = runStats;
@@ -131,18 +111,17 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
                 return 0.0;
             }
             if (visitedPoints.contains(point)) {
-                logger.warn("Point is already processed");
+                logger.warn("Point is already processed: "+point);
                 return 0.0;
             }
             logger.info("Processing point {}", point);
             SelectionResult res = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
             visitedPoints.add(point);
-            List<Point> neighbours = getNeighbours(point);
+            List<Point> neighbours = point.getNeighbours(config.getDelta());
             executorService.increaseTasksPriorities(PRIORITY_INCREMENT);
             neighbours.forEach(p -> {
                 if (!visitedPoints.contains(p)) {
-                    executorService.submitWithPriority(new PointProcessingTask(
-                                    new PriorityPoint(res.getScore(), p.getCoordinates()), stopCondition, runStats),
+                    executorService.submitWithPriority(new PointProcessingTask(p, stopCondition, runStats),
                             res.getScore()
                     );
                 }
@@ -176,7 +155,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
             }
         };
         startingPoints.forEach(point -> executorService.submitWithPriority(
-                new PointProcessingTask(new PriorityPoint(1.0, point.getCoordinates()), stopCondition, runStats),
+                new PointProcessingTask(point, stopCondition, runStats),
                 1.0
         ));
         try {

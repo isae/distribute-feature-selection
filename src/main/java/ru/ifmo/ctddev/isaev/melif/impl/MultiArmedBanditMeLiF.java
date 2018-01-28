@@ -1,9 +1,11 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
+import kotlin.Unit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSet;
+import ru.ifmo.ctddev.isaev.LinearSearchPriorityBlockingQueue;
 import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
@@ -12,7 +14,10 @@ import ru.ifmo.ctddev.isaev.result.RunStats;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -37,9 +42,9 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
         return executorService;
     }
 
-    protected final Set<Point> visitedPoints = new ConcurrentSkipListSet<>();
+    protected final Set<PriorityPoint> visitedPoints = new ConcurrentSkipListSet<>();
 
-    private final Map<Integer, PriorityBlockingQueue<PriorityPoint>> pointsQueues;
+    private final Map<Integer, LinearSearchPriorityBlockingQueue<PriorityPoint>> pointsQueues;
 
     private final Holder holder;
 
@@ -52,12 +57,17 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
 
         Map<Integer, Point> spaces = generateStartingPoints(dimension, splitNumber);
 
-        Map<Integer, PriorityBlockingQueue<PriorityPoint>> pointQueues = new HashMap<>();
-        Comparator<PriorityPoint> priorityComparator = (o1, o2) -> (int) -Math.signum(o1.getPriority() - o2.getPriority());
-        spaces.entrySet().stream().forEach(e -> {
-            PriorityBlockingQueue<PriorityPoint> queue = new PriorityBlockingQueue<>(10, priorityComparator);
-            queue.put(new PriorityPoint(e.getValue()));
-            pointQueues.put(e.getKey(), queue);
+        Map<Integer, LinearSearchPriorityBlockingQueue<PriorityPoint>> pointQueues = new HashMap<>();
+        spaces.forEach((key, value) -> {
+            LinearSearchPriorityBlockingQueue<PriorityPoint> queue = new LinearSearchPriorityBlockingQueue<>(64,
+                    PriorityPoint::getPriority,
+                    (point, increment) -> {
+                        point.setPriority(point.getPriority() + increment);
+                        return Unit.INSTANCE;
+                    }
+            );
+            queue.offer(new PriorityPoint(value));
+            pointQueues.put(key, queue);
         });
         this.pointsQueues = Collections.unmodifiableMap(pointQueues);
         this.executorService = Executors.newFixedThreadPool(threads);
@@ -93,7 +103,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
 
         final int[] counter = {0};
         Map<Integer, Point> pointsMap = new LinkedHashMap<>();
-        points.stream().forEach(point -> pointsMap.put(counter[0]++, point));
+        points.forEach(point -> pointsMap.put(counter[0]++, point));
 
         return Collections.unmodifiableMap(pointsMap);
     }
@@ -107,28 +117,14 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
         double gridStep = 1.0 / splitParts; // from -1 to 1
         return IntStream.range(0, splitParts)
                 .mapToDouble(i -> 1.0 - gridStep * i)
-                .mapToObj(d -> d)
+                .boxed()
                 .flatMap(d -> {
                     List<List<Double>> dimBelow = generateSpaceWithFixedGrid(dimension - 1, splitParts);
-                    return dimBelow.stream().map(l -> {
-                        l.add(d);
-                        return l;
-                    });
+                    return dimBelow.stream().peek(l -> l.add(d));
                 }).collect(Collectors.toList());
     }
 
-    private List<Point> getNeighbours(Point point) {
-        List<Point> points = new ArrayList<>();
-        IntStream.range(0, config.getMeasures().length).forEach(i -> {
-            Point plusDelta = new Point(point, coords -> coords[i] += config.getDelta());
-            Point minusDelta = new Point(point, coords -> coords[i] -= config.getDelta());
-            points.add(plusDelta);
-            points.add(minusDelta);
-        });
-        return points;
-    }
-
-    protected double mu(int i) {
+    private double mu(int i) {
         return holder.visitedSum[i] / holder.visitedNumber[i];
     }
 
@@ -139,13 +135,13 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
     }
 
     protected class Holder {
-        protected final int[] visitedNumber;
+        final int[] visitedNumber;
 
-        protected final double[] visitedSum;
+        final double[] visitedSum;
 
-        protected final int arms;
+        final int arms;
 
-        public Holder(int arms) {
+        Holder(int arms) {
             this.visitedNumber = new int[arms];
             this.visitedSum = new double[arms];
             this.arms = arms;
@@ -170,51 +166,49 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
                 return;
             }
 
-            try {
-                int arm;
-                PriorityPoint point;
-                synchronized (holder) {
-                    if (tries < holder.arms) {
-                        arm = tries;
-                        point = pointsQueues.get(arm).poll(1, TimeUnit.MILLISECONDS);
-                    } else {
-                        synchronized (pointsQueues) {
-                            arm = IntStream.range(0, holder.arms)
-                                    .filter(i -> pointsQueues.get(i).size() != 0)
-                                    .mapToObj(i -> i)
-                                    .max(Comparator.comparingDouble(i -> armCost(i)))
-                                    .get();
-                            point = pointsQueues.get(arm).poll(1, TimeUnit.MILLISECONDS);
+            int arm;
+            PriorityPoint point;
+            synchronized (holder) {
+                if (tries < holder.arms) {
+                    arm = tries;
+                    point = pointsQueues.get(arm).take();
+                } else {
+                    synchronized (pointsQueues) {
+                        final Optional<Integer> bestArm = IntStream.range(0, holder.arms)
+                                .filter(i -> !pointsQueues.get(i).isEmpty())
+                                .boxed()
+                                .max(Comparator.comparingDouble(MultiArmedBanditMeLiF.this::armCost));
+                        if (!bestArm.isPresent()) {//no points in queue for now
+                            logger.error("All queues are empty");
+                            return;
                         }
+                        arm = bestArm.get();
+                        point = pointsQueues.get(arm).take();
                     }
-                    ++tries;
                 }
-                if (point == null) {//no points in queue for now
-                    logger.error("Queue {} is empty", arm);
-                    return;
-                }
-                if (visitedPoints.contains(point)) {
-                    logger.warn("Point is already processed: {}", point);
-                    return;
-                }
-
-                logger.info("Processing point {} in queue {}", point, arm);
-                SelectionResult res = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
-                visitedPoints.add(point);
-                List<Point> neighbours = getNeighbours(point);
-                double award = res.getScore();
-                neighbours.forEach(p -> {
-                    if (!visitedPoints.contains(p)) {
-                        pointsQueues.get(arm).add(new PriorityPoint(award, p.getCoordinates()));
-                    }
-                });
-                synchronized (holder) {
-                    ++holder.visitedNumber[arm];
-                    holder.visitedSum[arm] += award;
-                }
-            } catch (InterruptedException ignored) {
-                logger.warn("Queue poll is interrupted");
+                ++tries;
+            }
+            if (point == null) {//no points in queue for now
+                logger.error("Queue {} is empty", arm);
                 return;
+            }
+            if (visitedPoints.contains(point)) {
+                logger.warn("Point is already processed: {}", point);
+                return;
+            }
+
+            logger.info("Processing point {} in queue {}", point, arm);
+            SelectionResult res = foldsEvaluator.getSelectionResult(dataSet, point, runStats);
+            visitedPoints.add(point);
+            List<Point> neighbours = point.getNeighbours(config.getDelta());
+            double award = res.getScore();
+            neighbours.stream()
+                    .map(p -> new PriorityPoint(award, p.getCoordinates()))
+                    .filter(p -> !visitedPoints.contains(p))
+                    .forEach(p -> pointsQueues.get(arm).offer(p));
+            synchronized (holder) {
+                ++holder.visitedNumber[arm];
+                holder.visitedSum[arm] += award;
             }
 
             executorService.submit(new PointProcessingTask(stopCondition, runStats));
