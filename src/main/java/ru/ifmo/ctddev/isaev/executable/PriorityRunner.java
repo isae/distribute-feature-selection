@@ -26,7 +26,7 @@ public class PriorityRunner {
     private static final Logger LOGGER = LoggerFactory.getLogger(PriorityRunner.class);
 
     public static void main(String[] args) {
-        int threads = 2;
+        int threads = 4;
         DataSetReader dataSetReader = new DataSetReader();
         DataSet dataSet = dataSetReader.readCsv(args[0]);
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
