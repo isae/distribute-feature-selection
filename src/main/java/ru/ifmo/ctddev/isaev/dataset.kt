@@ -1,4 +1,4 @@
-package ru.ifmo.ctddev.isaev.dataset
+package ru.ifmo.ctddev.isaev
 
 import java.util.*
 

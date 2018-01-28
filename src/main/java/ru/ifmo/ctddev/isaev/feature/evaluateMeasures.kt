@@ -1,7 +1,7 @@
 package ru.ifmo.ctddev.isaev.feature
 
 import ru.ifmo.ctddev.isaev.EvaluatedFeature
-import ru.ifmo.ctddev.isaev.dataset.Feature
+import ru.ifmo.ctddev.isaev.Feature
 import ru.ifmo.ctddev.isaev.result.Point
 
 /**

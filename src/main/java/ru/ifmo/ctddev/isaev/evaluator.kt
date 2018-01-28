@@ -1,19 +1,11 @@
-package ru.ifmo.ctddev.isaev.folds
+package ru.ifmo.ctddev.isaev
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import ru.ifmo.ctddev.isaev.Score
-import ru.ifmo.ctddev.isaev.SelectionResult
-import ru.ifmo.ctddev.isaev.classifier.Classifiers
-import ru.ifmo.ctddev.isaev.dataset.DataSet
-import ru.ifmo.ctddev.isaev.dataset.DataSetPair
-import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet
 import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure
-import ru.ifmo.ctddev.isaev.filter.DataSetFilter
 import ru.ifmo.ctddev.isaev.melif.impl.FeatureSelectionAlgorithm
 import ru.ifmo.ctddev.isaev.result.Point
 import ru.ifmo.ctddev.isaev.result.RunStats
-import ru.ifmo.ctddev.isaev.splitter.DataSetSplitter
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService

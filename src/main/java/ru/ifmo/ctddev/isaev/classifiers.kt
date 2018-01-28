@@ -1,8 +1,5 @@
-package ru.ifmo.ctddev.isaev.classifier
+package ru.ifmo.ctddev.isaev
 
-import ru.ifmo.ctddev.isaev.dataset.DataInstance
-import ru.ifmo.ctddev.isaev.dataset.DataSet
-import ru.ifmo.ctddev.isaev.dataset.InstanceDataSet
 import weka.classifiers.AbstractClassifier
 import weka.classifiers.bayes.NaiveBayes
 import weka.classifiers.functions.LinearRegression
@@ -135,4 +132,27 @@ class WekaSVM : WekaClassifier() {
 
 class WekaNaiveBayes : WekaClassifier() {
     override fun createClassifier(): AbstractClassifier = NaiveBayes()
+}
+
+enum class Classifiers(private val typeToken: Class<out Classifier>) {
+    HOEFD(WekaHoeffdingTree::class.java),
+    J48(WekaJ48::class.java),
+    KNN(WekaKNN::class.java),
+    LMT(WekaLMT::class.java),
+    PERCEPTRON(WekaMultilayerPerceptron::class.java),
+    PART(WekaPART::class.java),
+    RAND_FOREST(WekaRandomForest::class.java),
+    SVM(WekaSVM::class.java),
+    NAIVE_BAYES(WekaNaiveBayes::class.java);
+
+    fun newClassifier(): Classifier {
+        try {
+            return typeToken.newInstance()
+        } catch (e: InstantiationException) {
+            throw IllegalStateException("Failed to instantiate Classifier")
+        } catch (e: IllegalAccessException) {
+            throw IllegalStateException("Failed to instantiate Classifier")
+        }
+
+    }
 }

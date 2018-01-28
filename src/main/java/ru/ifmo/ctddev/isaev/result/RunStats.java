@@ -1,9 +1,9 @@
 package ru.ifmo.ctddev.isaev.result;
 
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.Classifiers;
+import ru.ifmo.ctddev.isaev.DataSet;
 import ru.ifmo.ctddev.isaev.SelectionResult;
-import ru.ifmo.ctddev.isaev.classifier.Classifiers;
-import ru.ifmo.ctddev.isaev.dataset.DataSet;
 import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure;
 
 import java.time.LocalDateTime;

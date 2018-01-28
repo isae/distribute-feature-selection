@@ -1,7 +1,6 @@
 package ru.ifmo.ctddev.isaev;
 
 import org.junit.Test;
-import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
 
 import java.util.List;
 

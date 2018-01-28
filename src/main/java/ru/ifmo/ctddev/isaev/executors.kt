@@ -1,4 +1,4 @@
-package ru.ifmo.ctddev.isaev.executor
+package ru.ifmo.ctddev.isaev
 
 import org.slf4j.LoggerFactory
 import java.util.concurrent.*
@@ -24,23 +24,23 @@ class PriorityFutureTask<T> : FutureTask<T>, Runnable, Comparable<PriorityFuture
 
 private val LOGGER = LoggerFactory.getLogger(PriorityThreadPoolExecutor::class.java)
 
-class PriorityThreadPoolExecutor(corePoolSize: Int, maximumPoolSize: Int, keepAliveTime: Long, unit: TimeUnit, workQueue: PriorityBlockingQueue<Runnable>) : ThreadPoolExecutor(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue) {
+class PriorityThreadPoolExecutor(corePoolSize: Int, maximumPoolSize: Int) 
+    : ThreadPoolExecutor(corePoolSize, maximumPoolSize, 0L, TimeUnit.MILLISECONDS, PriorityBlockingQueue<Runnable>(64)) {
+
     override fun submit(task: Runnable): Future<*> {
-        LOGGER.error("Do not use submit without priority")
-        throw UnsupportedOperationException()
+        throw UnsupportedOperationException("Do not use submit without priority")
     }
 
     override fun <T> submit(task: Runnable, result: T): Future<T> {
-        LOGGER.error("Do not use submit without priority")
-        throw UnsupportedOperationException()
+        throw UnsupportedOperationException("Do not use submit without priority")
     }
 
     override fun <T> submit(task: Callable<T>): Future<T> {
         LOGGER.error("Do not use submit without priority")
-        throw UnsupportedOperationException()
+        throw UnsupportedOperationException("Do not use submit without priority")
     }
 
-    fun <T> submit(task: Runnable?, result: T, priority: Double): Future<T> {
+    fun <T> submitWithPriority(task: Runnable?, result: T, priority: Double): Future<T> {
         if (task == null) {
             throw IllegalArgumentException("Task must not be null")
         }
@@ -49,7 +49,7 @@ class PriorityThreadPoolExecutor(corePoolSize: Int, maximumPoolSize: Int, keepAl
         return future
     }
 
-    fun <T> submit(task: Callable<T>?, priority: Double): Future<T> {
+    fun <T> submitWithPriority(task: Callable<T>?, priority: Double): Future<T> {
         if (task == null) {
             throw IllegalArgumentException("Task must not be null")
         }
@@ -67,12 +67,10 @@ class PriorityThreadPoolExecutor(corePoolSize: Int, maximumPoolSize: Int, keepAl
     }
 
     override fun <T> newTaskFor(runnable: Runnable, value: T): RunnableFuture<T> {
-        LOGGER.error("Do not use newTaskFor without priority")
-        throw UnsupportedOperationException()
+        throw UnsupportedOperationException("Do not use newTaskFor without priority")
     }
 
     override fun <T> newTaskFor(callable: Callable<T>): RunnableFuture<T> {
-        LOGGER.error("Do not use newTaskFor without priority")
-        throw UnsupportedOperationException()
+        throw UnsupportedOperationException("Do not use newTaskFor without priority")
     }
 }

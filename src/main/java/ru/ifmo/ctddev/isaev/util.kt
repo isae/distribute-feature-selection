@@ -1,10 +1,7 @@
 package ru.ifmo.ctddev.isaev
 
 import org.slf4j.LoggerFactory
-import ru.ifmo.ctddev.isaev.dataset.Feature
-import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet
 import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure
-import ru.ifmo.ctddev.isaev.folds.FoldsEvaluator
 import ru.ifmo.ctddev.isaev.result.Point
 import java.io.BufferedReader
 import java.io.File

@@ -4,8 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.SelectionResult;
-import ru.ifmo.ctddev.isaev.dataset.DataSetPair;
-import ru.ifmo.ctddev.isaev.dataset.FeatureDataSet;
+import ru.ifmo.ctddev.isaev.DataSetPair;
+import ru.ifmo.ctddev.isaev.FeatureDataSet;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 

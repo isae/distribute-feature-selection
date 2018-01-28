@@ -1,11 +1,7 @@
-package ru.ifmo.ctddev.isaev.splitter
+package ru.ifmo.ctddev.isaev
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import ru.ifmo.ctddev.isaev.dataset.DataInstance
-import ru.ifmo.ctddev.isaev.dataset.DataSet
-import ru.ifmo.ctddev.isaev.dataset.DataSetPair
-import ru.ifmo.ctddev.isaev.dataset.InstanceDataSet
 import java.util.*
 import java.util.stream.IntStream
 
