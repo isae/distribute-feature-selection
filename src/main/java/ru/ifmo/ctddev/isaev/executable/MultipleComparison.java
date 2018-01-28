@@ -55,11 +55,11 @@ public class MultipleComparison extends Comparison {
         String startTimeString = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd_MM_yyyy_HH:mm"));
         MDC.put("fileName", startTimeString + "/COMMON");
         Point[] points = new Point[] {
-                new Point(1, 0, 0, 0),
-                new Point(0, 1, 0, 0),
-                new Point(0, 0, 1, 0),
-                new Point(0, 0, 0, 1),
-                new Point(1, 1, 1, 1),
+                new Point(1.0, 0.0, 0.0, 0.0),
+                new Point(0.0, 1.0, 0.0, 0.0),
+                new Point(0.0, 0.0, 1.0, 0.0),
+                new Point(0.0, 0.0, 0.0, 1.0),
+                new Point(1.0, 1.0, 1.0, 1.0),
         };
         int testPercent = 20;
         int threadsCount;

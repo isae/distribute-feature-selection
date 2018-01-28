@@ -53,7 +53,7 @@ class FeatureDataSet(val features: List<Feature>,
     override fun toFeatureSet() = this
 
     override fun toInstanceSet(): InstanceDataSet {
-        val instances = 0.rangeTo(classes.size)
+        val instances = (0 until classes.size)
                 .map {
                     val values = ArrayList<Int>()
                     features.forEach { feature -> values.add(feature.values[it]) }
@@ -74,7 +74,7 @@ class FeatureDataSet(val features: List<Feature>,
 class InstanceDataSet(val instances: List<DataInstance>) : DataSet("") {
     override fun toFeatureSet(): FeatureDataSet {
         val classes = instances.map { it.clazz }
-        val features = 0.rangeTo(instances[0].values.size)
+        val features = (0 until instances[0].values.size)
                 .map { Feature(instances.map { inst -> inst.values[it] }) }
         return FeatureDataSet(features, classes, name)
     }

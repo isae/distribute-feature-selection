@@ -28,19 +28,14 @@ class OrderSplitter(testPercent: Int, val order: List<Int>) : DataSetSplitter(te
     }
 
     fun splitRandomly(original: DataSet, testPercent: Int, times: Int): List<DataSetPair> {
-        return 0.rangeTo(times).map { splitRandomly(original, testPercent) }
+        return (0 until times).map { splitRandomly(original, testPercent) }
     }
 
     override fun split(original: DataSet): List<DataSetPair> {
         val folds = (100.toDouble() / testPercent).toInt()
         val instancesBeforeShuffle = ArrayList(original.toInstanceSet().instances)
-        var instances: MutableList<DataInstance> = ArrayList()
-        if (order != null) {
-            val finalInstances = instances
-            order.forEach { i -> finalInstances.add(instancesBeforeShuffle[i]) }
-        } else {
-            instances = instancesBeforeShuffle
-        }
+        val instances: MutableList<DataInstance> = ArrayList()
+        order.forEach { i -> instances.add(instancesBeforeShuffle[i]) }
         val results = ArrayList<ArrayList<DataInstance>>()
         IntStream.range(0, folds).forEach { results.add(ArrayList()) }
         val pos = intArrayOf(0)
@@ -48,7 +43,7 @@ class OrderSplitter(testPercent: Int, val order: List<Int>) : DataSetSplitter(te
             results[pos[0]].add(inst)
             pos[0] = (pos[0] + 1) % folds
         }
-        val result = 0.rangeTo(folds).map {
+        val result = (0 until folds).map {
             val train = ArrayList<DataInstance>()
             val test = ArrayList<DataInstance>()
             for (j in 0 until folds) {
@@ -89,7 +84,7 @@ class RandomSplitter(private val testPercent: Int,
     private val random = Random()
 
     fun split(original: DataSet): List<DataSetPair> {
-        return 0.rangeTo(times).map { splitRandomly(original) }
+        return (0 until times).map { splitRandomly(original) }
     }
 
     private fun splitRandomly(original: DataSet): DataSetPair {

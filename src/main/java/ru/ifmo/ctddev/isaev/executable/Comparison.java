@@ -13,29 +13,27 @@ import static ru.ifmo.ctddev.isaev.melif.impl.FeatureSelectionAlgorithm.FORMAT;
 /**
  * @author iisaev
  */
-public class Comparison {
+class Comparison {
 
-    protected static double getSpeedImprovementPercent(long prevSeconds, long curSeconds) {
+    static double getSpeedImprovementPercent(long prevSeconds, long curSeconds) {
         long diff = prevSeconds - curSeconds;
         return (double) diff / prevSeconds * 100;
     }
 
-    protected static double getPercentImprovement(double prev, double cur) {
+    static double getPercentImprovement(double prev, double cur) {
         double diff = prev - cur;
         return diff / prev * 100;
     }
 
-    protected static String fullCsvRepresentation(List<List<RunStats>> executionResults) {
+    static String fullCsvRepresentation(List<List<RunStats>> executionResults) {
         StringBuilder sb = new StringBuilder();
         sb.append(csvHeader(executionResults.get(0)));
-        executionResults.stream()
-                .forEach(pr -> {
-                    sb.append(csvRepresentation(pr));
-                });
+        executionResults
+                .forEach(pr -> sb.append(csvRepresentation(pr)));
         return sb.toString();
     }
 
-    protected static String csvHeader(List<RunStats> executionResults) {
+    static String csvHeader(List<RunStats> executionResults) {
         StringBuilder sb = new StringBuilder();
         Stream<String> start = Stream.of("Dataset", "Shape", "Features", "Instances");
         Stream<String> header = Stream.concat(start, executionResults.stream().flatMap(
@@ -50,7 +48,7 @@ public class Comparison {
         return sb.toString();
     }
 
-    protected static String csvRepresentation(List<RunStats> pr) {
+    static String csvRepresentation(List<RunStats> pr) {
         StringBuilder sb = new StringBuilder();
         Stream<Object> rowStart = Stream.of(
                 pr.get(0).getDataSetName(),

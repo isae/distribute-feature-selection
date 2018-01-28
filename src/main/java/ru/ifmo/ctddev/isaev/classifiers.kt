@@ -37,17 +37,17 @@ fun toInstances(ds: InstanceDataSet): Instances {
         val instance = DenseInstance(inst.values.size + 1)
         instance.setDataset(result)
         instance.setValue(0, inst.clazz.toString())
-        0.rangeTo(inst.values.size)
+        (0 until inst.values.size)
                 .forEach { instance.setValue(it + 1, inst.values[it].toDouble()) }
         result.add(instance)
     }
     return result
 }
 
-fun toInstance(instance: DataInstance): Instance {
+fun toWekaInstance(instance: DataInstance): Instance {
     val result = DenseInstance(instance.values.size + 1)
     result.setMissing(0)
-    0.rangeTo(instance.values.size)
+    (0 until instance.values.size)
             .forEach { result.setValue(it + 1, instance.values[it].toDouble()) }
     return result
 }
@@ -57,16 +57,14 @@ interface Classifier {
 }
 
 class TrainedClassifier(private val classifier: AbstractClassifier,
-                        private val instances: Instances) {
+                        private val wekaDataSet: Instances) {
     fun test(testDs: DataSet): List<Double> {
         return testDs.toInstanceSet().instances
-                .map { toInstance(it) }
-                .map { i ->
+                .map { toWekaInstance(it) }
+                .onEach { it.setDataset(wekaDataSet) }
+                .map { wekaInstance ->
                     try {
-                        i.setDataset(instances)
-                        return testDs.toInstanceSet().instances
-                                .map { toInstance(it) }
-                                .map { classifier.classifyInstance(it) }
+                        classifier.classifyInstance(wekaInstance)
                     } catch (e: Exception) {
                         throw IllegalArgumentException("Given dataset is not valid", e)
                     }

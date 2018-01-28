@@ -62,14 +62,14 @@ class FitCriterion : RelevanceMeasure() {
     }
 
     private fun calculateVariance(clazz: Int, mean0: Double, values: List<Int>, classes: List<Int>): Double {
-        return 0.rangeTo(classes.size)
+        return (0 until classes.size)
                 .filter { i -> classes[i] == clazz }
                 .map { index -> Math.pow(values[index] - mean0, 2.0) }
                 .average()
     }
 
     private fun calculateMean(clazz: Int, values: List<Int>, classes: List<Int>): Double {
-        return 0.rangeTo(classes.size)
+        return (0 until classes.size)
                 .filter { classes[it] == clazz }
                 .map({ values[it] })
                 .average()
