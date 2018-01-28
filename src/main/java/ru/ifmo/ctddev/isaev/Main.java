@@ -13,7 +13,7 @@ import ru.ifmo.ctddev.isaev.melif.impl.MultiArmedBanditMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.PriorityQueueMeLiF;
 import ru.ifmo.ctddev.isaev.point.Point;
-import ru.ifmo.ctddev.isaev.point.RunStats;
+import ru.ifmo.ctddev.isaev.results.RunStats;
 
 import java.io.PrintWriter;
 import java.time.LocalDateTime;

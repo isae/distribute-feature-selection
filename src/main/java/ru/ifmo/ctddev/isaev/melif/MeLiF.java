@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.melif;
 
-import ru.ifmo.ctddev.isaev.point.RunStats;
+import ru.ifmo.ctddev.isaev.results.RunStats;
 import ru.ifmo.ctddev.isaev.point.Point;
 
 

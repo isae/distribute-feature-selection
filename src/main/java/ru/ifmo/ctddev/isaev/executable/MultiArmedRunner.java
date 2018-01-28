@@ -6,7 +6,7 @@ import ru.ifmo.ctddev.isaev.*;
 import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty;
 import ru.ifmo.ctddev.isaev.feature.measure.VDM;
 import ru.ifmo.ctddev.isaev.melif.impl.MultiArmedBanditMeLiF;
-import ru.ifmo.ctddev.isaev.point.RunStats;
+import ru.ifmo.ctddev.isaev.results.RunStats;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

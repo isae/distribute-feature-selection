@@ -7,7 +7,7 @@ import ru.ifmo.ctddev.isaev.DataSetPair;
 import ru.ifmo.ctddev.isaev.FeatureDataSet;
 import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.point.Point;
-import ru.ifmo.ctddev.isaev.point.RunStats;
+import ru.ifmo.ctddev.isaev.results.RunStats;
 
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;

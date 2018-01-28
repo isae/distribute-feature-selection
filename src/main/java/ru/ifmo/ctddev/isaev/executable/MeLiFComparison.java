@@ -9,7 +9,7 @@ import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.MeLifStar;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.point.Point;
-import ru.ifmo.ctddev.isaev.point.RunStats;
+import ru.ifmo.ctddev.isaev.results.RunStats;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

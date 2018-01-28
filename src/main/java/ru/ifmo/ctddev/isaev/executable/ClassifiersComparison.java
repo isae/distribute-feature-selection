@@ -8,7 +8,7 @@ import ru.ifmo.ctddev.isaev.feature.measure.VDM;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelNopMeLiF;
 import ru.ifmo.ctddev.isaev.point.Point;
-import ru.ifmo.ctddev.isaev.point.RunStats;
+import ru.ifmo.ctddev.isaev.results.RunStats;
 
 import java.util.Collections;
 import java.util.List;

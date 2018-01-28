@@ -8,7 +8,7 @@ import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty;
 import ru.ifmo.ctddev.isaev.feature.measure.VDM;
 import ru.ifmo.ctddev.isaev.melif.impl.*;
 import ru.ifmo.ctddev.isaev.point.Point;
-import ru.ifmo.ctddev.isaev.point.RunStats;
+import ru.ifmo.ctddev.isaev.results.RunStats;
 
 import java.io.File;
 import java.io.FileNotFoundException;

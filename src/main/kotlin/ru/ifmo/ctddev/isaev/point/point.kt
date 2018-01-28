@@ -69,3 +69,8 @@ open class Point : Comparable<Point> {
         return points
     }
 }
+
+class PriorityPoint(var priority: Double, vararg coordinates: Double) : Point(*coordinates) {
+
+    constructor(value: Point) : this(1.0, *value.coordinates)
+}

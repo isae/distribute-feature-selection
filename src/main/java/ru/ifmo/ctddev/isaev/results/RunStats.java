@@ -1,4 +1,4 @@
-package ru.ifmo.ctddev.isaev.point;
+package ru.ifmo.ctddev.isaev.results;
 
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.Classifiers;

@@ -3,7 +3,7 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.melif.MeLiF;
-import ru.ifmo.ctddev.isaev.point.RunStats;
+import ru.ifmo.ctddev.isaev.results.RunStats;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSet;
 import ru.ifmo.ctddev.isaev.PriorityExecutor;

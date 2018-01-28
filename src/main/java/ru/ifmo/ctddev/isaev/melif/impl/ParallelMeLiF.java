@@ -6,7 +6,7 @@ import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSet;
 import ru.ifmo.ctddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.point.Point;
-import ru.ifmo.ctddev.isaev.point.RunStats;
+import ru.ifmo.ctddev.isaev.results.RunStats;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
