@@ -31,8 +31,10 @@ sealed class DataSetFilter {
 
     protected val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
-    protected fun evaluateFeatures(original: FeatureDataSet, measureCosts: Point,
-                                   measures: Array<RelevanceMeasure>): Sequence<EvaluatedFeature> {
+    protected fun evaluateFeatures(original: FeatureDataSet,
+                                   measureCosts: Point,
+                                   measures: Array<RelevanceMeasure>
+    ): Sequence<EvaluatedFeature> {
         return evaluateMeasures(original.features.asSequence(), original.classes, measureCosts, *measures)
                 .sortedBy { it.measure }
     }

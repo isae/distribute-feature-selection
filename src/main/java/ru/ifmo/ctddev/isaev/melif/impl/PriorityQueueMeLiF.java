@@ -2,13 +2,13 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.ifmo.ctddev.isaev.melif.MeLiF;
-import ru.ifmo.ctddev.isaev.results.RunStats;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSet;
 import ru.ifmo.ctddev.isaev.PriorityExecutor;
 import ru.ifmo.ctddev.isaev.SelectionResult;
+import ru.ifmo.ctddev.isaev.melif.MeLiF;
 import ru.ifmo.ctddev.isaev.point.Point;
+import ru.ifmo.ctddev.isaev.results.RunStats;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -45,11 +45,13 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
         Arrays.fill(allEqual, 1.0);
         startingPoints.add(new Point(allEqual));
 
-        IntStream.range(0, dimension).forEach(dim -> {
-            double[] coordinates = new double[dimension];
-            coordinates[dim] = 1.0;
-            startingPoints.add(new Point(coordinates));
-        });
+        IntStream.range(0, dimension)
+                .forEach(coord -> {
+                    double[] coordinates = new double[dimension];
+                    coordinates[coord] = 1.0;
+                    coordinates[dimension - 1] = 1.0;
+                    startingPoints.add(new Point(coordinates));
+                });
         this.executorService = new PriorityExecutor(threads);
     }
 
@@ -111,7 +113,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
                 return 0.0;
             }
             if (visitedPoints.contains(point)) {
-                logger.warn("Point is already processed: "+point);
+                logger.warn("Point is already processed: " + point);
                 return 0.0;
             }
             logger.info("Processing point {}", point);

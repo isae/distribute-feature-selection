@@ -61,7 +61,7 @@ open class Point : Comparable<Point> {
 
     fun getNeighbours(delta: Double): List<Point> {
         val points = ArrayList<Point>()
-        IntStream.range(0, coordinates.size).forEach { i ->
+        IntStream.range(0, coordinates.size - 1).forEach { i ->
             val plusDelta = Point(this, { coords -> coords[i] += delta })
             val minusDelta = Point(this, { coords -> coords[i] -= delta })
             points.add(plusDelta)
