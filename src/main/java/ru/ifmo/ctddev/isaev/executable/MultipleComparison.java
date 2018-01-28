@@ -3,16 +3,13 @@ package ru.ifmo.ctddev.isaev.executable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import ru.ifmo.ctddev.isaev.*;
-import ru.ifmo.ctddev.isaev.feature.FitCriterion;
-import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure;
-import ru.ifmo.ctddev.isaev.feature.SpearmanRankCorrelation;
 import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty;
 import ru.ifmo.ctddev.isaev.feature.measure.VDM;
 import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
+import ru.ifmo.ktddev.isaev.*;
 
 import java.io.File;
 import java.io.FileNotFoundException;

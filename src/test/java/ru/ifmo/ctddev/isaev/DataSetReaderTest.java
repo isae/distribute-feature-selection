@@ -1,6 +1,8 @@
 package ru.ifmo.ctddev.isaev;
 
 import org.junit.Test;
+import ru.ifmo.ktddev.isaev.DataSetReader;
+import ru.ifmo.ktddev.isaev.FeatureDataSet;
 
 import java.util.List;
 
@@ -17,11 +19,11 @@ public class DataSetReaderTest {
         assertEquals("5 classes", 5, dataset.getClasses().size());
         List<Integer> classes = dataset.getClasses();
         assertArrayEquals("Classes", new Object[] {0, 0, 1, 1, 1}, classes.toArray());
-        assertArrayEquals("Feature 1",
+        assertArrayEquals("ru.ifmo.ktddev.isaev.Feature 1",
                 new Object[] {1, 2, 3, 4, 5},
                 dataset.getFeatures().get(0).getValues().toArray()
         );
-        assertArrayEquals("Feature 2",
+        assertArrayEquals("ru.ifmo.ktddev.isaev.Feature 2",
                 new Object[] {5, 4, 3, 2, 1},
                 dataset.getFeatures().get(1).getValues().toArray()
         );

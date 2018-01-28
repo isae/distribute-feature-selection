@@ -2,16 +2,13 @@ package ru.ifmo.ctddev.isaev.executable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.ifmo.ctddev.isaev.*;
-import ru.ifmo.ctddev.isaev.feature.FitCriterion;
-import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure;
-import ru.ifmo.ctddev.isaev.feature.SpearmanRankCorrelation;
 import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty;
 import ru.ifmo.ctddev.isaev.feature.measure.VDM;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelNopMeLiF;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
+import ru.ifmo.ktddev.isaev.*;
 
 import java.util.Collections;
 import java.util.List;
@@ -40,7 +37,7 @@ public class ClassifiersComparison extends Comparison {
                 .mapToObj(i -> Classifiers.values()[i])
                 .filter(clf -> clf == Classifiers.SVM)
                 .map(clf -> {
-                    LOGGER.info("Classifier: {}", clf);
+                    LOGGER.info("ru.ifmo.ktddev.isaev.Classifier: {}", clf);
                     List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
                     Collections.shuffle(order);
                     FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
@@ -63,7 +60,7 @@ public class ClassifiersComparison extends Comparison {
         AlgorithmConfig nopMelifConfig = new AlgorithmConfig(0.1, foldsEvaluator, measures);
         RunStats nopMelifStats = new ParallelNopMeLiF(nopMelifConfig, 20, (int) svmStats.getVisitedPoints()).run(points);
         allStats.forEach(stats ->
-                LOGGER.info("Classifier: {}; f1Score: {}; work time: {} seconds; visited points: {}", new Object[] {
+                LOGGER.info("ru.ifmo.ktddev.isaev.Classifier: {}; f1Score: {}; work time: {} seconds; visited points: {}", new Object[] {
                         stats.getUsedClassifier(),
                         stats.getBestResult().getScore(),
                         stats.getWorkTime(),

@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.feature.measure;
 
-import ru.ifmo.ctddev.isaev.Feature;
+import ru.ifmo.ktddev.isaev.Feature;
 
 import java.util.List;
 import java.util.Map;

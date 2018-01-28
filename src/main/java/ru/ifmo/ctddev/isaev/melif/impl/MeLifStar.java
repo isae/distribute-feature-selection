@@ -1,8 +1,8 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
-import ru.ifmo.ctddev.isaev.AlgorithmConfig;
-import ru.ifmo.ctddev.isaev.DataSet;
-import ru.ifmo.ctddev.isaev.SelectionResult;
+import ru.ifmo.ktddev.isaev.AlgorithmConfig;
+import ru.ifmo.ktddev.isaev.DataSet;
+import ru.ifmo.ktddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.result.Point;
 import ru.ifmo.ctddev.isaev.result.RunStats;
 

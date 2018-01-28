@@ -1,8 +1,7 @@
-package ru.ifmo.ctddev.isaev
+package ru.ifmo.ktddev.isaev
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import ru.ifmo.ctddev.isaev.feature.RelevanceMeasure
 import ru.ifmo.ctddev.isaev.melif.impl.FeatureSelectionAlgorithm
 import ru.ifmo.ctddev.isaev.result.Point
 import ru.ifmo.ctddev.isaev.result.RunStats

@@ -3,6 +3,7 @@ package ru.ifmo.ctddev.isaev;
 import org.junit.Assert;
 import org.junit.Test;
 import ru.ifmo.ctddev.isaev.result.Point;
+import ru.ifmo.ktddev.isaev.DataSetReader;
 
 import java.util.Arrays;
 import java.util.List;

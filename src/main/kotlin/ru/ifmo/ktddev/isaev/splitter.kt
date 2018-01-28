@@ -1,4 +1,4 @@
-package ru.ifmo.ctddev.isaev
+package ru.ifmo.ktddev.isaev
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

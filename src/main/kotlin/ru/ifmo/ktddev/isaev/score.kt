@@ -1,4 +1,4 @@
-package ru.ifmo.ctddev.isaev
+package ru.ifmo.ktddev.isaev
 
 import java.lang.Double.MIN_VALUE
 import java.lang.Double.isNaN

@@ -1,6 +1,4 @@
-package ru.ifmo.ctddev.isaev.feature
-
-import ru.ifmo.ctddev.isaev.Feature
+package ru.ifmo.ktddev.isaev
 
 /**
  * @author iisaev
