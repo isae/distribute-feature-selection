@@ -47,7 +47,6 @@ class DataSetReader {
     private fun readDataSet(file: File, delimiter: String): FeatureDataSet {
         fun parseRow(line: String): List<Int> {
             return line.split(delimiter.toRegex())
-                    .dropLastWhile { it.isEmpty() }
                     .map({ Integer.valueOf(it) })
         }
         try {
