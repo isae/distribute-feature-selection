@@ -1,10 +1,10 @@
-package ru.ifmo.ctddev.isaev.result;
+package ru.ifmo.ctddev.isaev.point;
 
-import ru.ifmo.ktddev.isaev.AlgorithmConfig;
-import ru.ifmo.ktddev.isaev.Classifiers;
-import ru.ifmo.ktddev.isaev.DataSet;
-import ru.ifmo.ktddev.isaev.SelectionResult;
-import ru.ifmo.ktddev.isaev.RelevanceMeasure;
+import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.Classifiers;
+import ru.ifmo.ctddev.isaev.DataSet;
+import ru.ifmo.ctddev.isaev.SelectionResult;
+import ru.ifmo.ctddev.isaev.RelevanceMeasure;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

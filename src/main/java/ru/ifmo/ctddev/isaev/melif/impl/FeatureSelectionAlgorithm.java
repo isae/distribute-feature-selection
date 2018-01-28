@@ -2,9 +2,9 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.ifmo.ktddev.isaev.AlgorithmConfig;
-import ru.ifmo.ktddev.isaev.DataSet;
-import ru.ifmo.ktddev.isaev.FoldsEvaluator;
+import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.DataSet;
+import ru.ifmo.ctddev.isaev.FoldsEvaluator;
 
 import java.text.DecimalFormat;
 

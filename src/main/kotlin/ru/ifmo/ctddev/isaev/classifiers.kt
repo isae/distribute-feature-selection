@@ -1,4 +1,4 @@
-package ru.ifmo.ktddev.isaev
+package ru.ifmo.ctddev.isaev
 
 import weka.classifiers.AbstractClassifier
 import weka.classifiers.bayes.NaiveBayes
@@ -147,9 +147,9 @@ enum class Classifiers(private val typeToken: Class<out Classifier>) {
         try {
             return typeToken.newInstance()
         } catch (e: InstantiationException) {
-            throw IllegalStateException("Failed to instantiate ru.ifmo.ktddev.isaev.Classifier")
+            throw IllegalStateException("Failed to instantiate ru.ifmo.ctddev.isaev.Classifier")
         } catch (e: IllegalAccessException) {
-            throw IllegalStateException("Failed to instantiate ru.ifmo.ktddev.isaev.Classifier")
+            throw IllegalStateException("Failed to instantiate ru.ifmo.ctddev.isaev.Classifier")
         }
 
     }

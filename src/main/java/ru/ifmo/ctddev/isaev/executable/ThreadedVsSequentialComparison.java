@@ -2,13 +2,13 @@ package ru.ifmo.ctddev.isaev.executable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.ifmo.ctddev.isaev.*;
 import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty;
 import ru.ifmo.ctddev.isaev.feature.measure.VDM;
 import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
-import ru.ifmo.ctddev.isaev.result.Point;
-import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ktddev.isaev.*;
+import ru.ifmo.ctddev.isaev.point.Point;
+import ru.ifmo.ctddev.isaev.point.RunStats;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -38,7 +38,7 @@ public class ThreadedVsSequentialComparison extends Comparison {
                 new Point(1)
         };*/
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};
-        //ru.ifmo.ktddev.isaev.RelevanceMeasure[] measures = new ru.ifmo.ktddev.isaev.RelevanceMeasure[] {new VDM()};
+        //ru.ifmo.ctddev.isaev.RelevanceMeasure[] measures = new ru.ifmo.ctddev.isaev.RelevanceMeasure[] {new VDM()};
 
         List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
         Collections.shuffle(order);

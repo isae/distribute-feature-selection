@@ -2,7 +2,6 @@ package ru.ifmo.ctddev.isaev;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import ru.ifmo.ktddev.isaev.PriorityExecutor;
 
 import java.util.concurrent.TimeUnit;
 

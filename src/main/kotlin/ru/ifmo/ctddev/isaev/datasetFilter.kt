@@ -1,8 +1,8 @@
-package ru.ifmo.ktddev.isaev
+package ru.ifmo.ctddev.isaev
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import ru.ifmo.ctddev.isaev.result.Point
+import ru.ifmo.ctddev.isaev.point.Point
 import java.util.*
 
 /**

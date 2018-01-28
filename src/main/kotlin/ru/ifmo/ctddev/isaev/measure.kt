@@ -1,4 +1,4 @@
-package ru.ifmo.ktddev.isaev
+package ru.ifmo.ctddev.isaev
 
 /**
  * @author iisaev

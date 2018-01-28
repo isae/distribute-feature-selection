@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import ru.ifmo.ctddev.isaev.result.RunStats;
+import ru.ifmo.ctddev.isaev.point.RunStats;
 
 import java.util.List;
 import java.util.Objects;

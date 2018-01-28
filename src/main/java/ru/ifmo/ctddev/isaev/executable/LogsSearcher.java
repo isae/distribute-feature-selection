@@ -1,17 +1,9 @@
 package ru.ifmo.ctddev.isaev.executable;
 
-import ru.ifmo.ktddev.isaev.DataSetReader;
-import ru.ifmo.ktddev.isaev.DataSet;
-import ru.ifmo.ktddev.isaev.FitCriterion;
-import ru.ifmo.ktddev.isaev.RelevanceMeasure;
-import ru.ifmo.ktddev.isaev.SpearmanRankCorrelation;
+import ru.ifmo.ctddev.isaev.*;
 import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty;
 import ru.ifmo.ctddev.isaev.feature.measure.VDM;
-import ru.ifmo.ktddev.isaev.DataSetFilter;
-import ru.ifmo.ktddev.isaev.PreferredSizeFilter;
-import ru.ifmo.ctddev.isaev.result.Point;
-import ru.ifmo.ktddev.isaev.DataSetSplitter;
-import ru.ifmo.ktddev.isaev.OrderSplitter;
+import ru.ifmo.ctddev.isaev.point.Point;
 
 import java.io.*;
 import java.util.ArrayList;

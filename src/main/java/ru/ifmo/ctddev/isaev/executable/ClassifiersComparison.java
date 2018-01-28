@@ -2,13 +2,13 @@ package ru.ifmo.ctddev.isaev.executable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.ifmo.ctddev.isaev.*;
 import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty;
 import ru.ifmo.ctddev.isaev.feature.measure.VDM;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF;
 import ru.ifmo.ctddev.isaev.melif.impl.ParallelNopMeLiF;
-import ru.ifmo.ctddev.isaev.result.Point;
-import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ktddev.isaev.*;
+import ru.ifmo.ctddev.isaev.point.Point;
+import ru.ifmo.ctddev.isaev.point.RunStats;
 
 import java.util.Collections;
 import java.util.List;
@@ -37,7 +37,7 @@ public class ClassifiersComparison extends Comparison {
                 .mapToObj(i -> Classifiers.values()[i])
                 .filter(clf -> clf == Classifiers.SVM)
                 .map(clf -> {
-                    LOGGER.info("ru.ifmo.ktddev.isaev.Classifier: {}", clf);
+                    LOGGER.info("ru.ifmo.ctddev.isaev.Classifier: {}", clf);
                     List<Integer> order = IntStream.range(0, dataSet.getInstanceCount()).mapToObj(i -> i).collect(Collectors.toList());
                     Collections.shuffle(order);
                     FoldsEvaluator foldsEvaluator = new SequentalEvaluator(
@@ -60,7 +60,7 @@ public class ClassifiersComparison extends Comparison {
         AlgorithmConfig nopMelifConfig = new AlgorithmConfig(0.1, foldsEvaluator, measures);
         RunStats nopMelifStats = new ParallelNopMeLiF(nopMelifConfig, 20, (int) svmStats.getVisitedPoints()).run(points);
         allStats.forEach(stats ->
-                LOGGER.info("ru.ifmo.ktddev.isaev.Classifier: {}; f1Score: {}; work time: {} seconds; visited points: {}", new Object[] {
+                LOGGER.info("ru.ifmo.ctddev.isaev.Classifier: {}; f1Score: {}; work time: {} seconds; visited points: {}", new Object[] {
                         stats.getUsedClassifier(),
                         stats.getBestResult().getScore(),
                         stats.getWorkTime(),

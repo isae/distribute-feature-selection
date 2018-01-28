@@ -1,4 +1,4 @@
-package ru.ifmo.ktddev.isaev
+package ru.ifmo.ctddev.isaev
 
 import java.util.*
 
@@ -45,7 +45,7 @@ class FeatureDataSet(val features: List<Feature>,
         }
         features.forEach { f ->
             if (f.values.size != classes.size) {
-                throw IllegalArgumentException("ru.ifmo.ktddev.isaev.Feature ${f.name} has wrong number of values")
+                throw IllegalArgumentException("ru.ifmo.ctddev.isaev.Feature ${f.name} has wrong number of values")
             }
         }
     }

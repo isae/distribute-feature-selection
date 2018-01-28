@@ -1,6 +1,6 @@
 package ru.ifmo.ctddev.isaev.feature.measure;
 
-import ru.ifmo.ktddev.isaev.RelevanceMeasure;
+import ru.ifmo.ctddev.isaev.RelevanceMeasure;
 
 import java.util.HashMap;
 import java.util.List;

@@ -2,11 +2,11 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.ifmo.ktddev.isaev.AlgorithmConfig;
-import ru.ifmo.ktddev.isaev.SelectionResult;
-import ru.ifmo.ktddev.isaev.DataSet;
-import ru.ifmo.ctddev.isaev.result.Point;
-import ru.ifmo.ctddev.isaev.result.RunStats;
+import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.DataSet;
+import ru.ifmo.ctddev.isaev.SelectionResult;
+import ru.ifmo.ctddev.isaev.point.Point;
+import ru.ifmo.ctddev.isaev.point.RunStats;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -87,7 +87,7 @@ public class ParallelMeLiF extends BasicMeLiF {
         scores.stream().mapToDouble(SelectionResult::getScore).forEach(System.out::println);
         LOGGER.info("Max score: {} at point {}",
                 runStats.getBestResult().getScore(),
-                runStats.getBestResult().getPoint().getCoordinates()
+                runStats.getBestResult().getPoint()
         );
         runStats.setFinishTime(LocalDateTime.now());
         LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());

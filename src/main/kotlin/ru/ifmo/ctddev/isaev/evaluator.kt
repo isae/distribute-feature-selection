@@ -1,10 +1,10 @@
-package ru.ifmo.ktddev.isaev
+package ru.ifmo.ctddev.isaev
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import ru.ifmo.ctddev.isaev.melif.impl.FeatureSelectionAlgorithm
-import ru.ifmo.ctddev.isaev.result.Point
-import ru.ifmo.ctddev.isaev.result.RunStats
+import ru.ifmo.ctddev.isaev.point.RunStats
+import ru.ifmo.ctddev.isaev.point.Point
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService

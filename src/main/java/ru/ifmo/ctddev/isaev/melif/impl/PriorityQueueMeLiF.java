@@ -2,13 +2,13 @@ package ru.ifmo.ctddev.isaev.melif.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.ifmo.ktddev.isaev.AlgorithmConfig;
-import ru.ifmo.ktddev.isaev.DataSet;
-import ru.ifmo.ktddev.isaev.PriorityExecutor;
-import ru.ifmo.ktddev.isaev.SelectionResult;
 import ru.ifmo.ctddev.isaev.melif.MeLiF;
-import ru.ifmo.ctddev.isaev.result.Point;
-import ru.ifmo.ctddev.isaev.result.RunStats;
+import ru.ifmo.ctddev.isaev.point.RunStats;
+import ru.ifmo.ctddev.isaev.AlgorithmConfig;
+import ru.ifmo.ctddev.isaev.DataSet;
+import ru.ifmo.ctddev.isaev.PriorityExecutor;
+import ru.ifmo.ctddev.isaev.SelectionResult;
+import ru.ifmo.ctddev.isaev.point.Point;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -84,7 +84,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
         executorService.shutdownNow();
         LOGGER.info("Max score: {} at point {}",
                 runStats.getBestResult().getScore(),
-                runStats.getBestResult().getPoint().getCoordinates()
+                runStats.getBestResult().getPoint()
         );
         runStats.setFinishTime(LocalDateTime.now());
         LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());
@@ -166,7 +166,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
         executorService.shutdownNow();
         LOGGER.info("Max score: {} at point {}",
                 runStats.getBestResult().getScore(),
-                runStats.getBestResult().getPoint().getCoordinates()
+                runStats.getBestResult().getPoint()
         );
         runStats.setFinishTime(LocalDateTime.now());
         LOGGER.info("Finished {} at {}", getClass().getSimpleName(), runStats.getFinishTime());

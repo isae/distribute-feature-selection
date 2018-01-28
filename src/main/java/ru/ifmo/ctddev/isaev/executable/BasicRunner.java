@@ -2,23 +2,12 @@ package ru.ifmo.ctddev.isaev.executable;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import ru.ifmo.ktddev.isaev.AlgorithmConfig;
-import ru.ifmo.ktddev.isaev.DataSetReader;
-import ru.ifmo.ktddev.isaev.F1Score;
-import ru.ifmo.ktddev.isaev.Classifiers;
-import ru.ifmo.ktddev.isaev.DataSet;
-import ru.ifmo.ktddev.isaev.FitCriterion;
-import ru.ifmo.ktddev.isaev.RelevanceMeasure;
-import ru.ifmo.ktddev.isaev.SpearmanRankCorrelation;
+import ru.ifmo.ctddev.isaev.*;
 import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty;
 import ru.ifmo.ctddev.isaev.feature.measure.VDM;
-import ru.ifmo.ktddev.isaev.PreferredSizeFilter;
-import ru.ifmo.ktddev.isaev.FoldsEvaluator;
-import ru.ifmo.ktddev.isaev.SequentalEvaluator;
 import ru.ifmo.ctddev.isaev.melif.impl.BasicMeLiF;
-import ru.ifmo.ctddev.isaev.result.Point;
-import ru.ifmo.ctddev.isaev.result.RunStats;
-import ru.ifmo.ktddev.isaev.OrderSplitter;
+import ru.ifmo.ctddev.isaev.point.Point;
+import ru.ifmo.ctddev.isaev.point.RunStats;
 
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;

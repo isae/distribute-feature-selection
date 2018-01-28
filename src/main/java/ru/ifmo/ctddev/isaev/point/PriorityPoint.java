@@ -1,4 +1,4 @@
-package ru.ifmo.ctddev.isaev.result;
+package ru.ifmo.ctddev.isaev.point;
 
 /**
  * @author iisaev
