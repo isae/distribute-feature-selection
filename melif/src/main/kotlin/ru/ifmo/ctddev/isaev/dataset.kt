@@ -5,7 +5,7 @@ import java.util.*
 /**
  * @author iisaev
  */
-abstract class DataSet (val name: String) {
+abstract class DataSet(val name: String) {
 
     abstract fun getFeatureCount(): Int
 
@@ -29,7 +29,7 @@ class DataInstance(val name: String,
 class DataSetPair(val trainSet: DataSet, val testSet: DataSet)
 
 open class Feature(val name: String,
-              val values: List<Int>) {
+                   val values: List<Int>) {
 
     constructor(values: List<Int>) : this("", values)
 
@@ -60,6 +60,10 @@ class FeatureDataSet(val features: List<Feature>,
                     DataInstance("instance ${it + 1}", classes[it], values)
                 }
         return InstanceDataSet(instances)
+    }
+
+    fun take(size: Int): FeatureDataSet {
+        return FeatureDataSet(features.take(size), classes, name)
     }
 
     override fun getFeatureCount(): Int {

@@ -2,7 +2,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>ru.ifmo.ctddev.isaev</groupId>
-    <artifactId>distributed-feature-selection</artifactId>
+    <artifactId>melif-parent</artifactId>
     <version>1.0.1-SNAPSHOT</version>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -11,8 +11,12 @@
         <jackson.version>2.7.0</jackson.version>
         <kotlin.version>1.2.21</kotlin.version>
     </properties>
-    <packaging>jar</packaging>
-    <name>distributed-feature-selection</name>
+    <packaging>pom</packaging>
+    <name>MeLiF Parent POM</name>
+    <modules>
+        <module>melif</module>
+        <module>features_moving</module>
+    </modules>
     <dependencies>
         <dependency>
             <groupId>nz.ac.waikato.cms.weka</groupId>
@@ -57,6 +61,7 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <!-- Download Java source JARs. -->
@@ -78,20 +83,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <archive>
-                        <manifest>
-                            <addClasspath>true</addClasspath>
-                            <mainClass>ru.ifmo.ctddev.isaev.Main</mainClass>
-                        </manifest>
-                    </archive>
-                    <descriptorRefs>
-                        <descriptorRef>jar-with-dependencies</descriptorRef>
-                    </descriptorRefs>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
