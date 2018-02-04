@@ -22,6 +22,7 @@ fun main(args: Array<String>) {
     val n = 100
     val xData = 0.rangeTo(n)
             .map { (it.toDouble()) / n }
+    println(xData)
 
     fun feature(i: Int) = getFeaturePositions(i, xData, dataSet, measures)
 
@@ -32,10 +33,10 @@ fun main(args: Array<String>) {
             .xAxisTitle("Measure Proportion (${measures[0].javaClass.simpleName} to ${measures[1].javaClass.simpleName})")
             .yAxisTitle("Number of feature in order")
     val chart = XYChart(chartBuilder)
-    for (i in 0..20){
+   /* for (i in 0..20){
         chart.addSeries("Feature $i", xData, feature(i)).marker = SeriesMarkers.NONE
-    }
-    //chart.addSeries("Feature 4", xData, feature(4)).marker = SeriesMarkers.NONE
+    }*/
+    chart.addSeries("Feature 4", xData, feature(4)).marker = SeriesMarkers.NONE
 
     // Show it
     SwingWrapper(chart).displayChart()
@@ -48,9 +49,9 @@ private fun getFeaturePositions(pos: Int,
                                 xData: List<Double>,
                                 dataSet: FeatureDataSet,
                                 measures: Array<RelevanceMeasure>): List<Int> {
-    return xData
+    val result = xData
             .map {
-                val sortedFeatures = DataSetEvaluator().evaluateFeatures(dataSet, Point(it, 1 - it), measures)
+                val sortedFeatures = DataSetEvaluator(true).evaluateFeatures(dataSet, Point(it, 1 - it), measures)
                         .zip(generateSequence(0, { it + 1 }))
                         .sortedBy { it.first.name }
                         .toList()
@@ -58,4 +59,6 @@ private fun getFeaturePositions(pos: Int,
                         .map { it.second }
                 point[pos]
             }
+    println(result)
+    return result
 }

@@ -8,26 +8,6 @@ import java.util.*
 /**
  * @author iisaev
  */
-fun evaluateMeasures(features: List<Feature>,
-                     classes: List<Int>,
-                     measureCosts: Point,
-                     vararg measures: RelevanceMeasure): List<EvaluatedFeature> {
-    if (measureCosts.coordinates.size != measures.size) {
-        throw IllegalArgumentException("Number of given measures mismatch with measureCosts dimension")
-    }
-
-    val valuesForEachMeasure = measures.map { m ->
-        features.map { m.evaluate(it, classes) }
-                .toList()
-                .normalize()
-    }
-    val ensembleMeasures = 0.until(features.size)
-            .map { i -> measureCosts.coordinates.zip(valuesForEachMeasure.map { it[i] }) }
-            .map { it.sumByDouble { (measureCost, measureValue) -> measureCost * measureValue } }
-
-    return features.zip(ensembleMeasures)
-            .map { (f, m) -> EvaluatedFeature(f, m) }
-}
 
 private fun Iterable<Double>.normalize(): List<Double> {
     if (!this.iterator().hasNext()) {
@@ -38,7 +18,31 @@ private fun Iterable<Double>.normalize(): List<Double> {
     return this.map { (it - min) / (max - min) }
 }
 
-class DataSetEvaluator {
+class DataSetEvaluator(private val normalize: Boolean) {
+    constructor() : this(true)
+
+    private fun evaluateMeasures(features: List<Feature>,
+                                 classes: List<Int>,
+                                 measureCosts: Point,
+                                 vararg measures: RelevanceMeasure): List<EvaluatedFeature> {
+        if (measureCosts.coordinates.size != measures.size) {
+            throw IllegalArgumentException("Number of given measures mismatch with measureCosts dimension")
+        }
+
+        val valuesForEachMeasure = measures.map { m ->
+            val evaluated = features.map { m.evaluate(it, classes) }
+                    .toList()
+            if (normalize) evaluated.normalize() else evaluated
+        }
+        val ensembleMeasures = 0.until(features.size)
+                .map { i -> measureCosts.coordinates.zip(valuesForEachMeasure.map { it[i] }) }
+                .map { it.sumByDouble { (measureCost, measureValue) -> measureCost * measureValue } }
+
+        return features.zip(ensembleMeasures)
+                .map { (f, m) -> EvaluatedFeature(f, m) }
+    }
+
+
     fun evaluateFeatures(original: FeatureDataSet,
                          measureCosts: Point,
                          measures: Array<RelevanceMeasure>
