@@ -29,18 +29,19 @@ fun main(args: Array<String>) {
     val chartBuilder = XYChartBuilder()
             .width(640)
             .height(480)
-            .xAxisTitle("Measure Proportion (VDM to Spearman)")
+            .xAxisTitle("Measure Proportion (${measures[0].javaClass.simpleName} to ${measures[1].javaClass.simpleName})")
             .yAxisTitle("Number of feature in order")
     val chart = XYChart(chartBuilder)
     for (i in 0..20){
         chart.addSeries("Feature $i", xData, feature(i)).marker = SeriesMarkers.NONE
     }
+    //chart.addSeries("Feature 4", xData, feature(4)).marker = SeriesMarkers.NONE
 
     // Show it
     SwingWrapper(chart).displayChart()
 
     // or save it in high-res
-    BitmapEncoder.saveBitmapWithDPI(chart, "./charts/Test_Chart_${LocalDateTime.now()}", BitmapEncoder.BitmapFormat.PNG, 400);
+    BitmapEncoder.saveBitmapWithDPI(chart, "./charts/Test_Chart_${LocalDateTime.now()}", BitmapEncoder.BitmapFormat.PNG, 200);
 }
 
 private fun getFeaturePositions(pos: Int,

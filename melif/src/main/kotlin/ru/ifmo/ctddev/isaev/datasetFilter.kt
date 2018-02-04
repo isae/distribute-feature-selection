@@ -8,23 +8,34 @@ import java.util.*
 /**
  * @author iisaev
  */
-fun evaluateMeasures(features: Sequence<Feature>,
+fun evaluateMeasures(features: List<Feature>,
                      classes: List<Int>,
                      measureCosts: Point,
-                     vararg measures: RelevanceMeasure): Sequence<EvaluatedFeature> {
+                     vararg measures: RelevanceMeasure): List<EvaluatedFeature> {
     if (measureCosts.coordinates.size != measures.size) {
         throw IllegalArgumentException("Number of given measures mismatch with measureCosts dimension")
     }
 
-    fun evaluateFeature(feature: Feature): Double {
-        return measures
-                .map { m -> m.evaluate(feature, classes) }
-                .toDoubleArray()
-                .zip(measureCosts.coordinates)
-                .sumByDouble { it.first * it.second }
+    val valuesForEachMeasure = measures.map { m ->
+        features.map { m.evaluate(it, classes) }
+                .toList()
+                .normalize()
     }
+    val ensembleMeasures = 0.until(features.size)
+            .map { i -> measureCosts.coordinates.zip(valuesForEachMeasure.map { it[i] }) }
+            .map { it.sumByDouble { (measureCost, measureValue) -> measureCost * measureValue } }
 
-    return features.map { EvaluatedFeature(it, evaluateFeature(it)) }
+    return features.zip(ensembleMeasures)
+            .map { (f, m) -> EvaluatedFeature(f, m) }
+}
+
+private fun Iterable<Double>.normalize(): List<Double> {
+    if (!this.iterator().hasNext()) {
+        return emptyList()
+    }
+    val max = this.max()!!
+    val min = this.min()!!
+    return this.map { (it - min) / (max - min) }
 }
 
 class DataSetEvaluator {
@@ -32,8 +43,9 @@ class DataSetEvaluator {
                          measureCosts: Point,
                          measures: Array<RelevanceMeasure>
     ): Sequence<EvaluatedFeature> {
-        return evaluateMeasures(original.features.asSequence(), original.classes, measureCosts, *measures)
+        return evaluateMeasures(original.features, original.classes, measureCosts, *measures)
                 .sortedBy { it.measure }
+                .asSequence()
     }
 }
 
