@@ -66,6 +66,10 @@ class FeatureDataSet(val features: List<Feature>,
         return FeatureDataSet(features.take(size), classes, name)
     }
 
+    fun drop(size: Int): FeatureDataSet {
+        return FeatureDataSet(features.drop(size), classes, name)
+    }
+
     override fun getFeatureCount(): Int {
         return features.size
     }

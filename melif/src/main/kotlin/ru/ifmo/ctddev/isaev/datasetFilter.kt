@@ -9,19 +9,17 @@ import java.util.*
  * @author iisaev
  */
 
-private fun Iterable<Double>.normalize(): List<Double> {
+fun Iterable<Double>.normalize(min: Double, max: Double): List<Double> {
     if (!this.iterator().hasNext()) {
         return emptyList()
     }
-    val max = this.max()!!
-    val min = this.min()!!
     return this.map { (it - min) / (max - min) }
 }
 
-class DataSetEvaluator(private val normalize: Boolean) {
+class DataSetEvaluator(val normalize: Boolean) {
     constructor() : this(true)
 
-    private fun evaluateMeasures(features: List<Feature>,
+    fun evaluateMeasures(features: List<Feature>,
                                  classes: List<Int>,
                                  measureCosts: Point,
                                  vararg measures: RelevanceMeasure): List<EvaluatedFeature> {
@@ -32,7 +30,7 @@ class DataSetEvaluator(private val normalize: Boolean) {
         val valuesForEachMeasure = measures.map { m ->
             val evaluated = features.map { m.evaluate(it, classes) }
                     .toList()
-            if (normalize) evaluated.normalize() else evaluated
+            if (normalize) evaluated.normalize(m.minValue, m.maxValue) else evaluated
         }
         val ensembleMeasures = 0.until(features.size)
                 .map { i -> measureCosts.coordinates.zip(valuesForEachMeasure.map { it[i] }) }

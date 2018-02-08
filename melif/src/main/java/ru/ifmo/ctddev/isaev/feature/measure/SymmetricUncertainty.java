@@ -16,7 +16,8 @@ public class SymmetricUncertainty extends CorrelationBasedMeasure {
     private static final double LOG_2 = Math.log(2);
 
     public SymmetricUncertainty() {
-        super();
+        super(-100500.0, 100500.0);
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override

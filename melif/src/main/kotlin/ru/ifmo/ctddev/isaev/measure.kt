@@ -3,7 +3,7 @@ package ru.ifmo.ctddev.isaev
 /**
  * @author iisaev
  */
-abstract class RelevanceMeasure {
+abstract class RelevanceMeasure(val minValue: Double, val maxValue: Double) {
     abstract fun evaluate(feature: Feature, classes: List<Int>): Double
 
     override fun toString(): String {
@@ -11,7 +11,7 @@ abstract class RelevanceMeasure {
     }
 }
 
-class SpearmanRankCorrelation : RelevanceMeasure() {
+class SpearmanRankCorrelation : RelevanceMeasure(-1.0, 1.0) {
 
     override fun evaluate(feature: Feature, classes: List<Int>): Double {
         return evaluate(
@@ -44,7 +44,7 @@ class SpearmanRankCorrelation : RelevanceMeasure() {
     }
 }
 
-class FitCriterion : RelevanceMeasure() {
+class FitCriterion : RelevanceMeasure({throw UnsupportedOperationException("not implemented")}(), {throw UnsupportedOperationException("not implemented")}()) {
     override fun evaluate(feature: Feature, classes: List<Int>): Double {
         val values = feature.values
         val mean0 = calculateMean(0, values, classes)

@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.feature.measure;
 
+import org.jetbrains.annotations.NotNull;
 import ru.ifmo.ctddev.isaev.RelevanceMeasure;
 
 import java.util.HashMap;
@@ -12,8 +13,8 @@ import java.util.stream.Collectors;
  * @author iisaev
  */
 abstract class CorrelationBasedMeasure extends RelevanceMeasure {
-    CorrelationBasedMeasure() {
-        super();
+    CorrelationBasedMeasure(@NotNull Double minValue, @NotNull Double maxValue) {
+        super(minValue, maxValue);
     }
 
     protected class Distribution {

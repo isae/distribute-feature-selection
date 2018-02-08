@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.feature.measure;
 
+import org.jetbrains.annotations.NotNull;
 import ru.ifmo.ctddev.isaev.Feature;
 
 import java.util.HashSet;
@@ -12,8 +13,13 @@ import java.util.Set;
  * @author iisaev
  */
 public class VDM extends CorrelationBasedMeasure {
+    public VDM() {
+        super(0.0, 1.0);
+    }
+
     @Override
-    public double evaluate(Feature feature, List<Integer> classes) {
+    public double evaluate(@NotNull Feature feature,
+                           @NotNull List<Integer> classes) {
         Map<Integer, CorrelationBasedMeasure.Distribution> distributions = calculateDistribution(feature.getValues(), classes);
         Set<Integer> distinctValues = new HashSet<>(feature.getValues());
         final double[] result = {0};
