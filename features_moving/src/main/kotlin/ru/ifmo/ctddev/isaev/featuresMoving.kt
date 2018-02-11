@@ -9,7 +9,6 @@ import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
 import java.time.LocalDateTime
 import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
 
 
 /**
@@ -24,17 +23,8 @@ fun main(args: Array<String>) {
     val n = 100
     val xData = 0.rangeTo(n)
             .map { (it.toDouble()) / n }
-    val normalize = true
     println(xData.map { String.format("%.2f", it) })
-    val valuesForEachMeasure = measures.map { m ->
-        val measure = m.createInstance()
-        val evaluated = dataSet.features
-                .map { measure.evaluate(it, dataSet.classes) }
-                .toList()
-        val minValue = evaluated.min() ?: throw IllegalStateException()
-        val maxValue = evaluated.max() ?: throw IllegalStateException()
-        if (normalize) evaluated.normalize(minValue, maxValue) else evaluated
-    }
+    val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measures.toList());
 
     val evaluatedData = getEvaluatedData(xData, dataSet, valuesForEachMeasure)
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)

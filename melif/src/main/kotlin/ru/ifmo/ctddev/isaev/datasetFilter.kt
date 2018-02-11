@@ -4,10 +4,14 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import ru.ifmo.ctddev.isaev.point.Point
 import java.util.*
+import kotlin.reflect.KClass
+import kotlin.reflect.full.createInstance
 
 /**
  * @author iisaev
  */
+
+enum class NormalizationMode { NONE, VALUE_BASED, MEASURE_BASED }
 
 fun Iterable<Double>.normalize(min: Double, max: Double): List<Double> {
     if (!this.iterator().hasNext()) {
@@ -16,22 +20,31 @@ fun Iterable<Double>.normalize(min: Double, max: Double): List<Double> {
     return this.map { (it - min) / (max - min) }
 }
 
-class DataSetEvaluator(val normalize: Boolean) {
-    constructor() : this(true)
+class DataSetEvaluator(private val normMode: NormalizationMode) {
+    constructor() : this(NormalizationMode.VALUE_BASED)
 
-    fun evaluateMeasures(features: List<Feature>,
-                                 classes: List<Int>,
-                                 measureCosts: Point,
-                                 vararg measures: RelevanceMeasure): List<EvaluatedFeature> {
+    private fun evaluateMeasures_(original: FeatureDataSet,
+                         measures: List<RelevanceMeasure>): List<List<Double>> {
+        return measures.map { m ->
+            val evaluated = original.features.map { m.evaluate(it, original.classes) }
+                    .toList()
+            when (normMode) {
+                NormalizationMode.NONE -> evaluated
+                NormalizationMode.VALUE_BASED -> evaluated.normalize(evaluated.min()!!, evaluated.max()!!)
+                NormalizationMode.MEASURE_BASED -> evaluated.normalize(m.minValue, m.maxValue)
+            }
+        }
+    }
+
+    fun evaluateMeasures(original: FeatureDataSet,
+                         measureCosts: Point,
+                         vararg measures: RelevanceMeasure): List<EvaluatedFeature> {
         if (measureCosts.coordinates.size != measures.size) {
             throw IllegalArgumentException("Number of given measures mismatch with measureCosts dimension")
         }
 
-        val valuesForEachMeasure = measures.map { m ->
-            val evaluated = features.map { m.evaluate(it, classes) }
-                    .toList()
-            if (normalize) evaluated.normalize(m.minValue, m.maxValue) else evaluated
-        }
+        val features = original.features
+        val valuesForEachMeasure = evaluateMeasures_(original, measures.toList())
         val ensembleMeasures = 0.until(features.size)
                 .map { i -> measureCosts.coordinates.zip(valuesForEachMeasure.map { it[i] }) }
                 .map { it.sumByDouble { (measureCost, measureValue) -> measureCost * measureValue } }
@@ -45,9 +58,14 @@ class DataSetEvaluator(val normalize: Boolean) {
                          measureCosts: Point,
                          measures: Array<RelevanceMeasure>
     ): Sequence<EvaluatedFeature> {
-        return evaluateMeasures(original.features, original.classes, measureCosts, *measures)
+        return evaluateMeasures(original, measureCosts, *measures)
                 .sortedBy { it.measure }
                 .asSequence()
+    }
+
+    fun evaluateMeasures(dataSet: FeatureDataSet, 
+                         measures: List<KClass<out RelevanceMeasure>>): List<List<Double>> {
+        return evaluateMeasures_(dataSet, measures.map { k -> k.createInstance() })
     }
 }
 
