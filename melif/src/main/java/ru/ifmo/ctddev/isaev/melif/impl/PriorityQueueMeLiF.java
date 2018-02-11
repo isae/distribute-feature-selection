@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
@@ -56,12 +57,12 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
     }
 
     @Override
-    public RunStats run(Point[] points) {
+    public RunStats run(@NotNull Point[] points) {
         return run("PqMeLiF", 75);
     }
 
     @Override
-    public RunStats run(String name, Point[] points, int latchSize) {
+    public RunStats run(@NotNull String name, @NotNull Point[] points, int latchSize) {
         RunStats runStats = new RunStats(config, dataSet, name);
         logger.info("Started {} at {}", name, runStats.getStartTime());
         CountDownLatch latch = new CountDownLatch(latchSize);

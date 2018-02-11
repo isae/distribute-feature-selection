@@ -18,16 +18,26 @@ class AlgorithmConfig(val delta: Double,
 class EvaluatedFeature(feature: Feature, val measure: Double)
     : Feature(feature.name, feature.values)
 
-class SelectionResult(val selectedFeatures: List<Feature>,
-                      val point: Point,
-                      val score: Double) : Comparable<SelectionResult> {
+open class SelectionResult(val selectedFeatures: List<Feature>,
+                           val point: Point,
+                           val score: Double) : Comparable<SelectionResult> {
 
     override fun compareTo(other: SelectionResult): Int {
         return compare(score, other.score)
     }
 
-    fun betterThan(bestScore: SelectionResult): Boolean {
+    open fun betterThan(bestScore: SelectionResult): Boolean {
         return this.compareTo(bestScore) == 1
+    }
+}
+
+class NoneSelectionResult : SelectionResult(emptyList(), Point(), -1.0) {
+    override fun compareTo(other: SelectionResult): Int {
+        return -1
+    }
+
+    override fun betterThan(bestScore: SelectionResult): Boolean {
+        return false
     }
 }
 

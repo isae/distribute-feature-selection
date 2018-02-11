@@ -27,10 +27,10 @@ public class BasicRunner {
         DataSetReader dataSetReader = new DataSetReader();
         DataSet dataSet = dataSetReader.readCsv(args[0]);
         Point[] points = new Point[] {
-                new Point(1.0, 0, 0, 0),
-                new Point(0, 1, 0, 0),
-                new Point(0, 0, 1, 0),
-                new Point(0, 0, 0, 1),
+                new Point(1.0, 0.0, 0.0, 0.0),
+                new Point(0.0, 1, 0, 0),
+                new Point(0.0, 0, 1, 0),
+                new Point(0.0, 0, 0, 1),
                 new Point(1.0, 1, 1, 1)
         };
         RelevanceMeasure[] measures = new RelevanceMeasure[] {new VDM(), new FitCriterion(), new SymmetricUncertainty(), new SpearmanRankCorrelation()};

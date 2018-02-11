@@ -1,6 +1,7 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
 import kotlin.Unit;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
@@ -79,7 +80,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
     }
 
     @Override
-    public RunStats run(Point[] points) {
+    public RunStats run(@NotNull Point[] points) {
         return run("MultiArmedMeLiF", 75);
     }
 
@@ -216,7 +217,7 @@ public class MultiArmedBanditMeLiF extends FeatureSelectionAlgorithm implements 
     }
 
     @Override
-    public RunStats run(String name, Point[] unused, int latchSize) {
+    public RunStats run(@NotNull String name, @NotNull Point[] unused, int latchSize) {
         RunStats runStats = new RunStats(config, dataSet, name);
         logger.info("Started {} at {}", name, runStats.getStartTime());
 

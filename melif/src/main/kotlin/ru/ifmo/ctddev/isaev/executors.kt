@@ -113,7 +113,7 @@ class LinearSearchPriorityBlockingQueue<T>(private val capacity: Int,
         get() = list.size
 }
 
-val LOGGER: Logger = LoggerFactory.getLogger(PriorityExecutor::class.java)
+private val LOGGER: Logger = LoggerFactory.getLogger(PriorityExecutor::class.java)
 
 class PriorityExecutor(poolSize: Int)
     : ThreadPoolExecutor(poolSize, poolSize, 0L, TimeUnit.MILLISECONDS,

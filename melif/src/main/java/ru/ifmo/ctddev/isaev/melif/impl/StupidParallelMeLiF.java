@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.ifmo.ctddev.isaev.results.RunStats;
@@ -42,12 +43,12 @@ public class StupidParallelMeLiF extends BasicMeLiF {
     }
 
     @Override
-    public RunStats run(String name, Point[] points, int pointsToVisit) {
+    public RunStats run(@NotNull String name, @NotNull Point[] points, int pointsToVisit) {
         return run(name, points, true);
     }
 
     @Override
-    public RunStats run(Point[] points) {
+    public RunStats run(@NotNull Point[] points) {
         return run("Stupid", points, true);
     }
 

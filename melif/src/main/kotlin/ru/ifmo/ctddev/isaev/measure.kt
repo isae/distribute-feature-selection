@@ -44,7 +44,7 @@ class SpearmanRankCorrelation : RelevanceMeasure(-1.0, 1.0) {
     }
 }
 
-class FitCriterion : RelevanceMeasure({throw UnsupportedOperationException("not implemented")}(), {throw UnsupportedOperationException("not implemented")}()) {
+class FitCriterion : RelevanceMeasure(0.0, 1.0) {
     override fun evaluate(feature: Feature, classes: List<Int>): Double {
         val values = feature.values
         val mean0 = calculateMean(0, values, classes)

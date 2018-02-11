@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.melif.impl;
 
+import org.jetbrains.annotations.NotNull;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.DataSet;
 import ru.ifmo.ctddev.isaev.SelectionResult;
@@ -29,7 +30,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
     }
 
     @Override
-    public RunStats run(String name, Point[] points, int pointsToVisit) {
+    public RunStats run(@NotNull String name, @NotNull Point[] points, int pointsToVisit) {
         Arrays.asList(points).forEach(p -> {
             if (p.getCoordinates().length != config.getMeasures().length) {
                 throw new IllegalArgumentException("Each point must have same coordinates number as number of measures");
@@ -56,7 +57,7 @@ public class BasicMeLiF extends FeatureSelectionAlgorithm implements MeLiF {
     }
 
     @Override
-    public RunStats run(Point[] points) {
+    public RunStats run(@NotNull Point[] points) {
         return run("Basic", points, 0);
     }
 

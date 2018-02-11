@@ -40,7 +40,7 @@ fun main(args: Array<String>) {
             .xAxisTitle("Measure Proportion (${measures[0].simpleName} to ${measures[1].simpleName})")
             .yAxisTitle("Ensemble feature measure")
     val chart = XYChart(chartBuilder)
-    val featuresToTake = 20
+    val featuresToTake = 30
     val lines = 0.rangeTo(featuresToTake).map { feature(it) }.mapIndexed { index, coords -> Line("Feature $index", coords) }
     lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
     for (i in 0..featuresToTake) {
@@ -69,13 +69,13 @@ fun main(args: Array<String>) {
                 val right = if (i == intersections.size) 1.0 else intersections[i].point.x
                 (left + right) / 2
             }
-            .map { "%.2f".format(it) }
+            .map { "%.3f".format(it) }
             .distinct()
             .map { it.toDouble() }
             .map { Point(it, 1 - it) }
 
     println("Found ${pointsToTry.size} points to try")
-    pointsToTry.forEach { println("(%.2f, %.2f)".format(it.coordinates[0], it.coordinates[1])) }
+    pointsToTry.forEach { println("(%.3f, %.3f)".format(it.coordinates[0], it.coordinates[1])) }
 
 
     // Show it
