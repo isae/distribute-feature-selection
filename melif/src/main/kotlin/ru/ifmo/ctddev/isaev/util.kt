@@ -7,13 +7,20 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileReader
 import java.lang.Double.compare
+import kotlin.reflect.KClass
+import kotlin.reflect.full.createInstance
 
 /**
  * @author iisaev
  */
 class AlgorithmConfig(val delta: Double,
                       val foldsEvaluator: FoldsEvaluator,
-                      val measures: Array<RelevanceMeasure>)
+                      val measureClasses: List<KClass<out RelevanceMeasure>>) {
+    constructor(delta: Double, foldsEvaluator: FoldsEvaluator, measures: Array<RelevanceMeasure>)
+            : this(delta, foldsEvaluator, measures.map { it.javaClass.kotlin })
+
+    val measures = measureClasses.map { it.createInstance() }.toTypedArray()
+}
 
 class EvaluatedFeature(feature: Feature, val measure: Double)
     : Feature(feature.name, feature.values)

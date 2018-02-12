@@ -23,8 +23,8 @@ fun Iterable<Double>.normalize(min: Double, max: Double): List<Double> {
 class DataSetEvaluator(private val normMode: NormalizationMode) {
     constructor() : this(NormalizationMode.VALUE_BASED)
 
-    private fun evaluateMeasures_(original: FeatureDataSet,
-                         measures: List<RelevanceMeasure>): List<List<Double>> {
+    private fun evaluateMeasuresHelper(original: FeatureDataSet,
+                                       measures: List<RelevanceMeasure>): List<List<Double>> {
         return measures.map { m ->
             val evaluated = original.features.map { m.evaluate(it, original.classes) }
                     .toList()
@@ -44,7 +44,7 @@ class DataSetEvaluator(private val normMode: NormalizationMode) {
         }
 
         val features = original.features
-        val valuesForEachMeasure = evaluateMeasures_(original, measures.toList())
+        val valuesForEachMeasure = evaluateMeasuresHelper(original, measures.toList())
         val ensembleMeasures = 0.until(features.size)
                 .map { i -> measureCosts.coordinates.zip(valuesForEachMeasure.map { it[i] }) }
                 .map { it.sumByDouble { (measureCost, measureValue) -> measureCost * measureValue } }
@@ -65,7 +65,7 @@ class DataSetEvaluator(private val normMode: NormalizationMode) {
 
     fun evaluateMeasures(dataSet: FeatureDataSet, 
                          measures: List<KClass<out RelevanceMeasure>>): List<List<Double>> {
-        return evaluateMeasures_(dataSet, measures.map { k -> k.createInstance() })
+        return evaluateMeasuresHelper(dataSet, measures.map { k -> k.createInstance() })
     }
 }
 

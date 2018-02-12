@@ -134,7 +134,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
     }
 
     public RunStats run(String name, int latchSize) {
-        return run(name, null, latchSize);
+        return run(name, new Point[0], latchSize);
     }
 
     public RunStats runUntilNoImproveOnLastN(String name, Point[] points, int untilStop) {

@@ -4,7 +4,6 @@ import ru.ifmo.ctddev.isaev.Feature;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 
 /**
@@ -50,6 +49,6 @@ public class SymmetricUncertainty extends CorrelationBasedMeasure {
             double p = (double) e.getValue() / distribution.getSum();
             double log2P = Math.log(p) / LOG_2;
             return p * log2P;
-        }).collect(Collectors.summingDouble(d -> d));
+        }).mapToDouble(d -> d).sum();
     }
 }
