@@ -67,12 +67,15 @@ fun evaluateDataSet(dataSet: FeatureDataSet,
                     measureCosts: Point,
                     measuresForEachFeature: Matrix
 ): List<EvaluatedFeature> {
-    val ensembleMeasures = measuresForEachFeature
-            .map { it.zip(measureCosts.coordinates.toTypedArray()) } // TODO speed up
-            .map { sumByDouble(it) }
-    val sortedBy = dataSet.features.zip(ensembleMeasures)
-            .map { (f, m) -> EvaluatedFeature(f, m) }
-    return sortedBy
+    val result = ArrayList<EvaluatedFeature>(measuresForEachFeature.size)
+    for (i in 0..measuresForEachFeature.size - 1) {
+        var m = 0.0
+        for (j in 0..measureCosts.coordinates.size - 1) {
+            m += measureCosts.coordinates[j] * measuresForEachFeature[i][j]
+        }
+        result.add(EvaluatedFeature(dataSet.features[i], m))
+    }
+    return result
 }
 
 fun sumByDouble(it: List<Pair<Double, Double>>) = it
