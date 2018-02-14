@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.feature.measure;
 
+import org.jetbrains.annotations.NotNull;
 import ru.ifmo.ctddev.isaev.Feature;
 
 import java.util.List;
@@ -19,7 +20,7 @@ public class SymmetricUncertainty extends CorrelationBasedMeasure {
     }
 
     @Override
-    public double evaluate(Feature feature, List<Integer> classes) {
+    public double evaluate(@NotNull Feature feature, @NotNull List<Integer> classes) {
         double xPriorEntropy = getPriorEntropy(calculateDistribution(feature.getValues()));
         double yPriorEntropy = getPriorEntropy(calculateDistribution(classes));
         double posteriorEntropy = getConditionalEntropy(feature.getValues(), classes);
@@ -28,11 +29,6 @@ public class SymmetricUncertainty extends CorrelationBasedMeasure {
 
     /**
      * <a href="https://en.wikipedia.org/wiki/Conditional_entropy">link to formula</a>
-     *
-     * @param featureValues
-     * @param classes
-     *
-     * @return
      */
     private double getConditionalEntropy(List<Integer> featureValues, List<Integer> classes) {
         Map<Integer, Distribution> yDistribution = calculateDistribution(classes, featureValues);

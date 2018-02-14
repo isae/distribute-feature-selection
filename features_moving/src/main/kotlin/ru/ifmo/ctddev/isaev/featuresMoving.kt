@@ -28,8 +28,8 @@ fun main(args: Array<String>) {
     val dataSet = DataSetReader().readCsv(args[0])
     //val n = 100
     //val xData = 0.rangeTo(n).map { (it.toDouble()) / n }
-    val xData = listOf(0.0, 1.0)
-    println(xData.map { String.format("%.2f", it) })
+    val xData = listOf(listOf(0.0, 1.0), listOf(1.0, 0.0))
+    println(xData.map { x -> x.map { String.format("%.2f", it) } })
     val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measures.toList())
     val evaluatedData = getEvaluatedData(xData, dataSet, valuesForEachMeasure)
 

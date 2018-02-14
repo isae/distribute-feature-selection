@@ -43,7 +43,7 @@ fun getFeaturePositions(pos: Int,
     return result
 }
 
-fun getEvaluatedData(xData: List<Double>, dataSet: FeatureDataSet, valuesForEachMeasure: List<List<Double>>): List<List<Double>> {
+fun getEvaluatedData(xData: List<List<Double>>, dataSet: FeatureDataSet, valuesForEachMeasure: List<List<Double>>): List<List<Double>> {
     return xData
             .map {
                 val sortedFeatures = evaluateDataSet(dataSet, it, valuesForEachMeasure)
@@ -57,10 +57,9 @@ fun getEvaluatedData(xData: List<Double>, dataSet: FeatureDataSet, valuesForEach
 }
 
 fun evaluateDataSet(dataSet: FeatureDataSet,
-                    c1: Double,
+                    costs: List<Double>,
                     valuesForEachMeasure: List<List<Double>>): Sequence<EvaluatedFeature> {
-    val c2 = 1 - c1
-    val measureCosts = Point(c1, c2)
+    val measureCosts = Point(*costs.toDoubleArray())
     val ensembleMeasures = 0.until(dataSet.features.size)
             .map { i ->
                 val measuresForParticularFeature = valuesForEachMeasure
