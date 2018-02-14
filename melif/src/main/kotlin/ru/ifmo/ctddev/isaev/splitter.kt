@@ -55,7 +55,9 @@ class OrderSplitter(testPercent: Int, val order: List<Int>) : DataSetSplitter(te
             }
             DataSetPair(InstanceDataSet(train), InstanceDataSet(test))
         }
-        assert(result.size == folds)
+        if (result.size != folds) {
+            throw IllegalStateException("Invalid split")
+        }
         return result
     }
 

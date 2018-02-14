@@ -3,8 +3,8 @@ package ru.ifmo.ctddev.isaev
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import ru.ifmo.ctddev.isaev.melif.impl.FeatureSelectionAlgorithm
-import ru.ifmo.ctddev.isaev.results.RunStats
 import ru.ifmo.ctddev.isaev.point.Point
+import ru.ifmo.ctddev.isaev.results.RunStats
 import java.util.*
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
@@ -81,7 +81,11 @@ class SequentalEvaluator(classifiers: Classifiers, dataSetFilter: DataSetFilter,
         }
         try {
             latch.await()
-            futures.forEach { f -> assert(f.isDone) }
+            futures.forEach { f ->
+                if (!f.isDone) {
+                    throw IllegalStateException("Task is not done after latch is released")
+                }
+            }
             val f1Score = f1Scores.average()
             logger.debug("Point {}; F1 score: {}", point, f1Score)
             val result = SelectionResult(filteredDs.features, point, f1Score)
@@ -117,7 +121,11 @@ class ParallelEvaluator(classifiers: Classifiers, dataSetFilter: DataSetFilter, 
                 }
         try {
             latch.await()
-            futures.forEach { f -> assert(f.isDone) }
+            futures.forEach { f ->
+                if (!f.isDone) {
+                    throw IllegalStateException("Task is not done after latch is released")
+                }
+            }
             val f1Score = f1Scores.average()
             logger.debug("Point $point; F1 score: $f1Score")
             val result = SelectionResult(filteredDs.features, point, f1Score)

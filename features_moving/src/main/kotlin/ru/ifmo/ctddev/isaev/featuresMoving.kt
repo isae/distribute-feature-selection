@@ -9,6 +9,7 @@ import org.knowm.xchart.style.markers.SeriesMarkers
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.Line
+import ru.ifmo.ctddev.isaev.space.Matrix
 import ru.ifmo.ctddev.isaev.space.getEvaluatedData
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
 import java.awt.BasicStroke
@@ -24,14 +25,13 @@ import kotlin.reflect.KClass
  */
 
 fun main(args: Array<String>) {
-    val measures: Array<KClass<out RelevanceMeasure>> = arrayOf(VDM::class, SpearmanRankCorrelation::class)
+    val measures = listOf(VDM::class, SpearmanRankCorrelation::class)
     val dataSet = DataSetReader().readCsv(args[0])
     //val n = 100
     //val xData = 0.rangeTo(n).map { (it.toDouble()) / n }
-    val xData = listOf(listOf(0.0, 1.0), listOf(1.0, 0.0))
-    println(xData.map { x -> x.map { String.format("%.2f", it) } })
-    val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measures.toList())
-    val evaluatedData = getEvaluatedData(xData, dataSet, valuesForEachMeasure)
+    val xData = 0.rangeTo(100).map { x -> Point(x.toDouble() / 100, (100 - x).toDouble() / 100) }//listOf(listOf(0.0, 1.0), listOf(1.0, 0.0))
+    println(xData.map { x -> x.toString() })
+    val evaluatedData = getEvaluatedData(xData, dataSet, measures)
 
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
 
@@ -43,8 +43,10 @@ fun main(args: Array<String>) {
             .yAxisTitle("Ensemble feature measure")
     val chart = XYChart(chartBuilder)
     val featuresToTake = 40
-    val lines = 0.rangeTo(featuresToTake).map { feature(it) }.mapIndexed { index, coords -> Line("Feature $index", coords) }
-    lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
+    val lines = 0.rangeTo(featuresToTake).map { feature(it) }.mapIndexed { index, coords -> Line("Feature $index", listOf(coords.first(), coords.last())) }
+    //lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
+    val features = 0.rangeTo(featuresToTake).map { feature(it) }
+    features.forEachIndexed({ index, line -> addLine("Feature $index", xData, line, chart) })
     val intersections = lines.flatMap { first -> lines.map { setOf(first, it) } }
             .filter { it.size > 1 }
             .distinct()
@@ -87,4 +89,8 @@ fun main(args: Array<String>) {
 
 private fun addLine(name: String, line: Line, chart: XYChart) {
     chart.addSeries(name, listOf(line.from.x, line.to.x), listOf(line.from.y, line.to.y)).marker = SeriesMarkers.NONE
+}
+
+private fun addLine(name: String, xData: List<Point>, line: List<Number>, chart: XYChart) {
+    chart.addSeries(name, xData.map { it.coordinates[0] }, line).marker = SeriesMarkers.NONE
 }

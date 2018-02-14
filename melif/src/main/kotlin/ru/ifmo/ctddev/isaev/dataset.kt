@@ -36,9 +36,11 @@ open class Feature(val name: String,
     override fun toString() = name
 }
 
-class FeatureDataSet(val features: List<Feature>,
+class FeatureDataSet(unSortedFeatures: List<Feature>,
                      val classes: List<Int>,
                      name: String) : DataSet(name) {
+    val features = unSortedFeatures.sortedBy { it.name }
+
     init {
         if (!classes.stream().allMatch { i -> i == 0 || i == 1 }) {
             throw IllegalArgumentException("All classes values should be 0 or 1")

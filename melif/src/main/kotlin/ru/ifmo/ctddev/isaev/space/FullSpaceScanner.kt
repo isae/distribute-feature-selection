@@ -51,9 +51,8 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
     }
 
     private fun calculatePoints(): List<Point> {
-        val xData = listOf(listOf(0.0, 1.0), listOf(1.0, 0.0))
-        val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(featureDataSet, config.measureClasses)
-        val evaluatedData = getEvaluatedData(xData, featureDataSet, valuesForEachMeasure)
+        val xData = listOf(Point(0.0, 1.0), Point(1.0, 0.0))
+        val evaluatedData = getEvaluatedData(xData, featureDataSet, config.measureClasses)
         fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
         val featuresToTake = 50
         val lines = 0.rangeTo(featuresToTake).map { feature(it) }

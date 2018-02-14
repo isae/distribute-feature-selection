@@ -12,6 +12,7 @@ import org.jzy3d.plot3d.builder.concrete.OrthonormalGrid
 import org.jzy3d.plot3d.rendering.canvas.Quality
 import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
+import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.getEvaluatedData
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
 import kotlin.reflect.KClass
@@ -23,21 +24,20 @@ import kotlin.reflect.KClass
 
 fun main(args: Array<String>) {
     val dataSet = DataSetReader().readCsv(args[0])
-    val measures: Array<KClass<out RelevanceMeasure>> = arrayOf(VDM::class, SpearmanRankCorrelation::class, SymmetricUncertainty::class)
+    val measures = listOf(VDM::class, SpearmanRankCorrelation::class, SymmetricUncertainty::class)
     //val n = 100
-    //val xyData = 0.rangeTo(n).map { (it.toDouble()) / n }
     val xyData = 0.rangeTo(100)
             .flatMap { x ->
                 0.rangeTo(100 - x)
                         .map { y ->
-                            listOf(
+                            Point(
                                     x.toDouble() / 100,
                                     y.toDouble() / 100,
-                                    (100 - x - y).toDouble() / 100)
+                                    (100 - x - y).toDouble() / 100
+                            )
                         }
             }
-    val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measures.toList())
-    val evaluatedData = getEvaluatedData(xyData, dataSet, valuesForEachMeasure)
+    val evaluatedData = getEvaluatedData(xyData, dataSet, measures)
 
     val feature: (Int) -> List<Number> = { getFeaturePositions(it, evaluatedData) }
     AnalysisLauncher.open(FeatureMoving3d(feature))

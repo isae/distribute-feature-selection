@@ -1,9 +1,12 @@
 package ru.ifmo.ctddev.isaev.space
 
+import ru.ifmo.ctddev.isaev.DataSetEvaluator
 import ru.ifmo.ctddev.isaev.EvaluatedFeature
 import ru.ifmo.ctddev.isaev.FeatureDataSet
+import ru.ifmo.ctddev.isaev.RelevanceMeasure
 import ru.ifmo.ctddev.isaev.point.Point
 import kotlin.math.abs
+import kotlin.reflect.KClass
 
 /**
  * @author iisaev
@@ -18,7 +21,9 @@ class Line(val name: String, val from: LinePoint, val to: LinePoint) {
     private val b: Double = to.y - k * to.x
 
     constructor(name: String, ys: List<Number>) : this(name, LinePoint(0.0, ys[0].toDouble()), LinePoint(1.0, ys[1].toDouble())) {
-        assert(ys.size == 2)
+        if (ys.size != 2) {
+            throw IllegalStateException("Invalid constructor invocation, list size is not 2")
+        }
     }
 
     fun intersect(second: Line): Intersection? {
@@ -43,36 +48,31 @@ fun getFeaturePositions(pos: Int,
     return result
 }
 
-fun getEvaluatedData(xData: List<List<Double>>, dataSet: FeatureDataSet, valuesForEachMeasure: List<List<Double>>): List<List<Double>> {
+typealias Matrix = List<List<Double>>
+
+fun getEvaluatedData(xData: List<Point>, // [number of points x number of features]
+                     dataSet: FeatureDataSet,
+                     measureClasses: List<KClass<out RelevanceMeasure>>
+): List<List<Double>> {
+    val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)// [number of measures x number of features]
+    val measuresForEachFeature = 0.until(dataSet.features.size).map { i -> valuesForEachMeasure.map { it[i] } } // [number of features x number of measures]
     return xData
-            .map {
-                val sortedFeatures = evaluateDataSet(dataSet, it, valuesForEachMeasure)
-                        .zip(generateSequence(0, { it + 1 }))
-                        .sortedBy { it.first.name }
-                        .toList()
-                val point = sortedFeatures
-                        .map { it.first.measure }
-                point
+            .map { point ->
+                evaluateDataSet(dataSet, point, measuresForEachFeature)
+                        .map { it.measure }
             }
 }
 
 fun evaluateDataSet(dataSet: FeatureDataSet,
-                    costs: List<Double>,
-                    valuesForEachMeasure: List<List<Double>>): Sequence<EvaluatedFeature> {
-    val measureCosts = Point(*costs.toDoubleArray())
-    val ensembleMeasures = 0.until(dataSet.features.size)
-            .map { i ->
-                val measuresForParticularFeature = valuesForEachMeasure
-                        .map { it[i] }
-                measureCosts.coordinates
-                        .zip(measuresForParticularFeature)
-            }
+                    measureCosts: Point,
+                    measuresForEachFeature: Matrix
+): List<EvaluatedFeature> {
+    val ensembleMeasures = measuresForEachFeature
+            .map { it.zip(measureCosts.coordinates.toTypedArray()) } // TODO speed up
             .map { sumByDouble(it) }
     val sortedBy = dataSet.features.zip(ensembleMeasures)
             .map { (f, m) -> EvaluatedFeature(f, m) }
-            .sortedBy { it.measure }
     return sortedBy
-            .asSequence()
 }
 
 fun sumByDouble(it: List<Pair<Double, Double>>) = it
