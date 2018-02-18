@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.melif.impl.PriorityQueueMeLiF
 import ru.ifmo.ctddev.isaev.space.FullSpaceScanner
+import ru.ifmo.ctddev.isaev.space.calculateTime
 
 /**
  * @author iisaev
@@ -37,10 +38,4 @@ fun main(args: Array<String>) {
     LOGGER.info("PQ: processed ${pqStats.visitedPoints} points in ${pqTime / 1000} seconds, best result is ${pqStats.bestResult.score}")
     LOGGER.info("FS: processed ${fullSpaceStats.visitedPoints} points in ${fullSpaceTime / 1000} seconds, best result is ${fullSpaceStats.bestResult.score}")
 
-}
-
-fun <T> calculateTime(block: () -> T): Pair<Long, T> {
-    val start = System.currentTimeMillis()
-    val result = block()
-    return Pair(System.currentTimeMillis() - start, result)
 }

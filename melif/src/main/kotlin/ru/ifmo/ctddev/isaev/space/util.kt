@@ -1,7 +1,6 @@
 package ru.ifmo.ctddev.isaev.space
 
 import ru.ifmo.ctddev.isaev.DataSetEvaluator
-import ru.ifmo.ctddev.isaev.EvaluatedFeature
 import ru.ifmo.ctddev.isaev.FeatureDataSet
 import ru.ifmo.ctddev.isaev.RelevanceMeasure
 import ru.ifmo.ctddev.isaev.point.Point
@@ -50,7 +49,7 @@ fun getFeaturePositions(pos: Int,
 
 typealias Matrix = List<List<Double>>
 
-fun getEvaluatedData(xData: List<Point>, // [number of points x number of features]
+fun getEvaluatedData(xData: List<Point>,
                      dataSet: FeatureDataSet,
                      measureClasses: List<KClass<out RelevanceMeasure>>
 ): List<List<Double>> {
@@ -58,25 +57,37 @@ fun getEvaluatedData(xData: List<Point>, // [number of points x number of featur
     val measuresForEachFeature = 0.until(dataSet.features.size).map { i -> valuesForEachMeasure.map { it[i] } } // [number of features x number of measures]
     return xData
             .map { point ->
-                evaluateDataSet(dataSet, point, measuresForEachFeature)
-                        .map { it.measure }
+                evaluateDataSet(point, measuresForEachFeature).toList()
             }
 }
 
-fun evaluateDataSet(dataSet: FeatureDataSet,
-                    measureCosts: Point,
+fun getEvaluatedData(xData: List<Point>,
+                     dataSet: FeatureDataSet,
+                     measureClasses: List<KClass<out RelevanceMeasure>>,
+                     position: Int
+): List<Double> {
+    val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)// [number of measures x number of features]
+    val measuresForEachFeature = 0.until(dataSet.features.size).map { i -> valuesForEachMeasure.map { it[i] } } // [number of features x number of measures]
+    return xData
+            .map { point ->
+                evaluateDataSet(point, listOf(measuresForEachFeature[position]))[0]
+            }
+}
+
+fun <T> calculateTime(block: () -> T): Pair<Long, T> {
+    val start = System.currentTimeMillis()
+    val result = block()
+    return Pair(System.currentTimeMillis() - start, result)
+}
+
+fun evaluateDataSet(measureCosts: Point,
                     measuresForEachFeature: Matrix
-): List<EvaluatedFeature> {
-    val result = ArrayList<EvaluatedFeature>(measuresForEachFeature.size)
-    for (i in 0..measuresForEachFeature.size - 1) {
-        var m = 0.0
-        for (j in 0..measureCosts.coordinates.size - 1) {
-            m += measureCosts.coordinates[j] * measuresForEachFeature[i][j]
-        }
-        result.add(EvaluatedFeature(dataSet.features[i], m))
+): DoubleArray {
+    val result = DoubleArray(measuresForEachFeature.size)
+    for (i in 0 until measuresForEachFeature.size) {
+        val m = (0 until measureCosts.coordinates.size)
+                .sumByDouble { measureCosts.coordinates[it] * measuresForEachFeature[i][it] }
+        result[i] = m
     }
     return result
 }
-
-fun sumByDouble(it: List<Pair<Double, Double>>) = it
-        .sumByDouble { (measureCost, measureValue) -> measureCost * measureValue }
