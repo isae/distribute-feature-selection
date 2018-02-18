@@ -74,6 +74,20 @@ fun getEvaluatedData(xData: List<Point>,
             }
 }
 
+fun getEvaluatedData(xData: List<Point>,
+                     dataSet: FeatureDataSet,
+                     measureClasses: List<KClass<out RelevanceMeasure>>,
+                     positions: Set<Int>
+): List<List<Double>> {
+    val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)// [number of measures x number of features]
+    val measuresForEachFeature = 0.until(dataSet.features.size).map { i -> valuesForEachMeasure.map { it[i] } } // [number of features x number of measures]
+    val measuresToProcess = positions.map { measuresForEachFeature[it] }
+    return xData
+            .map { point ->
+                evaluateDataSet(point, measuresToProcess).toList()
+            }
+}
+
 fun <T> calculateTime(block: () -> T): Pair<Long, T> {
     val start = System.currentTimeMillis()
     val result = block()
