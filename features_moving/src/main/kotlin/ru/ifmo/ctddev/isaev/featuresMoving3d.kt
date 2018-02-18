@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev
 
+import org.ejml.simple.SimpleMatrix
 import org.jzy3d.analysis.AbstractAnalysis
 import org.jzy3d.analysis.AnalysisLauncher
 import org.jzy3d.chart.factories.AWTChartComponentFactory
@@ -39,7 +40,17 @@ fun main(args: Array<String>) {
     println("Found ${xyData.size} points")
     val data = getEvaluatedData(xyData, dataSet, measures, 0)
     val forDraw = intValues.zip(data).toMap()
-    AnalysisLauncher.open(FeatureMoving3d2(emptyList()))
+    val element = Plane(
+            Point3d(0.5, 2.0, -1.0), 
+            Point3d(3.0, 1.0, 2.0),
+            Point3d(0.0, -1.0, 1.0)
+    )
+    val z1 = element.substitute(0.5, 2.0)
+    val z2 = element.substitute(3.0, 1.0)
+    val z3 = element.substitute(0.0, -1.0)
+    AnalysisLauncher.open(FeatureMoving3d2(listOf(
+            element
+    )))
 }
 
 class FeatureMoving3d2(val planes: List<Plane>) : AbstractAnalysis() {
@@ -73,12 +84,39 @@ class FeatureMoving3d2(val planes: List<Plane>) : AbstractAnalysis() {
     }
 }
 
-class Point3d(val x: Double, y: Double, z: Double)
+class Point3d(val x: Double, val y: Double, val z: Double)
 
-class Plane(p1: Point3d, p2: Point3d, p3: Point3d) {
-    private val a = 0.0
-    private val b = 0.0
-    private val c = 0.0
-    private val d = 0.0
-    fun substitute(x: Double, y: Double) = (a * x + b * y - d) / c
+class Plane {
+    private val a: Double
+    private val b: Double
+    private val c: Double
+    private val d: Double
+
+    constructor(a: Double, b: Double, c: Double, d: Double) {
+        this.a = a
+        this.b = b
+        this.c = c
+        this.d = d
+    }
+
+    constructor(p1: Point3d, p2: Point3d, p3: Point3d) {
+        val d1 = SimpleMatrix(arrayOf(
+                doubleArrayOf(p2.y - p1.y, p2.z - p1.z),
+                doubleArrayOf(p3.y - p1.y, p3.z - p1.z)
+        )).determinant()
+        val d2 = SimpleMatrix(arrayOf(
+                doubleArrayOf(p2.x - p1.x, p2.z - p1.z),
+                doubleArrayOf(p3.x - p1.x, p3.z - p1.z)
+        )).determinant()
+        val d3 = SimpleMatrix(arrayOf(
+                doubleArrayOf(p2.x - p1.x, p2.y - p1.y),
+                doubleArrayOf(p3.x - p1.x, p3.y - p1.y)
+        )).determinant()
+        this.a = d1
+        this.b = -d2
+        this.c = d3
+        this.d = d2 * p1.y - d1 * p1.x - d3 * p1.z
+    }
+
+    fun substitute(x: Double, y: Double) = (a * x + b * y + d) / (-c)
 }

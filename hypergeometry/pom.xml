@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>features-moving</artifactId>
+    <artifactId>hypergeometry</artifactId>
     <packaging>jar</packaging>
-    <name>Features Moving Test Implementation</name>
+    <name>Hyper Geometry Utility Library</name>
     <parent>
         <groupId>ru.ifmo.ctddev.isaev</groupId>
         <artifactId>melif-parent</artifactId>
@@ -11,38 +11,11 @@
     </parent>
     <dependencies>
         <dependency>
-            <groupId>ru.ifmo.ctddev.isaev</groupId>
-            <artifactId>melif</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>ru.ifmo.ctddev.isaev</groupId>
-            <artifactId>hypergeometry</artifactId>
-            <version>${project.parent.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.knowm.xchart</groupId>
-            <artifactId>xchart</artifactId>
-            <version>3.5.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jzy3d</groupId>
-            <artifactId>jzy3d-api</artifactId>
-            <version>1.0.0</version>
+            <groupId>org.ejml</groupId>
+            <artifactId>ejml-all</artifactId>
+            <version>0.33</version>
         </dependency>
     </dependencies>
-    <repositories>
-        <repository>
-            <id>jzy3d-snapshots</id>
-            <name>Jzy3d Snapshots</name>
-            <url>http://maven.jzy3d.org/snapshots</url>
-        </repository>
-        <repository>
-            <id>jzy3d-releases</id>
-            <name>Jzy3d Releases</name>
-            <url>http://maven.jzy3d.org/releases</url>
-        </repository>
-    </repositories>
     <build>
         <plugins>
             <!-- Download Java source JARs. -->

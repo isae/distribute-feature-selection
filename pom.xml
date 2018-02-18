@@ -16,6 +16,7 @@
     <modules>
         <module>melif</module>
         <module>features_moving</module>
+        <module>hypergeometry</module>
     </modules>
     <dependencies>
         <dependency>
