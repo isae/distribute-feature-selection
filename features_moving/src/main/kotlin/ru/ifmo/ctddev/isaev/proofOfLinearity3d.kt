@@ -39,10 +39,10 @@ fun main(args: Array<String>) {
     println("Found ${xyData.size} points")
     val data = getEvaluatedData(xyData, dataSet, measures, 0)
     val forDraw = intValues.zip(data).toMap()
-    AnalysisLauncher.open(FeatureMoving3d(forDraw))
+    AnalysisLauncher.open(ProofOfLinearity(forDraw))
 }
 
-class FeatureMoving3d(val forDraw: Map<Pair<Int, Int>, Double>) : AbstractAnalysis() {
+class ProofOfLinearity(val forDraw: Map<Pair<Int, Int>, Double>) : AbstractAnalysis() {
 
     override fun init() {
         // Define a function to plot

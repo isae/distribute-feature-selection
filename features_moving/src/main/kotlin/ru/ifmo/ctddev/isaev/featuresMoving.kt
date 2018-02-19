@@ -9,7 +9,6 @@ import org.knowm.xchart.style.markers.SeriesMarkers
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.Line
-import ru.ifmo.ctddev.isaev.space.Matrix
 import ru.ifmo.ctddev.isaev.space.getEvaluatedData
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
 import java.awt.BasicStroke
@@ -17,7 +16,6 @@ import java.awt.Color
 import java.time.LocalDateTime
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.reflect.KClass
 
 
 /**
@@ -42,7 +40,7 @@ fun main(args: Array<String>) {
             .xAxisTitle("Measure Proportion (${measures[0].simpleName} to ${measures[1].simpleName})")
             .yAxisTitle("Ensemble feature measure")
     val chart = XYChart(chartBuilder)
-    val featuresToTake = 40
+    val featuresToTake = 50
     val lines = 0.rangeTo(featuresToTake).map { feature(it) }.mapIndexed { index, coords -> Line("Feature $index", listOf(coords.first(), coords.last())) }
     //lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
     val features = 0.rangeTo(featuresToTake).map { feature(it) }
