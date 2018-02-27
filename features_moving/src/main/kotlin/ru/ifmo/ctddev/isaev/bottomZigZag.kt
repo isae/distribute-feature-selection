@@ -4,7 +4,6 @@ import org.knowm.xchart.BitmapEncoder
 import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
-import org.knowm.xchart.style.markers.None
 import org.knowm.xchart.style.markers.SeriesMarkers
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
@@ -15,8 +14,6 @@ import ru.ifmo.ctddev.isaev.space.getFeaturePositions
 import java.awt.BasicStroke
 import java.awt.Color
 import java.time.LocalDateTime
-import java.util.*
-import kotlin.collections.ArrayList
 
 
 /**
@@ -34,9 +31,11 @@ fun main(args: Array<String>) {
     val evaluatedData = getEvaluatedData(xData, dataSet, measures)
     val evaluatedDataWithNumbers = evaluatedData.map { it.mapIndexed { index, d -> Pair(index, d) } }
     val cutSize = 50
-    val cutsForAllPoints = evaluatedDataWithNumbers
+    val rawCutsForAllPoints = evaluatedDataWithNumbers
             .map { it.sortedBy { pair -> -pair.second } } //max first
             .map { it.take(cutSize) }
+    val cuttingLineY = rawCutsForAllPoints.map { it.last().second }
+    val cutsForAllPoints = rawCutsForAllPoints
             .map { it.map { pair -> pair.first } }
     val sometimesInCut = cutsForAllPoints
             .flatMap { it }
@@ -54,7 +53,10 @@ fun main(args: Array<String>) {
     // Create Chart
 
     val features = needToProcess.map { feature(it) }
-    val lines = features.mapIndexed { index, coords -> Line("Feature $index", listOf(coords.first(), coords.last())) }
+    val rawLines = features
+            .mapIndexed { index, coords -> Line("Feature $index", listOf(coords.first(), coords.last())) }
+    //val cuttingLineY = rawLines.sortedBy { it.from.y }[cutSize - 1].from.y
+    val lines = rawLines
     //lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
     val intersections = lines.flatMap { first -> lines.map { setOf(first, it) } }
             .filter { it.size > 1 }
@@ -80,27 +82,37 @@ fun main(args: Array<String>) {
     println("Found ${pointsToTry.size} points to try")
     //pointsToTry.forEach { println("(%.3f, %.3f)".format(it.coordinates[0], it.coordinates[1])) }
 
-    draw(features, xData, intersections)
+    draw(lines, xData, intersections, cuttingLineY)
 }
 
-private fun draw(features: List<List<Number>>, xData: List<Point>, intersections: List<Intersection>) {
+private fun draw(lines: List<Line>,
+                 xData: List<Point>,
+                 intersections: List<Intersection>,
+                 cuttingLineY: List<Double>) {
     val chartBuilder = XYChartBuilder()
             .width(1024)
             .height(768)
             .xAxisTitle("Measure Proportion (${measures[0].simpleName} to ${measures[1].simpleName})")
             .yAxisTitle("Ensemble feature measure")
     val chart = XYChart(chartBuilder)
-    features.forEachIndexed({ index, line -> addLine("Feature $index", xData, line, chart) })
-    intersections.forEach { point ->
-        val x = point.point.x
-        val y = point.point.y
-        val series = chart.addSeries(UUID.randomUUID().toString().take(10), listOf(x, x), listOf(0.0, y))
-        series.lineColor = Color.BLACK
-        series.markerColor = Color.BLACK
-        series.marker = None()
-        series.lineStyle = BasicStroke(0.1f)
-    }
-
+    lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
+    chart.addSeries("Cutting line", xData.map { it.coordinates[0] }, cuttingLineY)
+            .apply {
+                this.marker = SeriesMarkers.NONE
+                this.lineWidth = 3.0f
+                this.lineColor = Color.BLACK
+                this.lineStyle = BasicStroke(1.5f)
+            }
+    /* intersections.forEach { point ->
+         val x = point.point.x
+         val y = point.point.y
+         val series = chart.addSeries(UUID.randomUUID().toString().take(10), listOf(x, x), listOf(0.0, y))
+         series.lineColor = Color.BLACK
+         series.markerColor = Color.BLACK
+         series.marker = None()
+         series.lineStyle = BasicStroke(0.1f)
+     }
+ */
     // Show it
     SwingWrapper(chart).displayChart()
 

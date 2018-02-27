@@ -43,7 +43,7 @@ class Line(val name: String, val from: LinePoint, val to: LinePoint) {
 fun getFeaturePositions(pos: Int,
                         evaluatedData: List<List<Double>>): List<Number> {
     val result = evaluatedData.map { it[pos] }
-    println(result.map { String.format("%.2f", it) })
+    //println(result.map { String.format("%.2f", it) })
     return result
 }
 
