@@ -54,7 +54,7 @@ fun main(args: Array<String>) {
 
     val features = needToProcess.map { feature(it) }
     val rawLines = features
-            .mapIndexed { index, coords -> Line("Feature $index", listOf(coords.first(), coords.last())) }
+            .mapIndexed { index, coords -> Line("Feature $index", doubleArrayOf(coords.first(), coords.last())) }
     //val cuttingLineY = rawLines.sortedBy { it.from.y }[cutSize - 1].from.y
     val lines = rawLines
     //lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
@@ -124,6 +124,6 @@ private fun addLine(name: String, line: Line, chart: XYChart) {
     chart.addSeries(name, listOf(line.from.x, line.to.x), listOf(line.from.y, line.to.y)).marker = SeriesMarkers.NONE
 }
 
-private fun addLine(name: String, xData: List<Point>, line: List<Number>, chart: XYChart) {
-    chart.addSeries(name, xData.map { it.coordinates[0] }, line).marker = SeriesMarkers.NONE
+internal fun addLine(name: String, xData: List<Point>, line: DoubleArray, chart: XYChart) {
+    chart.addSeries(name, xData.map { it.coordinates[0] }.toDoubleArray(), line).marker = SeriesMarkers.NONE
 }

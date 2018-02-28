@@ -19,7 +19,7 @@ class Line(val name: String, val from: LinePoint, val to: LinePoint) {
 
     private val b: Double = to.y - k * to.x
 
-    constructor(name: String, ys: List<Number>) : this(name, LinePoint(0.0, ys[0].toDouble()), LinePoint(1.0, ys[1].toDouble())) {
+    constructor(name: String, ys: DoubleArray) : this(name, LinePoint(0.0, ys[0]), LinePoint(1.0, ys[1])) {
         if (ys.size != 2) {
             throw IllegalStateException("Invalid constructor invocation, list size is not 2")
         }
@@ -41,8 +41,8 @@ class Line(val name: String, val from: LinePoint, val to: LinePoint) {
 }
 
 fun getFeaturePositions(pos: Int,
-                        evaluatedData: List<List<Double>>): List<Number> {
-    val result = evaluatedData.map { it[pos] }
+                        evaluatedData: List<DoubleArray>): DoubleArray {
+    val result = evaluatedData.map { it[pos] }.toDoubleArray()
     //println(result.map { String.format("%.2f", it) })
     return result
 }
@@ -52,12 +52,12 @@ typealias Matrix = List<List<Double>>
 fun getEvaluatedData(xData: List<Point>,
                      dataSet: FeatureDataSet,
                      measureClasses: List<KClass<out RelevanceMeasure>>
-): List<List<Double>> {
+): List<DoubleArray> {
     val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)// [number of measures x number of features]
     val measuresForEachFeature = 0.until(dataSet.features.size).map { i -> valuesForEachMeasure.map { it[i] } } // [number of features x number of measures]
     return xData
             .map { point ->
-                evaluateDataSet(point, measuresForEachFeature).toList()
+                evaluateDataSet(point, measuresForEachFeature)
             }
 }
 
@@ -78,14 +78,12 @@ fun getEvaluatedData(xData: List<Point>,
                      dataSet: FeatureDataSet,
                      measureClasses: List<KClass<out RelevanceMeasure>>,
                      positions: Set<Int>
-): List<List<Double>> {
+): List<DoubleArray> {
     val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)// [number of measures x number of features]
     val measuresForEachFeature = 0.until(dataSet.features.size).map { i -> valuesForEachMeasure.map { it[i] } } // [number of features x number of measures]
     val measuresToProcess = positions.map { measuresForEachFeature[it] }
     return xData
-            .map { point ->
-                evaluateDataSet(point, measuresToProcess).toList()
-            }
+            .map { point -> evaluateDataSet(point, measuresToProcess) }
 }
 
 fun <T> calculateTime(block: () -> T): Pair<Long, T> {

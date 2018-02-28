@@ -25,8 +25,8 @@ import kotlin.collections.ArrayList
 /**
  * @author iisaev
  */
-val random = Random()
-val colorMaps = listOf(
+private val random = Random()
+private val colorMaps = listOf(
         ColorMapRainbow(),
         ColorMapWhiteGreen(),
         ColorMapGrayscale(),
@@ -37,7 +37,7 @@ val colorMaps = listOf(
         ColorMapWhiteRed()
 )
 
-fun randomColor() = colorMaps[random.nextInt(colorMaps.size)]
+private fun randomColor() = colorMaps[random.nextInt(colorMaps.size)]
 
 fun main(args: Array<String>) {
     val dataSet = DataSetReader().readCsv(args[0])
@@ -58,7 +58,7 @@ fun main(args: Array<String>) {
     AnalysisLauncher.open(PointsScene(pointsToTry))
 }
 
-fun calculatePlanes(data: List<List<Double>>): List<Plane> {
+fun calculatePlanes(data: List<DoubleArray>): List<Plane> {
     return 0.until(data[0].size)
             .map {
                 Plane(
@@ -69,8 +69,8 @@ fun calculatePlanes(data: List<List<Double>>): List<Plane> {
             }
 }
 
-class PlanesAndIntersectionsScene(private val planes: List<Plane>,
-                                  private val intersections: List<Intersection3d>) : AbstractAnalysis() {
+private class PlanesAndIntersectionsScene(private val planes: List<Plane>,
+                                          private val intersections: List<Intersection3d>) : AbstractAnalysis() {
 
     override fun init() {
         // Define a function to plot
@@ -115,7 +115,7 @@ class PlanesAndIntersectionsScene(private val planes: List<Plane>,
     }
 }
 
-class PointsScene(private val pointsToTry: List<Point3d>) : AbstractAnalysis() {
+private class PointsScene(private val pointsToTry: List<Point3d>) : AbstractAnalysis() {
 
     override fun init() {
         chart = AWTChartComponentFactory.chart(Quality.Fastest, getCanvasType())
@@ -132,7 +132,7 @@ class PointsScene(private val pointsToTry: List<Point3d>) : AbstractAnalysis() {
     }
 }
 
-private fun calculatePoints(it: Intersection3d): List<Point3d> {
+fun calculatePoints(it: Intersection3d): List<Point3d> {
     val p1 = it.line.p1
     val p2 = it.line.p2
     val xMin = Math.min(p1.x, p2.x)

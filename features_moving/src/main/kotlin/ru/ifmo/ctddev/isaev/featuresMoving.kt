@@ -41,7 +41,7 @@ fun main(args: Array<String>) {
             .yAxisTitle("Ensemble feature measure")
     val chart = XYChart(chartBuilder)
     val featuresToTake = 50
-    val lines = 0.rangeTo(featuresToTake).map { feature(it) }.mapIndexed { index, coords -> Line("Feature $index", listOf(coords.first(), coords.last())) }
+    val lines = 0.rangeTo(featuresToTake).map { feature(it) }.mapIndexed { index, coords -> Line("Feature $index", doubleArrayOf(coords.first(), coords.last())) }
     //lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
     val features = 0.rangeTo(featuresToTake).map { feature(it) }
     features.forEachIndexed({ index, line -> addLine("Feature $index", xData, line, chart) })
