@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 /**
  * @author iisaev
  */
-abstract class CorrelationBasedMeasure extends RelevanceMeasure {
+public abstract class CorrelationBasedMeasure extends RelevanceMeasure {
     CorrelationBasedMeasure(@NotNull Double minValue, @NotNull Double maxValue) {
         super(minValue, maxValue);
     }

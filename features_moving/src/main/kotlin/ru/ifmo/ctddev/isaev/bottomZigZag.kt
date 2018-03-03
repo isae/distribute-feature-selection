@@ -20,17 +20,17 @@ import java.time.LocalDateTime
  * @author iisaev
  */
 
-val measures = listOf(VDM::class, SpearmanRankCorrelation::class)
+val measures = listOf(SpearmanRankCorrelation::class, VDM::class)
+const val epsilon = 10000
+const val cutSize = 50
+val dataSet = KnownDatasets.DLBCL.read()
 
 fun main(args: Array<String>) {
-    val dataSet = DataSetReader().readCsv(args[0])
-    //val n = 100
-    //val xData = 0.rangeTo(n).map { (it.toDouble()) / n }
-    val xData = 0.rangeTo(100).map { x -> Point(x.toDouble() / 100, (100 - x).toDouble() / 100) }//listOf(listOf(0.0, 1.0), listOf(1.0, 0.0))
-    println(xData.map { x -> x.toString() })
+    val xData = 0.rangeTo(epsilon).map { x -> Point(x.toDouble() / epsilon, (epsilon - x).toDouble() / epsilon) }
+    println("${xData.size} points to calculate measures on")
     val evaluatedData = getEvaluatedData(xData, dataSet, measures)
     val evaluatedDataWithNumbers = evaluatedData.map { it.mapIndexed { index, d -> Pair(index, d) } }
-    val cutSize = 50
+
     val rawCutsForAllPoints = evaluatedDataWithNumbers
             .map { it.sortedBy { pair -> -pair.second } } //max first
             .map { it.take(cutSize) }
@@ -74,9 +74,9 @@ fun main(args: Array<String>) {
                 val right = if (i == intersections.size) 1.0 else intersections[i].point.x
                 (left + right) / 2
             }
-            .map { "%.3f".format(it) }
-            .distinct()
-            .map { it.toDouble() }
+            //.map { "%.3f".format(it) }
+            //.distinct()
+            //.map { it.toDouble() }
             .map { Point(it, 1 - it) }
 
     println("Found ${pointsToTry.size} points to try")
