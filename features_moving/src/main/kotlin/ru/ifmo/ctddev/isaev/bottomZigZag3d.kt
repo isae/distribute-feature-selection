@@ -18,8 +18,6 @@ import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.getEvaluatedData
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
-import java.time.Duration
-import java.time.LocalDateTime
 import java.util.*
 
 
@@ -39,8 +37,6 @@ private val colorMaps = listOf(
 )
 
 private fun randomColor() = colorMaps[random.nextInt(colorMaps.size)]
-
-private val startTime = LocalDateTime.now()
 
 fun main(args: Array<String>) {
     val dataSet = DataSetReader().readCsv(args[0])
@@ -100,10 +96,6 @@ fun main(args: Array<String>) {
     //val n = 100
     AnalysisLauncher.open(Planes(planes, intersections))
     AnalysisLauncher.open(Points(pointsToTry))
-}
-
-private fun logToConsole(msg: String) {
-    println("${Duration.between(startTime, LocalDateTime.now()).toMillis()} ms: " + msg)
 }
 
 private class Planes(private val planes: List<Plane>,

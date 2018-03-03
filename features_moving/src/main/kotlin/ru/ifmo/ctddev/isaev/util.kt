@@ -1,5 +1,8 @@
 package ru.ifmo.ctddev.isaev
 
+import java.time.Duration
+import java.time.LocalDateTime
+
 /**
  * @author iisaev
  */
@@ -62,4 +65,11 @@ enum class KnownDatasets(name: String) {
     fun read(): FeatureDataSet {
         return DataSetReader().readCsv(path)
     }
+}
+
+
+private val startTime = LocalDateTime.now()
+
+fun logToConsole(msg: String) {
+    println("${Duration.between(startTime, LocalDateTime.now()).toMillis()} ms: " + msg)
 }

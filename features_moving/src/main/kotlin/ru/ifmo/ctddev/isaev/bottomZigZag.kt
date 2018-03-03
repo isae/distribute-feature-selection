@@ -14,6 +14,7 @@ import ru.ifmo.ctddev.isaev.space.getFeaturePositions
 import java.awt.BasicStroke
 import java.awt.Color
 import java.time.LocalDateTime
+import java.util.*
 
 
 /**
@@ -26,27 +27,21 @@ const val cutSize = 50
 val dataSet = KnownDatasets.DLBCL.read()
 
 fun main(args: Array<String>) {
+    logToConsole("Started the processing")
     val xData = 0.rangeTo(epsilon).map { x -> Point(x.toDouble() / epsilon, (epsilon - x).toDouble() / epsilon) }
-    println("${xData.size} points to calculate measures on")
-    val evaluatedData = getEvaluatedData(xData, dataSet, measures)
-    val evaluatedDataWithNumbers = evaluatedData.map { it.mapIndexed { index, d -> Pair(index, d) } }
-
-    val rawCutsForAllPoints = evaluatedDataWithNumbers
-            .map { it.sortedBy { pair -> -pair.second } } //max first
-            .map { it.take(cutSize) }
-    val cuttingLineY = rawCutsForAllPoints.map { it.last().second }
-    val cutsForAllPoints = rawCutsForAllPoints
-            .map { it.map { pair -> pair.first } }
+    logToConsole("${xData.size} points to calculate measures on")
+    val (evaluatedData, cuttingLineY, cutsForAllPoints) = processAllPointsFast(xData)
+    logToConsole("Evaluated data, calculated cutting line and cuts for all points")
     val sometimesInCut = cutsForAllPoints
             .flatMap { it }
             .toSet()
-    println("Sometimes in cut: ${sometimesInCut.size} features")
+    logToConsole("Sometimes in cut: ${sometimesInCut.size} features")
     val alwaysInCut = sometimesInCut.filter { featureNum ->
         cutsForAllPoints.all { it.contains(featureNum) }
     }
-    println("Always in cut: ${alwaysInCut.size} features: $alwaysInCut")
+    logToConsole("Always in cut: ${alwaysInCut.size} features: $alwaysInCut")
     val needToProcess = sometimesInCut - alwaysInCut
-    println("Need to process: ${needToProcess.size} features")
+    logToConsole("Need to process: ${needToProcess.size} features")
 
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
 
@@ -65,7 +60,7 @@ fun main(args: Array<String>) {
             .map { it[0].intersect(it[1]) }
             .filterNotNull()
             .sortedBy { it.point.x }
-    println("Found ${intersections.size} intersections")
+    logToConsole("Found ${intersections.size} intersections")
     //intersections.forEach { println("Intersection of ${it.line1.name} and ${it.line2.name} in point (%.2f, %.2f)".format(it.point.x, it.point.y)) }
 
     val pointsToTry = 0.rangeTo(intersections.size)
@@ -74,15 +69,44 @@ fun main(args: Array<String>) {
                 val right = if (i == intersections.size) 1.0 else intersections[i].point.x
                 (left + right) / 2
             }
-            //.map { "%.3f".format(it) }
-            //.distinct()
-            //.map { it.toDouble() }
             .map { Point(it, 1 - it) }
 
-    println("Found ${pointsToTry.size} points to try")
+    logToConsole("Found ${pointsToTry.size} points to try")
     //pointsToTry.forEach { println("(%.3f, %.3f)".format(it.coordinates[0], it.coordinates[1])) }
 
     draw(lines, xData, intersections, cuttingLineY)
+}
+
+private fun processAllPoints(xData: List<Point>): Triple<List<DoubleArray>, List<Double>, List<List<Int>>> {
+    val evaluatedData = getEvaluatedData(xData, dataSet, measures)
+    val evaluatedDataWithNumbers = evaluatedData.map { it.mapIndexed { index, d -> Pair(index, d) } }
+
+    val rawCutsForAllPoints = evaluatedDataWithNumbers
+            .map { it.sortedBy { pair -> -pair.second } } //max first
+    val cuttingLineY = rawCutsForAllPoints.map { it[cutSize - 1].second }
+    val cutsForAllPoints = rawCutsForAllPoints
+            .map { it.take(cutSize) }
+            .map { it.map { pair -> pair.first } }
+    return Triple(evaluatedData, cuttingLineY, cutsForAllPoints)
+}
+
+private fun processAllPointsFast(xData: List<Point>): Triple<List<DoubleArray>, List<Double>, List<List<Int>>> {
+    val evaluatedData = getEvaluatedData(xData, dataSet, measures)
+    val range = Array(evaluatedData[0].size, { it })
+    val evaluatedDataWithNumbers = evaluatedData.map { Pair(it, range.clone()) }
+    val rawCutsForAllPoints = evaluatedDataWithNumbers
+            .map {
+                val featureNumbers = it.second
+                val featureMeasures = it.first
+                val comparator = kotlin.Comparator<Int> { o1, o2 -> compareValuesBy(o1, o2, { -featureMeasures[it] }) }
+                Arrays.sort(featureNumbers, comparator)
+                return@map Pair(featureMeasures, featureNumbers)
+            } //max first
+    val cuttingLineY = rawCutsForAllPoints
+            .map { it.first[it.second[cutSize - 1]] }
+    val cutsForAllPoints = rawCutsForAllPoints
+            .map { it.second.take(cutSize) }
+    return Triple(evaluatedData, cuttingLineY, cutsForAllPoints)
 }
 
 private fun draw(lines: List<Line>,
@@ -114,7 +138,9 @@ private fun draw(lines: List<Line>,
      }
  */
     // Show it
+    logToConsole("Finished calculations; visualizing...")
     SwingWrapper(chart).displayChart()
+    logToConsole("Finished visualization")
 
     // or save it in high-res
     BitmapEncoder.saveBitmapWithDPI(chart, "./charts/Test_Chart_${LocalDateTime.now()}", BitmapEncoder.BitmapFormat.PNG, 200);
