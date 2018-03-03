@@ -12,27 +12,21 @@ abstract class DataSetSplitter(val testPercent: Int) {
     protected val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
     init {
-        logger.info("Initialized dataset splitter with test percent {}", testPercent)
+        logger.info("Initialized dataset splitter with test percent $testPercent")
     }
 
     abstract fun split(original: DataSet): List<DataSetPair>
 }
 
 class OrderSplitter(testPercent: Int, val order: List<Int>) : DataSetSplitter(testPercent) {
-    private val random = Random()
-
     init {
         if (logger.isTraceEnabled) {
-            logger.trace("Initialized dataset splitter with order {}", Arrays.toString(order.toTypedArray()))
+            logger.trace("Initialized dataset splitter with order $order")
         }
     }
 
-    fun splitRandomly(original: DataSet, testPercent: Int, times: Int): List<DataSetPair> {
-        return (0 until times).map { splitRandomly(original, testPercent) }
-    }
-
     override fun split(original: DataSet): List<DataSetPair> {
-        val folds = (100.toDouble() / testPercent).toInt()
+        val folds = (100.0 / testPercent).toInt()
         val instancesBeforeShuffle = ArrayList(original.toInstanceSet().instances)
         val instances: MutableList<DataInstance> = ArrayList()
         order.forEach { i -> instances.add(instancesBeforeShuffle[i]) }
@@ -59,25 +53,6 @@ class OrderSplitter(testPercent: Int, val order: List<Int>) : DataSetSplitter(te
             throw IllegalStateException("Invalid split")
         }
         return result
-    }
-
-    fun splitRandomly(original: DataSet, testPercent: Int): DataSetPair {
-        val testInstanceNumber = (original.getInstanceCount().toDouble() * testPercent).toInt() / 100
-        val selectedInstances = HashSet<Int>()
-        while (selectedInstances.size != testInstanceNumber) {
-            selectedInstances.add(random.nextInt(original.getInstanceCount()))
-        }
-        val instanceSet = original.toInstanceSet()
-        val trainInstances = ArrayList<DataInstance>(original.getInstanceCount() - testInstanceNumber)
-        val testInstances = ArrayList<DataInstance>(testInstanceNumber)
-        IntStream.range(0, original.getInstanceCount()).forEach { i ->
-            if (selectedInstances.contains(i)) {
-                testInstances.add(instanceSet.instances[i])
-            } else {
-                trainInstances.add(instanceSet.instances[i])
-            }
-        }
-        return DataSetPair(InstanceDataSet(trainInstances), InstanceDataSet(testInstances))
     }
 }
 

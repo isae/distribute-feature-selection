@@ -20,18 +20,15 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
 
     private val foldsEvaluator = config.foldsEvaluator
 
-    private val name = "FullSpaceScanner"
-
     private val executorService = Executors.newFixedThreadPool(threads)
 
     private val featureDataSet = dataSet.toFeatureSet()
 
     fun run(): RunStats {
+        val runStats = RunStats(config, dataSet, javaClass.simpleName)
+        logger.info("Started {} at {}", javaClass.simpleName, runStats.startTime)
         val points = calculateAllPoints(config, featureDataSet, 50)
         logger.info("Found ${points.size} points to process")
-        val runStats = RunStats(config, dataSet, name)
-        logger.info("Started {} at {}", name, runStats.startTime)
-        logger.info("Started {} at {}", javaClass.simpleName, runStats.startTime)
         val scoreFutures = points.map { p ->
             executorService.submit(Callable<SelectionResult> { foldsEvaluator.getSelectionResult(dataSet, p, runStats) })
         }

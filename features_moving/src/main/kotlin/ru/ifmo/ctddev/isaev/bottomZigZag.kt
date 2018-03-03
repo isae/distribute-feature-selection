@@ -60,8 +60,7 @@ fun main(args: Array<String>) {
             .filter { it.size > 1 }
             .distinct()
             .map { ArrayList(it) }
-            .map { it[0].intersect(it[1]) }
-            .filterNotNull()
+            .mapNotNull { it[0].intersect(it[1]) }
             .sortedBy { it.point.x }
     logToConsole("Found ${intersections.size} intersections")
     //intersections.forEach { println("Intersection of ${it.line1.name} and ${it.line2.name} in point (%.2f, %.2f)".format(it.point.x, it.point.y)) }

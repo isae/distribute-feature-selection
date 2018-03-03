@@ -36,9 +36,9 @@ class DataSetEvaluator(private val normMode: NormalizationMode) {
         }
     }
 
-    fun evaluateMeasures(original: FeatureDataSet,
-                         measureCosts: Point,
-                         vararg measures: RelevanceMeasure): List<EvaluatedFeature> {
+    private fun evaluateMeasures(original: FeatureDataSet,
+                                 measureCosts: Point,
+                                 vararg measures: RelevanceMeasure): List<EvaluatedFeature> {
         if (measureCosts.coordinates.size != measures.size) {
             throw IllegalArgumentException("Number of given measures mismatch with measureCosts dimension")
         }

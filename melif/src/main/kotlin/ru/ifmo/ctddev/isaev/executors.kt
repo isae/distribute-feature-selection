@@ -128,7 +128,9 @@ class PriorityExecutor(poolSize: Int, updatePrioritiesOnEachStep: Boolean)
 ) {
 
     fun increaseTasksPriorities(increment: Double) {
-        (queue as LinearSearchPriorityBlockingQueue).increasePriorities(increment)
+        if (queue is LinearSearchPriorityBlockingQueue) {
+            (queue as LinearSearchPriorityBlockingQueue<Runnable>).increasePriorities(increment)
+        }
     }
 
     override fun submit(task: Runnable): Future<*> = fail()

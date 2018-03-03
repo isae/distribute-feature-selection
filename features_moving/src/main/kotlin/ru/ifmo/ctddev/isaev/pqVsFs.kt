@@ -36,9 +36,9 @@ fun main(args: Array<String>) {
                 .run()
     }
     LOGGER.info("""
-        PQ: processed ${pqStats.visitedPoints} points in ${pqTime / 1000} seconds, 
-        best result is ${pqStats.bestResult.score} in point ${pqStats.bestResult.point}
-        """)
+          PQ: processed ${pqStats.visitedPoints} points in ${pqTime / 1000} seconds, 
+          best result is ${pqStats.bestResult.score} in point ${pqStats.bestResult.point}
+          """)
     LOGGER.info("""
         FS: processed ${fullSpaceStats.visitedPoints} points in ${fullSpaceTime / 1000} seconds, 
         best result is ${fullSpaceStats.bestResult.score} in point ${fullSpaceStats.bestResult.point}

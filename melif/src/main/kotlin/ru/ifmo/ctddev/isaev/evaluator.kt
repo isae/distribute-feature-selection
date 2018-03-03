@@ -21,7 +21,6 @@ abstract class FoldsEvaluator(val name: String,
     protected val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
     abstract fun getSelectionResult(dataSet: DataSet, point: Point, stats: RunStats): SelectionResult
-    abstract fun getSelectionResultPar(dataSet: DataSet, point: Point, stats: RunStats, executorService: ExecutorService): SelectionResult
 
     protected fun getScore(dsPair: DataSetPair): Double {
         val classifier = classifiers.newClassifier()
@@ -38,17 +37,12 @@ abstract class FoldsEvaluator(val name: String,
         return result
     }
 
-    protected fun getScore(filteredDs: FeatureDataSet): Double {
-        val instanceDataSet = filteredDs.toInstanceSet()
-        val f1Scores = dataSetSplitter.split(instanceDataSet)
-                .map { this.getScore(it) }
-        return f1Scores.average()
-    }
-
-    protected fun getScore(dataSet: DataSet, point: Point, measures: Array<RelevanceMeasure>): Double {
+    protected fun getScore(dataSet: DataSet, 
+                           point: Point, measures: Array<RelevanceMeasure>): Double {
         val filteredDs = dataSetFilter.filterDataSet(dataSet.toFeatureSet(), point, measures)
         val instanceDataSet = filteredDs.toInstanceSet()
-        val f1Scores = dataSetSplitter.split(instanceDataSet)
+        val splits = dataSetSplitter.split(instanceDataSet)
+        val f1Scores = splits
                 .map { this.getScore(it) }
         return f1Scores.average()
     }
@@ -64,37 +58,6 @@ class SequentalEvaluator(classifiers: Classifiers, dataSetFilter: DataSetFilter,
         val result = SelectionResult(filteredDs.features, point, f1Score)
         stats.updateBestResult(result)
         return result
-    }
-
-    override fun getSelectionResultPar(dataSet: DataSet, point: Point, stats: RunStats, executorService: ExecutorService): SelectionResult {
-        val filteredDs = dataSetFilter.filterDataSet(dataSet.toFeatureSet(), point, stats.measures)
-        val instanceDataSet = filteredDs.toInstanceSet()
-        val dataSetPairs = dataSetSplitter.split(instanceDataSet)
-        val latch = CountDownLatch(dataSetPairs.size)
-        val f1Scores = Collections.synchronizedList(ArrayList<Double>(dataSetPairs.size))
-        val futures = dataSetPairs.map { ds ->
-            executorService.submit {
-                val score = getScore(ds)
-                f1Scores.add(score)
-                latch.countDown()
-            }
-        }
-        try {
-            latch.await()
-            futures.forEach { f ->
-                if (!f.isDone) {
-                    throw IllegalStateException("Task is not done after latch is released")
-                }
-            }
-            val f1Score = f1Scores.average()
-            logger.debug("Point {}; F1 score: {}", point, f1Score)
-            val result = SelectionResult(filteredDs.features, point, f1Score)
-            stats.updateBestResult(result)
-            return result
-        } catch (e: InterruptedException) {
-            throw IllegalStateException("Waiting on latch interrupted! ", e)
-        }
-
     }
 }
 
@@ -135,9 +98,5 @@ class ParallelEvaluator(classifiers: Classifiers, dataSetFilter: DataSetFilter, 
             throw IllegalStateException("Waiting on latch interrupted! ", e)
         }
 
-    }
-
-    override fun getSelectionResultPar(dataSet: DataSet, point: Point, stats: RunStats, executorService: ExecutorService): SelectionResult {
-        throw UnsupportedOperationException("Method is not implemented")
     }
 }
