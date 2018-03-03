@@ -22,7 +22,7 @@ import java.util.*
  */
 
 val measures = listOf(SpearmanRankCorrelation::class, VDM::class)
-const val epsilon = 10000
+const val epsilon = 1000
 const val cutSize = 50
 val dataSet = KnownDatasets.DLBCL.read()
 
@@ -31,6 +31,7 @@ fun main(args: Array<String>) {
     val xData = 0.rangeTo(epsilon).map { x -> Point(x.toDouble() / epsilon, (epsilon - x).toDouble() / epsilon) }
     logToConsole("${xData.size} points to calculate measures on")
     val (evaluatedData, cuttingLineY, cutsForAllPoints) = processAllPointsFast(xData)
+    val lastFeatureInAllCuts = cutsForAllPoints.map { it.last() }
     logToConsole("Evaluated data, calculated cutting line and cuts for all points")
     val sometimesInCut = cutsForAllPoints
             .flatMap { it }
@@ -63,14 +64,17 @@ fun main(args: Array<String>) {
     logToConsole("Found ${intersections.size} intersections")
     //intersections.forEach { println("Intersection of ${it.line1.name} and ${it.line2.name} in point (%.2f, %.2f)".format(it.point.x, it.point.y)) }
 
-    val pointsToTry = 0.rangeTo(intersections.size)
-            .map { i ->
-                val left = if (i == 0) 0.0 else intersections[i - 1].point.x
-                val right = if (i == intersections.size) 1.0 else intersections[i].point.x
-                (left + right) / 2
-            }
-            .map { Point(it, 1 - it) }
-
+    /* val pointsToTry = 0.rangeTo(intersections.size)
+             .map { i ->
+                 val left = if (i == 0) 0.0 else intersections[i - 1].point.x
+                 val right = if (i == intersections.size) 1.0 else intersections[i].point.x
+                 (left + right) / 2
+             }
+             .map { Point(it, 1 - it) }
+ */
+    val pointsToTry = lastFeatureInAllCuts
+            .filterIndexed({ i, feature -> i == 0 || feature != lastFeatureInAllCuts[i - 1] })
+            .mapIndexed({ i, _ -> Point(i.toDouble() / epsilon, (epsilon - i).toDouble() / epsilon) })
     logToConsole("Found ${pointsToTry.size} points to try")
     //pointsToTry.forEach { println("(%.3f, %.3f)".format(it.coordinates[0], it.coordinates[1])) }
 
@@ -103,7 +107,10 @@ private fun processAllPointsFast(xData: List<Point>): Triple<List<DoubleArray>, 
                 return@map Pair(featureMeasures, featureNumbers)
             } //max first
     val cuttingLineY = rawCutsForAllPoints
-            .map { it.first[it.second[cutSize - 1]] }
+            .map {
+                val lastFeatureInCut = it.second[cutSize - 1]
+                it.first[lastFeatureInCut]
+            }
     val cutsForAllPoints = rawCutsForAllPoints
             .map { it.second.take(cutSize) }
     return Triple(evaluatedData, cuttingLineY, cutsForAllPoints)
