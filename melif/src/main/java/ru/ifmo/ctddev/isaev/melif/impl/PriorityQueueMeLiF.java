@@ -53,7 +53,7 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
                     coordinates[dimension - 1] = 1.0;
                     startingPoints.add(new Point(coordinates));
                 });
-        this.executorService = new PriorityExecutor(threads);
+        this.executorService = new PriorityExecutor(threads, false);
     }
 
     @Override

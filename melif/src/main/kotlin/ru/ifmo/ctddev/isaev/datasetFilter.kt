@@ -77,10 +77,6 @@ sealed class DataSetFilter {
                                measures: Array<RelevanceMeasure>): FeatureDataSet
 }
 
-interface CuttingRule {
-    fun cut(features: List<EvaluatedFeature>): List<EvaluatedFeature>
-}
-
 class PercentFilter(private val percents: Int) : DataSetFilter() {
 
     override fun filterDataSet(original: FeatureDataSet, measureCosts: Point,

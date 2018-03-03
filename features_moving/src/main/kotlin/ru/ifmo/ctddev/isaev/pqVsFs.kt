@@ -14,10 +14,10 @@ import ru.ifmo.ctddev.isaev.space.calculateTime
 private val LOGGER = LoggerFactory.getLogger("pqVsFs")
 
 fun main(args: Array<String>) {
-    val dataSet = DataSetReader().readCsv(args[0])
+    val dataSet = KnownDatasets.ARIZONA5.read()
     val order = 0.until(dataSet.getInstanceCount()).shuffled()
     val algorithmConfig = AlgorithmConfig(
-            0.1,
+            0.001,
             SequentalEvaluator(
                     Classifiers.SVM,
                     PreferredSizeFilter(50),
@@ -35,7 +35,13 @@ fun main(args: Array<String>) {
         FullSpaceScanner(algorithmConfig, dataSet, 4)
                 .run()
     }
-    LOGGER.info("PQ: processed ${pqStats.visitedPoints} points in ${pqTime / 1000} seconds, best result is ${pqStats.bestResult.score}")
-    LOGGER.info("FS: processed ${fullSpaceStats.visitedPoints} points in ${fullSpaceTime / 1000} seconds, best result is ${fullSpaceStats.bestResult.score}")
+    LOGGER.info("""
+        PQ: processed ${pqStats.visitedPoints} points in ${pqTime / 1000} seconds, 
+        best result is ${pqStats.bestResult.score} in point ${pqStats.bestResult.point}
+        """)
+    LOGGER.info("""
+        FS: processed ${fullSpaceStats.visitedPoints} points in ${fullSpaceTime / 1000} seconds, 
+        best result is ${fullSpaceStats.bestResult.score} in point ${fullSpaceStats.bestResult.point}
+        """)
 
 }

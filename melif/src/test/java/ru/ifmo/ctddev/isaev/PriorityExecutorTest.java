@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
  * @author iisaev
  */
 public class PriorityExecutorTest {
-    PriorityExecutor executor = new PriorityExecutor(4);
+    PriorityExecutor executor = new PriorityExecutor(4, true);
 
     @Test
     @Ignore

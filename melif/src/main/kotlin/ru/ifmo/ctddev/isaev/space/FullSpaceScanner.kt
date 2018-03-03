@@ -2,15 +2,14 @@ package ru.ifmo.ctddev.isaev.space
 
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import ru.ifmo.ctddev.isaev.AlgorithmConfig
-import ru.ifmo.ctddev.isaev.DataSet
-import ru.ifmo.ctddev.isaev.DataSetEvaluator
-import ru.ifmo.ctddev.isaev.SelectionResult
+import ru.ifmo.ctddev.isaev.*
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.results.RunStats
 import java.time.LocalDateTime
+import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
+import kotlin.reflect.KClass
 
 /**
  * @author iisaev
@@ -28,7 +27,8 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
     private val featureDataSet = dataSet.toFeatureSet()
 
     fun run(): RunStats {
-        val points = calculatePoints();
+        val points = calculateAllPoints(config, featureDataSet, 50)
+        logger.info("Found ${points.size} points to process")
         val runStats = RunStats(config, dataSet, name)
         logger.info("Started {} at {}", name, runStats.startTime)
         logger.info("Started {} at {}", javaClass.simpleName, runStats.startTime)
@@ -74,4 +74,71 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
                 .map { it.toDouble() }
                 .map { Point(it, 1 - it) }
     }
+
+    fun calculateAllPoints(config: AlgorithmConfig,
+                           dataSet: FeatureDataSet,
+                           cutSize: Int): List<Point> {
+        val discreteSpace = (1.0 / config.delta).toInt()
+        fun getPoint(x: Int): Point {
+            val first = x.toDouble() / discreteSpace
+            val second = (discreteSpace - x).toDouble() / discreteSpace
+            return Point(first, second)
+        }
+
+        val xData = 0.rangeTo(discreteSpace)
+                .map { x -> getPoint(x) }
+        val measures = config.measures.map { it.javaClass.kotlin }
+        val (evaluatedData, cuttingLineY, cutsForAllPoints) = processAllPointsFast(xData, dataSet, measures, cutSize)
+        val lastFeatureInAllCuts = cutsForAllPoints.map { it.last() }
+        val lastFeatureInCutSwitchPositions = lastFeatureInAllCuts
+                .mapIndexed { index, i -> Pair(index, i) }
+                .filter { it.first == 0 || it.second != lastFeatureInAllCuts[it.first - 1] }
+                .map { it.first }
+        return lastFeatureInCutSwitchPositions
+                .map { x -> getPoint(x) }
+    }
+
+
+}
+
+fun processAllPoints(xData: List<Point>,
+                     dataSet: FeatureDataSet,
+                     measures: List<KClass<out RelevanceMeasure>>,
+                     cutSize: Int): Triple<List<DoubleArray>, List<Double>, List<List<Int>>> {
+    val evaluatedData = getEvaluatedData(xData, dataSet, measures)
+    val evaluatedDataWithNumbers = evaluatedData.map { it.mapIndexed { index, d -> Pair(index, d) } }
+
+    val rawCutsForAllPoints = evaluatedDataWithNumbers
+            .map { it.sortedBy { pair -> -pair.second } } //max first
+    val cuttingLineY = rawCutsForAllPoints.map { it[cutSize - 1].second }
+    val cutsForAllPoints = rawCutsForAllPoints
+            .map { it.take(cutSize) }
+            .map { it.map { pair -> pair.first } }
+    return Triple(evaluatedData, cuttingLineY, cutsForAllPoints)
+}
+
+fun processAllPointsFast(xData: List<Point>,
+                         dataSet: FeatureDataSet,
+                         measures: List<KClass<out RelevanceMeasure>>,
+                         cutSize: Int)
+        : Triple<List<DoubleArray>, List<Double>, List<List<Int>>> {
+    val evaluatedData = getEvaluatedData(xData, dataSet, measures)
+    val range = Array(evaluatedData[0].size, { it })
+    val evaluatedDataWithNumbers = evaluatedData.map { Pair(it, range.clone()) }
+    val rawCutsForAllPoints = evaluatedDataWithNumbers
+            .map {
+                val featureNumbers = it.second
+                val featureMeasures = it.first
+                val comparator = kotlin.Comparator<Int> { o1, o2 -> compareValuesBy(o1, o2, { -featureMeasures[it] }) }
+                Arrays.sort(featureNumbers, comparator)
+                return@map Pair(featureMeasures, featureNumbers)
+            } //max first
+    val cuttingLineY = rawCutsForAllPoints
+            .map {
+                val lastFeatureInCut = it.second[cutSize - 1]
+                it.first[lastFeatureInCut]
+            }
+    val cutsForAllPoints = rawCutsForAllPoints
+            .map { it.second.take(cutSize) }
+    return Triple(evaluatedData, cuttingLineY, cutsForAllPoints)
 }

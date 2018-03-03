@@ -115,12 +115,16 @@ class LinearSearchPriorityBlockingQueue<T>(private val capacity: Int,
 
 private val LOGGER: Logger = LoggerFactory.getLogger(PriorityExecutor::class.java)
 
-class PriorityExecutor(poolSize: Int)
+class PriorityExecutor(poolSize: Int, updatePrioritiesOnEachStep: Boolean)
     : ThreadPoolExecutor(poolSize, poolSize, 0L, TimeUnit.MILLISECONDS,
-        LinearSearchPriorityBlockingQueue<Runnable>(64,
-                { r -> (r as PriorityTask).priority() },
-                { task, priority -> (task as PriorityTask).increasePriority(priority) }
-        )
+        if (updatePrioritiesOnEachStep) {
+            LinearSearchPriorityBlockingQueue<Runnable>(64,
+                    { r -> (r as PriorityTask).priority() },
+                    { task, priority -> (task as PriorityTask).increasePriority(priority) }
+            )
+        } else {
+            PriorityBlockingQueue<Runnable>(64)
+        }
 ) {
 
     fun increaseTasksPriorities(increment: Double) {
