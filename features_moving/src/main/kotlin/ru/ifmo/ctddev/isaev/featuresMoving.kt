@@ -24,7 +24,7 @@ import kotlin.collections.ArrayList
 
 fun main(args: Array<String>) {
     val measures = listOf(VDM::class, SpearmanRankCorrelation::class)
-    val dataSet = DataSetReader().readCsv(args[0])
+    val dataSet = KnownDatasets.ARIZONA5.read()
     //val n = 100
     //val xData = 0.rangeTo(n).map { (it.toDouble()) / n }
     val xData = 0.rangeTo(100).map { x -> Point(x.toDouble() / 100, (100 - x).toDouble() / 100) }//listOf(listOf(0.0, 1.0), listOf(1.0, 0.0))

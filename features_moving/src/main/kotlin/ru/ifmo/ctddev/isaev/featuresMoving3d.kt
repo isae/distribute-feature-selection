@@ -40,7 +40,7 @@ private val colorMaps = listOf(
 private fun randomColor() = colorMaps[random.nextInt(colorMaps.size)]
 
 fun main(args: Array<String>) {
-    val dataSet = DataSetReader().readCsv(args[0])
+    val dataSet = KnownDatasets.ARIZONA5.read()
     val measures = listOf(VDM::class, SpearmanRankCorrelation::class, SymmetricUncertainty::class)
     val featuresToProcess = 0.rangeTo(50).toSet()//setOf(0, 5, 9)
     val xyData = listOf(Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0))

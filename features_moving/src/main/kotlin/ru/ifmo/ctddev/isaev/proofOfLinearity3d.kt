@@ -22,7 +22,7 @@ import ru.ifmo.ctddev.isaev.space.getEvaluatedData
  */
 
 fun main(args: Array<String>) {
-    val dataSet = DataSetReader().readCsv(args[0])
+    val dataSet = KnownDatasets.ARIZONA5.read()
     val measures = listOf(VDM::class, SpearmanRankCorrelation::class, SymmetricUncertainty::class)
     //val n = 100
     val intValues = 0.rangeTo(100)
