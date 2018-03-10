@@ -5,10 +5,8 @@ import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.style.markers.None
-import org.knowm.xchart.style.markers.SeriesMarkers
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
-import ru.ifmo.ctddev.isaev.space.Line
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
 import ru.ifmo.ctddev.isaev.space.processAllPointsFast
 import java.awt.BasicStroke
@@ -73,7 +71,6 @@ fun main(args: Array<String>) {
 
 
     logToConsole("Found ${pointsToTry.size} points to try")
-    //pointsToTry.forEach { println("(%.3f, %.3f)".format(it.coordinates[0], it.coordinates[1])) }
 
     val chartBuilder = XYChartBuilder()
             .width(1024)
@@ -118,7 +115,6 @@ fun main(args: Array<String>) {
 
     }
     drawChart(chart)
-    //draw(measures, lines, pointsInCartesianCoords, bottomFrontOfCuttingRule, cuttingLineY)
 }
 
 private fun getPoint(angle: Double): Point {
@@ -127,8 +123,7 @@ private fun getPoint(angle: Double): Point {
 
 private fun getAngle(epsilon: Int, x: Int): Double {
     val fractionOfPi = Math.PI / epsilon
-    val angle = Math.PI - (fractionOfPi * x) //from left to right
-    return angle
+    return Math.PI - (fractionOfPi * x)
 }
 
 private fun drawChart(chart: XYChart) {
@@ -136,14 +131,5 @@ private fun drawChart(chart: XYChart) {
     SwingWrapper(chart).displayChart()
     logToConsole("Finished visualization")
 
-    // or save it in high-res
     BitmapEncoder.saveBitmapWithDPI(chart, "./charts/Test_Chart_${LocalDateTime.now()}", BitmapEncoder.BitmapFormat.PNG, 200);
-}
-
-private fun addLine(name: String, line: Line, chart: XYChart) {
-    chart.addSeries(name, listOf(line.from.x, line.to.x), listOf(line.from.y, line.to.y)).marker = SeriesMarkers.NONE
-}
-
-private fun addLine(name: String, xData: List<Point>, line: DoubleArray, chart: XYChart) {
-    chart.addSeries(name, xData.map { it.coordinates[0] }.toDoubleArray(), line).marker = SeriesMarkers.NONE
 }
