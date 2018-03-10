@@ -42,9 +42,7 @@ class Line(val name: String, val from: LinePoint, val to: LinePoint) {
 
 fun getFeaturePositions(pos: Int,
                         evaluatedData: List<DoubleArray>): DoubleArray {
-    val result = evaluatedData.map { it[pos] }.toDoubleArray()
-    //println(result.map { String.format("%.2f", it) })
-    return result
+    return evaluatedData.map { it[pos] }.toDoubleArray()
 }
 
 typealias Matrix = List<List<Double>>

@@ -10,6 +10,11 @@ import java.util.stream.IntStream
  * @author iisaev
  */
 open class Point : Comparable<Point> {
+    companion object {
+        fun fromRawCoords(vararg coordinates: Double): Point {
+            return Point(true, *coordinates)
+        }
+    }
 
     val coordinates: DoubleArray
 
@@ -31,6 +36,11 @@ open class Point : Comparable<Point> {
     }
 
     constructor(point: Point) : this(*point.coordinates.clone())
+
+    private constructor(unused: Boolean, vararg coordinates: Double) {
+        this.coordinates = coordinates
+        this.generation = -1
+    }
 
     constructor(point: Point,
                 modifyCoordinates: (DoubleArray) -> Unit) {

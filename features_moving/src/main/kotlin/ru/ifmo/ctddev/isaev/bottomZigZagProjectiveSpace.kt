@@ -30,9 +30,9 @@ fun main(args: Array<String>) {
     val dataSet = KnownDatasets.DLBCL.read()
 
     logToConsole("Started the processing")
-    val xData = 0.rangeTo(epsilon).map { x -> Point(x.toDouble() / epsilon, (epsilon - x).toDouble() / epsilon) }
-    logToConsole("${xData.size} points to calculate measures on")
-    val (evaluatedData, cuttingLineY, cutsForAllPoints) = processAllPointsFast(xData, dataSet, measures, cutSize)
+    val pointsInProjectiveCoords = 0.rangeTo(epsilon).map { x -> getPoint(x, epsilon) }
+    logToConsole("${pointsInProjectiveCoords.size} points to calculate measures on")
+    val (evaluatedData, cuttingLineY, cutsForAllPoints) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
     val lastFeatureInAllCuts = cutsForAllPoints.map { it.last() }
     logToConsole("Evaluated data, calculated cutting line and cuts for all points")
     val sometimesInCut = cutsForAllPoints
@@ -48,37 +48,18 @@ fun main(args: Array<String>) {
 
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
 
-    // Create Chart
-
     val features = needToProcess.map { feature(it) }
-    val rawLines = features
+    
+    val lines = features // TODO: this is incorrect - we cannot draw lines in cartesian space from points in projective space 
             .mapIndexed { index, coords -> Line("Feature $index", doubleArrayOf(coords.first(), coords.last())) }
-    //val cuttingLineY = rawLines.sortedBy { it.from.y }[cutSize - 1].from.y
-    val lines = rawLines
+    //val cuttingLineY = lines.sortedBy { it.from.y }[cutSize - 1].from.y
     //lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
-    val intersections = lines.flatMap { first -> lines.map { setOf(first, it) } }
-            .filter { it.size > 1 }
-            .distinct()
-            .map { ArrayList(it) }
-            .mapNotNull { it[0].intersect(it[1]) }
-            .sortedBy { it.point.x }
-    logToConsole("Found ${intersections.size} intersections")
-    //intersections.forEach { println("Intersection of ${it.line1.name} and ${it.line2.name} in point (%.2f, %.2f)".format(it.point.x, it.point.y)) }
-
-    /* val pointsToTry = 0.rangeTo(intersections.size)
-             .map { i ->
-                 val left = if (i == 0) 0.0 else intersections[i - 1].point.x
-                 val right = if (i == intersections.size) 1.0 else intersections[i].point.x
-                 (left + right) / 2
-             }
-             .map { Point(it, 1 - it) }
- */
     val lastFeatureInCutSwitchPositions = lastFeatureInAllCuts
             .mapIndexed { index, i -> Pair(index, i) }
             .filter { it.first == 0 || it.second != lastFeatureInAllCuts[it.first - 1] }
             .map { it.first }
     val pointsToTry = lastFeatureInCutSwitchPositions
-            .map { Point(it.toDouble() / epsilon, (epsilon - it).toDouble() / epsilon) }
+            .map { getPoint(it, epsilon) }
     println(pointsToTry)
 
     val bottomFrontOfCuttingRule = lastFeatureInCutSwitchPositions
@@ -88,7 +69,18 @@ fun main(args: Array<String>) {
     logToConsole("Found ${pointsToTry.size} points to try")
     //pointsToTry.forEach { println("(%.3f, %.3f)".format(it.coordinates[0], it.coordinates[1])) }
 
-    draw(measures, lines, xData, bottomFrontOfCuttingRule, cuttingLineY)
+    val pointsInCartesianCoords = pointsInProjectiveCoords
+            .map { 
+                val first = Math.asin(it.coordinates[0])
+                Point(first, 1-first) 
+            }
+    draw(measures, lines, pointsInCartesianCoords, bottomFrontOfCuttingRule, cuttingLineY)
+}
+
+private fun getPoint(x: Int, epsilon: Int): Point {
+    val fractionOfPi = Math.PI / epsilon
+    val angle = fractionOfPi * x
+    return Point.fromRawCoords(Math.sin(angle), Math.cos(angle))
 }
 
 private fun draw(measures: List<KClass<out RelevanceMeasure>>,

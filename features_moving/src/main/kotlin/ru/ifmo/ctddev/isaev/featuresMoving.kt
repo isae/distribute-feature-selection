@@ -89,6 +89,6 @@ private fun addLine(name: String, line: Line, chart: XYChart) {
     chart.addSeries(name, listOf(line.from.x, line.to.x), listOf(line.from.y, line.to.y)).marker = SeriesMarkers.NONE
 }
 
-private fun addLine(name: String, xData: List<Point>, line: List<Number>, chart: XYChart) {
-    chart.addSeries(name, xData.map { it.coordinates[0] }, line).marker = SeriesMarkers.NONE
+private fun addLine(name: String, xData: List<Point>, line: DoubleArray, chart: XYChart) {
+    chart.addSeries(name, xData.map { it.coordinates[0] }.toDoubleArray(), line).marker = SeriesMarkers.NONE
 }
