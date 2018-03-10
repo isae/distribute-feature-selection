@@ -51,28 +51,6 @@ fun main(args: Array<String>) {
     // Create Chart
 
     val features = needToProcess.map { feature(it) }
-    val rawLines = features
-            .mapIndexed { index, coords -> Line("Feature $index", doubleArrayOf(coords.first(), coords.last())) }
-    //val cuttingLineY = rawLines.sortedBy { it.from.y }[cutSize - 1].from.y
-    val lines = rawLines
-    //lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
-    val intersections = lines.flatMap { first -> lines.map { setOf(first, it) } }
-            .filter { it.size > 1 }
-            .distinct()
-            .map { ArrayList(it) }
-            .mapNotNull { it[0].intersect(it[1]) }
-            .sortedBy { it.point.x }
-    logToConsole("Found ${intersections.size} intersections")
-    //intersections.forEach { println("Intersection of ${it.line1.name} and ${it.line2.name} in point (%.2f, %.2f)".format(it.point.x, it.point.y)) }
-
-    /* val pointsToTry = 0.rangeTo(intersections.size)
-             .map { i ->
-                 val left = if (i == 0) 0.0 else intersections[i - 1].point.x
-                 val right = if (i == intersections.size) 1.0 else intersections[i].point.x
-                 (left + right) / 2
-             }
-             .map { Point(it, 1 - it) }
- */
     val lastFeatureInCutSwitchPositions = lastFeatureInAllCuts
             .mapIndexed { index, i -> Pair(index, i) }
             .filter { it.first == 0 || it.second != lastFeatureInAllCuts[it.first - 1] }
@@ -86,13 +64,12 @@ fun main(args: Array<String>) {
 
 
     logToConsole("Found ${pointsToTry.size} points to try")
-    //pointsToTry.forEach { println("(%.3f, %.3f)".format(it.coordinates[0], it.coordinates[1])) }
 
-    draw(measures, lines, xData, bottomFrontOfCuttingRule, cuttingLineY)
+    draw(measures, features, xData, bottomFrontOfCuttingRule, cuttingLineY)
 }
 
 private fun draw(measures: List<KClass<out RelevanceMeasure>>,
-                 lines: List<Line>,
+                 features: List<DoubleArray>,
                  xData: List<Point>,
                  intersections: List<LinePoint>,
                  cuttingLineY: List<Double>) {
@@ -102,7 +79,7 @@ private fun draw(measures: List<KClass<out RelevanceMeasure>>,
             .xAxisTitle("Measure Proportion (${measures[0].simpleName} to ${measures[1].simpleName})")
             .yAxisTitle("Ensemble feature measure")
     val chart = XYChart(chartBuilder)
-    lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
+    features.forEachIndexed({ index, line -> addLine("Feature $index", xData, line, chart) })
     chart.addSeries("Cutting line", xData.map { it.coordinates[0] }, cuttingLineY)
             .apply {
                 this.marker = SeriesMarkers.NONE

@@ -16,6 +16,9 @@ import java.awt.BasicStroke
 import java.awt.Color
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.math.cos
+import kotlin.math.pow
+import kotlin.math.sin
 import kotlin.reflect.KClass
 
 
@@ -30,7 +33,8 @@ fun main(args: Array<String>) {
     val dataSet = KnownDatasets.DLBCL.read()
 
     logToConsole("Started the processing")
-    val pointsInProjectiveCoords = 0.rangeTo(epsilon).map { x -> getPoint(x, epsilon) }
+    val angles = 0.rangeTo(epsilon).map { getAngle(epsilon, it) }
+    val pointsInProjectiveCoords = angles.map { getPoint(it) }
     logToConsole("${pointsInProjectiveCoords.size} points to calculate measures on")
     val (evaluatedData, cuttingLineY, cutsForAllPoints) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
     val lastFeatureInAllCuts = cutsForAllPoints.map { it.last() }
@@ -49,9 +53,7 @@ fun main(args: Array<String>) {
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
 
     val features = needToProcess.map { feature(it) }
-    
-    val lines = features // TODO: this is incorrect - we cannot draw lines in cartesian space from points in projective space 
-            .mapIndexed { index, coords -> Line("Feature $index", doubleArrayOf(coords.first(), coords.last())) }
+
     //val cuttingLineY = lines.sortedBy { it.from.y }[cutSize - 1].from.y
     //lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
     val lastFeatureInCutSwitchPositions = lastFeatureInAllCuts
@@ -59,28 +61,77 @@ fun main(args: Array<String>) {
             .filter { it.first == 0 || it.second != lastFeatureInAllCuts[it.first - 1] }
             .map { it.first }
     val pointsToTry = lastFeatureInCutSwitchPositions
-            .map { getPoint(it, epsilon) }
+            .map {
+                val angle = getAngle(epsilon, it)
+                getPoint(angle)
+            }
     println(pointsToTry)
 
     val bottomFrontOfCuttingRule = lastFeatureInCutSwitchPositions
-            .map { LinePoint(it.toDouble() / epsilon, cuttingLineY[it]) }
+            .map {
+                val angle = getAngle(epsilon, it)
+                val d = cuttingLineY[it]
+                sin(angle) * d
+            }
 
 
     logToConsole("Found ${pointsToTry.size} points to try")
     //pointsToTry.forEach { println("(%.3f, %.3f)".format(it.coordinates[0], it.coordinates[1])) }
 
-    val pointsInCartesianCoords = pointsInProjectiveCoords
-            .map { 
-                val first = Math.asin(it.coordinates[0])
-                Point(first, 1-first) 
+    val chartBuilder = XYChartBuilder()
+            .width(1024)
+            .height(768)
+            .xAxisTitle("Measure Proportion (${measures[0].simpleName} to ${measures[1].simpleName})")
+            .yAxisTitle("Ensemble feature measure")
+    val chart = XYChart(chartBuilder)
+    val semiSphereXData = 0.rangeTo(epsilon).map { -1 + (2 * it).toDouble() / epsilon }
+    chart.addSeries("Sphere",
+            semiSphereXData,
+            semiSphereXData.map { Math.sqrt(1 - it.pow(2)) }
+    ).apply {
+        this.lineColor = Color.BLACK
+        this.marker = None()
+        this.lineStyle = BasicStroke(3.0f)
+    }
+    chart.addSeries("X", doubleArrayOf(0.0, 0.0), doubleArrayOf(0.0, 1.05)).apply {
+        this.lineColor = Color.BLACK
+        this.marker = None()
+        this.lineStyle = BasicStroke(2.0f)
+    }
+    val xDataForFeatures = angles.map { cos(it) }
+    features.forEachIndexed { index, doubles ->
+        val yDataForFeature = doubles.zip(angles)
+                .map { (d, angle) ->
+                    sin(angle) * d // y coord by definition of sinus
+                }
+        chart.addSeries("Feature $index", xDataForFeatures, yDataForFeature)
+                .apply {
+                    this.marker = None()
+                    this.lineStyle = BasicStroke(1.0f)
+                }
+    }
+    val cuttingLineDataToDraw = cuttingLineY.zip(angles)
+            .map { (d, angle) ->
+                sin(angle) * d // y coord by definition of sinus
             }
-    draw(measures, lines, pointsInCartesianCoords, bottomFrontOfCuttingRule, cuttingLineY)
+    chart.addSeries("Bottom front", xDataForFeatures, cuttingLineDataToDraw).apply {
+        this.marker = None()
+        this.lineColor = Color.BLACK
+        this.lineStyle = BasicStroke(3.0f)
+
+    }
+    drawChart(chart)
+    //draw(measures, lines, pointsInCartesianCoords, bottomFrontOfCuttingRule, cuttingLineY)
 }
 
-private fun getPoint(x: Int, epsilon: Int): Point {
+private fun getPoint(angle: Double): Point {
+    return Point.fromRawCoords(Math.cos(angle), Math.sin(angle))
+}
+
+private fun getAngle(epsilon: Int, x: Int): Double {
     val fractionOfPi = Math.PI / epsilon
-    val angle = fractionOfPi * x
-    return Point.fromRawCoords(Math.sin(angle), Math.cos(angle))
+    val angle = Math.PI - (fractionOfPi * x) //from left to right
+    return angle
 }
 
 private fun draw(measures: List<KClass<out RelevanceMeasure>>,
@@ -112,6 +163,10 @@ private fun draw(measures: List<KClass<out RelevanceMeasure>>,
         series.lineStyle = BasicStroke(0.1f)
     }
     // Show it
+    drawChart(chart)
+}
+
+private fun drawChart(chart: XYChart) {
     logToConsole("Finished calculations; visualizing...")
     SwingWrapper(chart).displayChart()
     logToConsole("Finished visualization")
