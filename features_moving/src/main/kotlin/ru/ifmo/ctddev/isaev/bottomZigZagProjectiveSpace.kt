@@ -6,8 +6,8 @@ import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.style.markers.None
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
-import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
+import ru.ifmo.ctddev.isaev.space.getPointOnUnitSphere
 import ru.ifmo.ctddev.isaev.space.processAllPointsFast
 import java.awt.BasicStroke
 import java.awt.Color
@@ -29,7 +29,7 @@ fun main(args: Array<String>) {
 
     logToConsole("Started the processing")
     val angles = 0.rangeTo(epsilon).map { getAngle(epsilon, it) }
-    val pointsInProjectiveCoords = angles.map { getPoint(it) }
+    val pointsInProjectiveCoords = angles.map { getPointOnUnitSphere(it) }
     logToConsole("${pointsInProjectiveCoords.size} points to calculate measures on")
     val (evaluatedData, cuttingLineY, cutsForAllPoints) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
     val lastFeatureInAllCuts = cutsForAllPoints.map { it.last() }
@@ -58,7 +58,7 @@ fun main(args: Array<String>) {
     val pointsToTry = lastFeatureInCutSwitchPositions
             .map {
                 val angle = getAngle(epsilon, it)
-                getPoint(angle)
+                getPointOnUnitSphere(angle)
             }
     println(pointsToTry)
 
@@ -115,10 +115,6 @@ fun main(args: Array<String>) {
 
     }
     drawChart(chart)
-}
-
-private fun getPoint(angle: Double): Point {
-    return Point.fromRawCoords(Math.cos(angle), Math.sin(angle))
 }
 
 private fun getAngle(epsilon: Int, x: Int): Double {

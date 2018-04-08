@@ -5,6 +5,8 @@ import ru.ifmo.ctddev.isaev.FeatureDataSet
 import ru.ifmo.ctddev.isaev.RelevanceMeasure
 import ru.ifmo.ctddev.isaev.point.Point
 import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.reflect.KClass
 
 /**
@@ -100,4 +102,22 @@ fun evaluateDataSet(measureCosts: Point,
         result[i] = m
     }
     return result
+}
+
+fun getPointOnUnitSphere(angle: Double): Point {
+    return getPointOnUnitSphere(doubleArrayOf(angle))
+}
+
+// https://ru.wikipedia.org/wiki/Гиперсфера#Гиперсферические_координаты
+fun getPointOnUnitSphere(angles: DoubleArray): Point {
+    val result = DoubleArray(angles.size + 1, { 1.0 })
+    0.rangeTo(angles.size).forEach { i ->
+        i.until(angles.size).forEach { j ->
+            result[i] *= sin(angles[j])
+        }
+    }
+    1.rangeTo(angles.size).forEach { i ->
+        result[i] *= cos(angles[i - 1])
+    }
+    return Point.fromRawCoords(*result)
 }

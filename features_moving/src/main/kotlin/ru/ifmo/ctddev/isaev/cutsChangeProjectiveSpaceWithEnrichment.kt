@@ -8,6 +8,7 @@ import org.knowm.xchart.style.markers.None
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
+import ru.ifmo.ctddev.isaev.space.getPointOnUnitSphere
 import ru.ifmo.ctddev.isaev.space.processAllPointsFast
 import java.awt.BasicStroke
 import java.awt.Color
@@ -113,7 +114,7 @@ private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessin
     val pointsToTry = currCutChangePositions
             .map {
                 val angle = getAngle(prevEpsilon, it)
-                getPoint(angle)
+                getPointOnUnitSphere(angle)
             }
 
     return PointProcessingFinalResult2d(
@@ -128,7 +129,7 @@ private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessin
 private fun processAllPoints(angles: List<Double>): PointProcessingResult2d {
     // begin first stage (before enrichment)
     logToConsole("Started the processing")
-    val pointsInProjectiveCoords = angles.map { getPoint(it) }
+    val pointsInProjectiveCoords = angles.map { getPointOnUnitSphere(it) }
     logToConsole("${pointsInProjectiveCoords.size} points to calculate measures on")
     val (evaluatedData, cuttingLineY, cutsForAllPointsRaw) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
     val cutsForAllPoints = cutsForAllPointsRaw.map { it.toSet() }
@@ -189,10 +190,6 @@ private fun getFeaturesToDraw(cutsForAllPoints: List<Set<Int>>, evaluatedData: L
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
 
     return needToProcess.map { feature(it) }
-}
-
-private fun getPoint(angle: Double): Point {
-    return Point.fromRawCoords(Math.cos(angle), Math.sin(angle))
 }
 
 private fun getAngle(epsilon: Int, x: Int): Double {
