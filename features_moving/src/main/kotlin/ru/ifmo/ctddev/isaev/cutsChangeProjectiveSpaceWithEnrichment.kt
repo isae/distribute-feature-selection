@@ -7,6 +7,7 @@ import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.style.markers.None
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
+import ru.ifmo.ctddev.isaev.space.getAngle
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
 import ru.ifmo.ctddev.isaev.space.getPointOnUnitSphere
 import ru.ifmo.ctddev.isaev.space.processAllPointsFast
@@ -190,11 +191,6 @@ private fun getFeaturesToDraw(cutsForAllPoints: List<Set<Int>>, evaluatedData: L
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
 
     return needToProcess.map { feature(it) }
-}
-
-private fun getAngle(epsilon: Int, x: Int): Double {
-    val fractionOfPi = Math.PI / epsilon
-    return Math.PI - (fractionOfPi * x)
 }
 
 private fun drawChart(chart: XYChart) {

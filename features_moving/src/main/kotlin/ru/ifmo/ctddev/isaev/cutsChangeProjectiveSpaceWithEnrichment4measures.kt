@@ -1,17 +1,19 @@
 package ru.ifmo.ctddev.isaev
 
+import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
+import ru.ifmo.ctddev.isaev.space.getAngle
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
 import ru.ifmo.ctddev.isaev.space.getPointOnUnitSphere
-import ru.ifmo.ctddev.isaev.space.processAllPointsFast
+import ru.ifmo.ctddev.isaev.space.processAllPointsHd
 
 
 /**
  * @author iisaev
  */
 
-private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class)
+private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class, SymmetricUncertainty::class)
 private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
 
@@ -32,7 +34,7 @@ private data class PointProcessingFinalResult(
 )
 
 fun main(args: Array<String>) {
-    val (evaluatedData, cuttingLineY, cutsForAllPoints, pointsToTry) = processAllPointsWithEnrichment(100)
+    val (evaluatedData, cuttingLineY, cutsForAllPoints, pointsToTry) = processAllPointsWithEnrichment(10)
     println("Found ${pointsToTry.size} points to try with enrichment")
     println(pointsToTry)
     if (!pointsToTry.all { it.coordinates.size == measures.size }) {
@@ -89,9 +91,9 @@ private class Space : Iterable<SpacePoint> {
 
 private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessingFinalResult {
     var prevEpsilon = startingEpsilon //TODO: recalculate only changes
-    var prevPositions = Space(measures.size, prevEpsilon)
-    var prevAngles = prevPositions.map { getAngle(prevEpsilon, it) }
-    var (evaluatedData, cuttingLineY, cutsForAllPoints, currCutChangePositions) = processAllPoints(prevAngles)
+    var prevPositions = Space(measures.size - 1, prevEpsilon)
+    var prevAngles = prevPositions.toList()
+    var (evaluatedData, cuttingLineY, cutsForAllPoints, currCutChangePositions) = processAllPoints(prevAngles, startingEpsilon)
     var prevCutChangePositions: List<Int>
 
     /*// after enrichment
@@ -130,16 +132,12 @@ private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessin
     )
 }
 
-private fun processAllPoints(angles: List<DoubleArray>): PointProcessingResult {
-    if (!angles.all { it.size + 1 == measures.size }) {
-        throw IllegalStateException("Invalid data")
-    }
+private fun processAllPoints(intPoints: List<SpacePoint>, epsilon: Int): PointProcessingResult {
     // begin first stage (before enrichment)
     logToConsole("Started the processing")
-    val pointsInProjectiveCoords = angles.map { getPointOnUnitSphere(it) }
-    logToConsole("${pointsInProjectiveCoords.size} points to calculate measures on")
-    val (evaluatedData, cuttingLineY, cutsForAllPointsRaw) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
-    val cutsForAllPoints = cutsForAllPointsRaw.map { it.toSet() }
+    logToConsole("${intPoints.size} points to calculate measures on")
+    val (evaluatedData, cutsForAllPoints) =
+            processAllPointsHd(intPoints, dataSet, measures, epsilon, cutSize)
     logToConsole("Evaluated data, calculated cutting line and cuts for all points")
 
     /* val cutChangePositions = cutsForAllPoints
@@ -149,9 +147,9 @@ private fun processAllPoints(angles: List<DoubleArray>): PointProcessingResult {
     val cutChangePositions = emptyList<SpacePoint>()
 
     logToConsole("Found ${cutChangePositions.size} points to try")
-
+    TODO("Not implemented")
     // end first stage (before enrichment)
-    return PointProcessingResult(evaluatedData, cuttingLineY, cutsForAllPoints, cutChangePositions)
+    //return PointProcessingResult(evaluatedData, cuttingLineY, cutsForAllPoints, cutChangePositions)
 }
 
 private fun getFilteredDataSet(cutsForAllPoints: List<Set<Int>>, evaluatedData: List<DoubleArray>): List<DoubleArray> {
@@ -169,13 +167,4 @@ private fun getFilteredDataSet(cutsForAllPoints: List<Set<Int>>, evaluatedData: 
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
 
     return needToProcess.map { feature(it) }
-}
-
-private fun getAngle(epsilon: Int, xs: IntArray): DoubleArray {
-    val fractionOfPi = Math.PI / epsilon
-    val result = DoubleArray(xs.size)
-    xs.forEachIndexed { i, x ->
-        result[i] = Math.PI - (fractionOfPi * x)
-    }
-    return result
 }

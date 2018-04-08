@@ -9,6 +9,7 @@ import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
+import kotlin.collections.ArrayList
 import kotlin.reflect.KClass
 
 /**
@@ -119,6 +120,9 @@ fun processAllPointsFast(xData: List<Point>,
                          measures: List<KClass<out RelevanceMeasure>>,
                          cutSize: Int)
         : Triple<List<DoubleArray>, List<Double>, List<List<Int>>> {
+    if (xData[0].coordinates.size != 2) {
+        throw IllegalArgumentException("Only two-dimensioned points are supported")
+    }
     val evaluatedData = getEvaluatedData(xData, dataSet, measures)
     val range = Array(evaluatedData[0].size, { it })
     val evaluatedDataWithNumbers = evaluatedData.map { Pair(it, range.clone()) }
@@ -138,4 +142,63 @@ fun processAllPointsFast(xData: List<Point>,
     val cutsForAllPoints = rawCutsForAllPoints
             .map { it.second.take(cutSize) }
     return Triple(evaluatedData, cuttingLineY, cutsForAllPoints)
+}
+
+fun processAllPointsHd(xDataRaw: List<IntArray>,
+                       dataSet: FeatureDataSet,
+                       measures: List<KClass<out RelevanceMeasure>>,
+                       epsilon: Int,
+                       cutSize: Int)
+        : Pair<Map<IntArray, DoubleArray>, Map<IntArray, Set<Int>>> {
+    val evaluatedData = ArrayList<DoubleArray>(xDataRaw.size)
+    val cutsForAllPoints = ArrayList<Set<Int>>(xDataRaw.size)
+    val chunkSize = 50000 // to ensure computation is filled in memory
+    xDataRaw.chunked(chunkSize)
+            .forEach {
+                val (evaluatedChunk, cutsForAllPointsInChunk) = processAllPointsHdChunk(xDataRaw, epsilon, dataSet, measures, cutSize)
+                evaluatedData.addAll(evaluatedChunk)
+                cutsForAllPoints.addAll(cutsForAllPointsInChunk)
+            }
+    return Pair(
+            evaluatedData.mapIndexed({ i, data -> xDataRaw[i] to data }).toMap(),
+            cutsForAllPoints.mapIndexed({ i, data -> xDataRaw[i] to data }).toMap()
+    )
+}
+
+private fun processAllPointsHdChunk(xDataRaw: List<IntArray>,
+                                    epsilon: Int,
+                                    dataSet: FeatureDataSet,
+                                    measures: List<KClass<out RelevanceMeasure>>,
+                                    cutSize: Int)
+        : Pair<List<DoubleArray>, List<Set<Int>>> {
+    val angles = xDataRaw.map { getAngle(epsilon, it) }
+    val xData = angles.map { getPointOnUnitSphere(it) }
+    val evaluatedData = getEvaluatedData(xData, dataSet, measures)
+    val range = Array(evaluatedData[0].size, { it })
+    val evaluatedDataWithNumbers = evaluatedData.map { Pair(it, range.clone()) }
+    val rawCutsForAllPoints = evaluatedDataWithNumbers
+            .map {
+                val featureNumbers = it.second
+                val featureMeasures = it.first
+                val comparator = kotlin.Comparator<Int> { o1, o2 -> compareValuesBy(o1, o2, { -featureMeasures[it] }) }
+                Arrays.sort(featureNumbers, comparator)
+                return@map Pair(featureMeasures, featureNumbers)
+            } //max first
+    val cutsForAllPoints = rawCutsForAllPoints
+            .map { it.second.take(cutSize).toSet() }
+    return Pair(evaluatedData, cutsForAllPoints)
+}
+
+fun getAngle(epsilon: Int, x: Int): Double {
+    val fractionOfPi = Math.PI / epsilon
+    return Math.PI - (fractionOfPi * x)
+}
+
+fun getAngle(epsilon: Int, xs: IntArray): DoubleArray {
+    val fractionOfPi = Math.PI / epsilon
+    val result = DoubleArray(xs.size)
+    xs.forEachIndexed { i, x ->
+        result[i] = Math.PI - (fractionOfPi * x)
+    }
+    return result
 }

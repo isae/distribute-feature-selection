@@ -111,13 +111,19 @@ fun getPointOnUnitSphere(angle: Double): Point {
 // https://ru.wikipedia.org/wiki/Гиперсфера#Гиперсферические_координаты
 fun getPointOnUnitSphere(angles: DoubleArray): Point {
     val result = DoubleArray(angles.size + 1, { 1.0 })
+    val sines = DoubleArray(angles.size) //cache for faster computation 
+    val cosines = DoubleArray(angles.size)
+    angles.forEachIndexed({ i, angle ->
+        sines[i] = sin(angle)
+        cosines[i] = cos(angle)
+    })
     0.rangeTo(angles.size).forEach { i ->
         i.until(angles.size).forEach { j ->
-            result[i] *= sin(angles[j])
+            result[i] *= sines[j]
         }
     }
     1.rangeTo(angles.size).forEach { i ->
-        result[i] *= cos(angles[i - 1])
+        result[i] *= cosines[i - 1]
     }
     return Point.fromRawCoords(*result)
 }
