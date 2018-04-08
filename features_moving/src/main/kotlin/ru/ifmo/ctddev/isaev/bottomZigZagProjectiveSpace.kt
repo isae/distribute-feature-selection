@@ -53,7 +53,7 @@ fun main(args: Array<String>) {
     //lines.forEachIndexed({ index, line -> addLine("Feature $index", line, chart) })
     val lastFeatureInCutSwitchPositions = lastFeatureInAllCuts
             .mapIndexed { index, i -> Pair(index, i) }
-            .filter { it.first == 0 || it.second != lastFeatureInAllCuts[it.first - 1] }
+            .filter { it.first != 0 && it.second != lastFeatureInAllCuts[it.first - 1] }
             .map { it.first }
     val pointsToTry = lastFeatureInCutSwitchPositions
             .map {
