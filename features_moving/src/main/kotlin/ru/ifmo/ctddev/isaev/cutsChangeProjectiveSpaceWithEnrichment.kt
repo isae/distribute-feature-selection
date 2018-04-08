@@ -21,18 +21,18 @@ import kotlin.math.sin
  * @author iisaev
  */
 
-val measures = listOf(SpearmanRankCorrelation::class, VDM::class)
-const val cutSize = 50
-val dataSet = KnownDatasets.DLBCL.read()
+private val measures = listOf(SpearmanRankCorrelation::class, VDM::class)
+private const val cutSize = 50
+private val dataSet = KnownDatasets.DLBCL.read()
 
-private data class PointProcessingResult(
+private data class PointProcessingResult2d(
         val evaluatedData: List<DoubleArray>,
         val cuttingLineY: List<Double>,
         val cutsForAllPoints: List<Set<Int>>,
         val cutChangePositions: List<Int>
 )
 
-private data class PointProcessingFinalResult(
+private data class PointProcessingFinalResult2d(
         val evaluatedData: List<DoubleArray>,
         val cuttingLineY: List<Double>,
         val cutsForAllPoints: List<Set<Int>>,
@@ -81,7 +81,7 @@ fun main(args: Array<String>) {
     drawChart(chart)
 }
 
-private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessingFinalResult {
+private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessingFinalResult2d {
     var prevEpsilon = startingEpsilon
     var prevPositions = (0..prevEpsilon).toSortedSet() //TODO: remove toSortedSet?
     var prevAngles = prevPositions.map { getAngle(prevEpsilon, it) }
@@ -116,7 +116,7 @@ private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessin
                 getPoint(angle)
             }
 
-    return PointProcessingFinalResult(
+    return PointProcessingFinalResult2d(
             evaluatedData,
             cuttingLineY,
             cutsForAllPoints,
@@ -125,7 +125,7 @@ private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessin
     )
 }
 
-private fun processAllPoints(angles: List<Double>): PointProcessingResult {
+private fun processAllPoints(angles: List<Double>): PointProcessingResult2d {
     // begin first stage (before enrichment)
     logToConsole("Started the processing")
     val pointsInProjectiveCoords = angles.map { getPoint(it) }
@@ -142,7 +142,7 @@ private fun processAllPoints(angles: List<Double>): PointProcessingResult {
     logToConsole("Found ${cutChangePositions.size} points to try")
 
     // end first stage (before enrichment)
-    return PointProcessingResult(evaluatedData, cuttingLineY, cutsForAllPoints, cutChangePositions)
+    return PointProcessingResult2d(evaluatedData, cuttingLineY, cutsForAllPoints, cutChangePositions)
 }
 
 private fun drawAxisY(chart: XYChart) {
