@@ -41,7 +41,7 @@ private data class PointProcessingFinalResult(
 )
 
 fun main(args: Array<String>) {
-    val (evaluatedData, cuttingLineY, cutsForAllPoints, pointsToTry, angles) = processAllPointsWithEnrichment()
+    val (evaluatedData, cuttingLineY, cutsForAllPoints, pointsToTry, angles) = processAllPointsWithEnrichment(1000)
     println("Found ${pointsToTry.size} points to try with enrichment")
     println(pointsToTry)
 
@@ -81,8 +81,8 @@ fun main(args: Array<String>) {
     drawChart(chart)
 }
 
-private fun processAllPointsWithEnrichment(): PointProcessingFinalResult {
-    var prevEpsilon = 1000
+private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessingFinalResult {
+    var prevEpsilon = startingEpsilon
     var prevPositions = (0..prevEpsilon).toSortedSet() //TODO: remove toSortedSet?
     var prevAngles = prevPositions.map { getAngle(prevEpsilon, it) }
     var (evaluatedData, cuttingLineY, cutsForAllPoints, currCutChangePositions) = processAllPoints(prevAngles)
