@@ -144,28 +144,59 @@ fun processAllPointsFast(xData: List<Point>,
     return Triple(evaluatedData, cuttingLineY, cutsForAllPoints)
 }
 
-fun processAllPointsHd(xDataRaw: List<IntArray>,
+class SpacePoint(val point: IntArray) : Iterable<Int> {
+
+
+    override fun iterator(): Iterator<Int> {
+        return point.iterator()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as SpacePoint
+
+        if (!Arrays.equals(point, other.point)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return Arrays.hashCode(point)
+    }
+
+    constructor(size: Int) : this(IntArray(size))
+
+    operator fun set(index: Int, value: Int) {
+        point[index] = value
+    }
+
+    fun clone(): SpacePoint = SpacePoint(point.clone())
+    val size: Int = point.size
+    operator fun get(coord: Int): Int = point[coord]
+    override fun toString(): String = Arrays.toString(point)
+}
+
+fun processAllPointsHd(xDataRaw: List<SpacePoint>,
                        dataSet: FeatureDataSet,
                        measures: List<KClass<out RelevanceMeasure>>,
                        epsilon: Int,
                        cutSize: Int)
-        : Pair<Map<IntArray, DoubleArray>, Map<IntArray, Set<Int>>> {
-    val evaluatedData = ArrayList<DoubleArray>(xDataRaw.size)
-    val cutsForAllPoints = ArrayList<Set<Int>>(xDataRaw.size)
+        : Pair<Map<SpacePoint, DoubleArray>, Map<SpacePoint, Set<Int>>> {
     val chunkSize = 50000 // to ensure computation is filled in memory
-    xDataRaw.chunked(chunkSize)
-            .forEach {
-                val (evaluatedChunk, cutsForAllPointsInChunk) = processAllPointsHdChunk(xDataRaw, epsilon, dataSet, measures, cutSize)
-                evaluatedData.addAll(evaluatedChunk)
-                cutsForAllPoints.addAll(cutsForAllPointsInChunk)
+    val res = xDataRaw.chunked(chunkSize)
+            .flatMap { chunk ->
+                val (evaluatedChunk, cutsForAllPointsInChunk) = processAllPointsHdChunk(chunk, epsilon, dataSet, measures, cutSize)
+                return@flatMap chunk.zip(evaluatedChunk).zip(cutsForAllPointsInChunk)
             }
     return Pair(
-            evaluatedData.mapIndexed({ i, data -> xDataRaw[i] to data }).toMap(),
-            cutsForAllPoints.mapIndexed({ i, data -> xDataRaw[i] to data }).toMap()
+            res.map({ (pair, _) -> pair.first to pair.second }).toMap(),
+            res.map({ (pair, cut) -> pair.first to cut }).toMap()
     )
 }
 
-private fun processAllPointsHdChunk(xDataRaw: List<IntArray>,
+private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
                                     epsilon: Int,
                                     dataSet: FeatureDataSet,
                                     measures: List<KClass<out RelevanceMeasure>>,
@@ -194,7 +225,7 @@ fun getAngle(epsilon: Int, x: Int): Double {
     return Math.PI - (fractionOfPi * x)
 }
 
-fun getAngle(epsilon: Int, xs: IntArray): DoubleArray {
+fun getAngle(epsilon: Int, xs: SpacePoint): DoubleArray {
     val fractionOfPi = Math.PI / epsilon
     val result = DoubleArray(xs.size)
     xs.forEachIndexed { i, x ->

@@ -109,7 +109,7 @@ fun getPointOnUnitSphere(angle: Double): Point {
 }
 
 // https://ru.wikipedia.org/wiki/Гиперсфера#Гиперсферические_координаты
-fun getPointOnUnitSphere(angles: DoubleArray): Point {
+fun getPointOnUnitSphere(angles: DoubleArray): Point { //TODO: review for 
     val result = DoubleArray(angles.size + 1, { 1.0 })
     val sines = DoubleArray(angles.size) //cache for faster computation 
     val cosines = DoubleArray(angles.size)

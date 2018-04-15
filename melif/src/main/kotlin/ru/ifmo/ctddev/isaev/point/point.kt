@@ -66,7 +66,7 @@ open class Point : Comparable<Point> {
 
     override fun toString(): String {
         val doubles = coordinates.map { FeatureSelectionAlgorithm.FORMAT.format(it) }
-        return "[" + doubles.joinToString(", ") + "]/" + if (generation != 0) generation else ""
+        return "[" + doubles.joinToString(", ") + "]/" + if (generation < 0) generation else ""
     }
 
     fun getNeighbours(delta: Double): List<Point> {
