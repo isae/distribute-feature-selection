@@ -85,7 +85,7 @@ fun main(args: Array<String>) {
 
 private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessingFinalResult2d {
     var prevEpsilon = startingEpsilon
-    var prevPositions = (0..prevEpsilon).toSortedSet() //TODO: remove toSortedSet?
+    var prevPositions = (0..prevEpsilon).toSortedSet()
     var prevAngles = prevPositions.map { getAngle(prevEpsilon, it) }
     var (evaluatedData, cuttingLineY, cutsForAllPoints, currCutChangePositions) = processAllPoints(prevAngles)
     var prevCutChangePositions: List<Int>
