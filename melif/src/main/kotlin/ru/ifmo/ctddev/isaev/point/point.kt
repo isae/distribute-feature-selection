@@ -54,10 +54,10 @@ open class Point : Comparable<Point> {
 
     override fun compareTo(other: Point): Int {
         for (i in coordinates.indices) {
-            if (coordinates[i] - other.coordinates[i] > 0.001) {
+            if (coordinates[i] - other.coordinates[i] > 0.00001) {
                 return 1
             }
-            if (coordinates[i] - other.coordinates[i] < -0.001) {
+            if (coordinates[i] - other.coordinates[i] < -0.00001) {
                 return -1
             }
         }
@@ -66,7 +66,7 @@ open class Point : Comparable<Point> {
 
     override fun toString(): String {
         val doubles = coordinates.map { FeatureSelectionAlgorithm.FORMAT.format(it) }
-        return "[" + doubles.joinToString(", ") + "]/" + if (generation < 0) generation else ""
+        return "[" + doubles.joinToString(", ") + "]/" + if (generation > 0) generation else ""
     }
 
     fun getNeighbours(delta: Double): List<Point> {

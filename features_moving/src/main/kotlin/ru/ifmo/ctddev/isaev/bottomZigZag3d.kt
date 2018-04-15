@@ -18,6 +18,7 @@ import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.getEvaluatedData
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
+import ru.ifmo.ctddev.isaev.space.logToConsole
 import java.util.*
 
 

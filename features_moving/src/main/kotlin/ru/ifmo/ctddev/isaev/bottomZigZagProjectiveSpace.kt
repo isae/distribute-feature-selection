@@ -6,10 +6,7 @@ import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.style.markers.None
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
-import ru.ifmo.ctddev.isaev.space.getAngle
-import ru.ifmo.ctddev.isaev.space.getFeaturePositions
-import ru.ifmo.ctddev.isaev.space.getPointOnUnitSphere
-import ru.ifmo.ctddev.isaev.space.processAllPointsFast
+import ru.ifmo.ctddev.isaev.space.*
 import java.awt.BasicStroke
 import java.awt.Color
 import java.time.LocalDateTime

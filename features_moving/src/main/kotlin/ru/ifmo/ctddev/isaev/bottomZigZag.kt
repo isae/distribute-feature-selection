@@ -8,10 +8,7 @@ import org.knowm.xchart.style.markers.None
 import org.knowm.xchart.style.markers.SeriesMarkers
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
-import ru.ifmo.ctddev.isaev.space.Line
-import ru.ifmo.ctddev.isaev.space.LinePoint
-import ru.ifmo.ctddev.isaev.space.getFeaturePositions
-import ru.ifmo.ctddev.isaev.space.processAllPointsFast
+import ru.ifmo.ctddev.isaev.space.*
 import java.awt.BasicStroke
 import java.awt.Color
 import java.time.LocalDateTime

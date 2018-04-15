@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory
 import ru.ifmo.ctddev.isaev.*
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.results.RunStats
+import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.Callable
@@ -184,15 +185,19 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
                        epsilon: Int,
                        cutSize: Int)
         : Pair<Map<SpacePoint, DoubleArray>, Map<SpacePoint, Set<Int>>> {
-    val chunkSize = 50000 // to ensure computation is filled in memory
-    val res = xDataRaw.chunked(chunkSize)
-            .flatMap { chunk ->
-                val (evaluatedChunk, cutsForAllPointsInChunk) = processAllPointsHdChunk(chunk, epsilon, dataSet, measures, cutSize)
-                return@flatMap chunk.zip(evaluatedChunk).zip(cutsForAllPointsInChunk)
+    val evaluatedData = ArrayList<DoubleArray>(xDataRaw.size)
+    val cutsForAllPoints = ArrayList<Set<Int>>(xDataRaw.size)
+    val chunkSize = 5000 // to ensure computation is filled in memory
+    xDataRaw.chunked(chunkSize)
+            .forEach {
+                logToConsole("Processing chunk of ${it.size} points")
+                val (evaluatedChunk, cutsForAllPointsInChunk) = processAllPointsHdChunk(it, epsilon, dataSet, measures, cutSize)
+                evaluatedData.addAll(evaluatedChunk)
+                cutsForAllPoints.addAll(cutsForAllPointsInChunk)
             }
     return Pair(
-            res.map({ (pair, _) -> pair.first to pair.second }).toMap(),
-            res.map({ (pair, cut) -> pair.first to cut }).toMap()
+            evaluatedData.mapIndexed({ i, data -> xDataRaw[i] to data }).toMap(),
+            cutsForAllPoints.mapIndexed({ i, data -> xDataRaw[i] to data }).toMap()
     )
 }
 
@@ -216,7 +221,7 @@ private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
                 return@map Pair(featureMeasures, featureNumbers)
             } //max first
     val cutsForAllPoints = rawCutsForAllPoints
-            .map { it.second.take(cutSize).toSet() }
+            .map { it.second.take(cutSize).toHashSet() }
     return Pair(evaluatedData, cutsForAllPoints)
 }
 
@@ -232,4 +237,10 @@ fun getAngle(epsilon: Int, xs: SpacePoint): DoubleArray {
         result[i] = Math.PI - (fractionOfPi * x)
     }
     return result
+}
+
+private val startTime = LocalDateTime.now()
+
+fun logToConsole(msg: String) {
+    println("${Duration.between(startTime, LocalDateTime.now()).toMillis()} ms: " + msg)
 }

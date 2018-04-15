@@ -26,7 +26,7 @@ private data class PointProcessingFinalResult(
         val pointsToTry: List<Point>
 )
 
-private fun getBasicSpace(dimensionality: Int, epsilon: Int): List<SpacePoint> {
+private fun getBasicSpace(dimensionality: Int, epsilon: Int): MutableList<SpacePoint> {
     val result = ArrayList<SpacePoint>()
     if (dimensionality < 1) {
         throw IllegalStateException("Incorrect dimensionality: $dimensionality")
@@ -67,24 +67,23 @@ fun main(args: Array<String>) {
 
 private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessingFinalResult {
     var prevEpsilon = startingEpsilon //TODO: recalculate only changes
-    var prevPositions = getBasicSpace(measures.size - 1, prevEpsilon)
-    var (evaluatedData, cutsForAllPoints, currCutChangePositions) = processAllPoints(prevPositions, startingEpsilon)
+    var startingSpace = getBasicSpace(measures.size - 1, prevEpsilon)
+    var (evaluatedData, cutsForAllPoints, currCutChangePositions) = processAllPoints(startingSpace, startingEpsilon)
     var prevCutChangePositions: MutableSet<SpacePoint>
 
     // after enrichment
     do {
-        prevCutChangePositions = currCutChangePositions.toMutableSet() // TODO ??
 
         val newEpsilon = prevEpsilon * 10
-        val newPositions = prevPositions.onEach { it *= 10 }
-        prevCutChangePositions.addAll(calculateEnrichment(newPositions))
-        val newResult = processAllPoints(newPositions, newEpsilon)
+        currCutChangePositions.onEach { it *= 10 }
+        prevCutChangePositions = currCutChangePositions.toMutableSet() // TODO ??
+        prevCutChangePositions.addAll(calculateEnrichment(prevCutChangePositions))
+        val newResult = processAllPoints(prevCutChangePositions, newEpsilon)
 
         evaluatedData = newResult.evaluatedData
         cutsForAllPoints = newResult.cutsForAllPoints
         currCutChangePositions = newResult.cutChangePositions
         prevEpsilon = newEpsilon
-        prevPositions = newPositions
     } while (currCutChangePositions.size != prevCutChangePositions.size)
 
     val pointsToTry = currCutChangePositions
@@ -100,19 +99,17 @@ private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessin
     )
 }
 
-fun calculateCutChangesForCoord(newPoint: SpacePoint, coord: Int, currentResult: Map<SpacePoint, Set<Int>>, cut: Set<Int>, results: HashSet<SpacePoint>, point: SpacePoint) {
+fun getFirstDifferentBelow(coord: Int, validate: (SpacePoint) -> Boolean, point: SpacePoint): SpacePoint? {
+    val newPoint = point.clone()
     val prevCoordValue = newPoint[coord] - 1
     prevCoordValue.downTo(0)
             .forEach { coordValue ->
                 newPoint[coord] = coordValue
-                val newPointCut = currentResult[newPoint]
-                if (newPointCut != null) {
-                    if (newPointCut != cut) {
-                        results.add(newPoint)
-                    }
-                    return
+                if (validate(newPoint)) {
+                    return newPoint
                 }
             }
+    return null
 }
 
 fun calculateCutChanges(currentResult: Map<SpacePoint, Set<Int>>): Set<SpacePoint> {
@@ -120,15 +117,33 @@ fun calculateCutChanges(currentResult: Map<SpacePoint, Set<Int>>): Set<SpacePoin
     currentResult
             .forEach { point, cut ->
                 0.until(point.size).forEach { coord ->
-                    val newPoint = point.clone()
-                    calculateCutChangesForCoord(newPoint, coord, currentResult, cut, results, point)
+                    val firstBelow = getFirstDifferentBelow(coord, {
+                        val newPointCut = currentResult[it]
+                        newPointCut != null && newPointCut != cut
+                    }, point)
+                    if (firstBelow != null) {
+                        results.add(firstBelow)
+                    }
                 }
             }
     return results
 }
 
-fun calculateEnrichment(newPositions: List<SpacePoint>): Collection<SpacePoint> {
-    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+fun calculateEnrichment(positions: Set<SpacePoint>): Collection<SpacePoint> {
+    val result = HashSet<SpacePoint>()
+    positions.forEach { point ->
+        0.until(point.size).forEach { coord ->
+            val firstBelow = getFirstDifferentBelow(coord, { positions.contains(it) }, point)
+            if (firstBelow != null) {
+                (firstBelow[coord] + 1).until(point[coord]).forEach { newCoordValue ->
+                    val newPoint = point.clone()
+                    newPoint[coord] = newCoordValue
+                    result.add(newPoint)
+                }
+            }
+        }
+    }
+    return result
 }
 
 private operator fun SpacePoint.timesAssign(multiplier: Int) {
@@ -137,12 +152,12 @@ private operator fun SpacePoint.timesAssign(multiplier: Int) {
     }
 }
 
-private fun processAllPoints(intPoints: List<SpacePoint>, epsilon: Int): PointProcessingResult {
+private fun processAllPoints(intPoints: Collection<SpacePoint>, epsilon: Int): PointProcessingResult {
     // begin first stage (before enrichment)
     logToConsole("Started the processing")
     logToConsole("${intPoints.size} points to calculate measures on")
     val (evaluatedData, cutsForAllPoints) =
-            processAllPointsHd(intPoints, dataSet, measures, epsilon, cutSize)
+            processAllPointsHd(intPoints.toList(), dataSet, measures, epsilon, cutSize)
     logToConsole("Evaluated data, calculated cutting line and cuts for all points")
     val cutChangePositions = calculateCutChanges(cutsForAllPoints)
     logToConsole("Found ${cutChangePositions.size} points to try")
