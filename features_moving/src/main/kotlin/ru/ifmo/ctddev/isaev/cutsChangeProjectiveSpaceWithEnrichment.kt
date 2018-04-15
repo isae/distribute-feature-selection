@@ -40,7 +40,7 @@ private data class PointProcessingFinalResult2d(
 )
 
 fun main(args: Array<String>) {
-    val (evaluatedData, cuttingLineY, cutsForAllPoints, pointsToTry, angles) = processAllPointsWithEnrichment(1000)
+    val (evaluatedData, cuttingLineY, cutsForAllPoints, pointsToTry, angles) = processAllPointsWithEnrichment(10)
     println("Found ${pointsToTry.size} points to try with enrichment")
     println(pointsToTry)
 

@@ -11,6 +11,7 @@ import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.reflect.KClass
 
 /**
@@ -184,21 +185,33 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
                        measures: List<KClass<out RelevanceMeasure>>,
                        epsilon: Int,
                        cutSize: Int)
-        : Pair<Map<SpacePoint, DoubleArray>, Map<SpacePoint, Set<Int>>> {
-    val evaluatedData = ArrayList<DoubleArray>(xDataRaw.size)
-    val cutsForAllPoints = ArrayList<Set<Int>>(xDataRaw.size)
-    val chunkSize = 5000 // to ensure computation is filled in memory
+        : Map<SpacePoint, Set<Int>> {
+    val cutsForAllPoints = HashMap<SpacePoint, Set<Int>>(xDataRaw.size)
+    val chunkSize = getChunkSize(cutSize, dataSet, measures) // to ensure computation is filled in memory
     xDataRaw.chunked(chunkSize)
             .forEach {
                 logToConsole("Processing chunk of ${it.size} points")
-                val (evaluatedChunk, cutsForAllPointsInChunk) = processAllPointsHdChunk(it, epsilon, dataSet, measures, cutSize)
-                evaluatedData.addAll(evaluatedChunk)
-                cutsForAllPoints.addAll(cutsForAllPointsInChunk)
+                processAllPointsHdChunk(it, epsilon, dataSet, measures, cutSize)
+                        .forEachIndexed { index, set ->
+                            cutsForAllPoints[it[index]] = set
+                        }
             }
-    return Pair(
-            evaluatedData.mapIndexed({ i, data -> xDataRaw[i] to data }).toMap(),
-            cutsForAllPoints.mapIndexed({ i, data -> xDataRaw[i] to data }).toMap()
-    )
+    return cutsForAllPoints
+}
+
+const val DOUBLE_SIZE = 8
+private fun getChunkSize(cutSize: Int, dataSet: FeatureDataSet, measures: List<KClass<out RelevanceMeasure>>): Int {
+    val numberOfFeatures = dataSet.features.size
+    logToConsole("Number of features: $numberOfFeatures")
+    val allocatedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
+    val presumableFreeMemory = Runtime.getRuntime().maxMemory() - allocatedMemory
+
+    logToConsole("Available memory: ${presumableFreeMemory / 1024 / 1024} mb")
+    val calculatedChunkSize = (presumableFreeMemory / DOUBLE_SIZE / numberOfFeatures / measures.size).toInt()
+    logToConsole("Calculated chunk size: $calculatedChunkSize")
+    val chunkSize = calculatedChunkSize
+    logToConsole("Chunk size to use: $chunkSize")
+    return chunkSize
 }
 
 private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
@@ -206,7 +219,7 @@ private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
                                     dataSet: FeatureDataSet,
                                     measures: List<KClass<out RelevanceMeasure>>,
                                     cutSize: Int)
-        : Pair<List<DoubleArray>, List<Set<Int>>> {
+        : List<Set<Int>> {
     val angles = xDataRaw.map { getAngle(epsilon, it) }
     val xData = angles.map { getPointOnUnitSphere(it) }
     val evaluatedData = getEvaluatedData(xData, dataSet, measures)
@@ -220,9 +233,8 @@ private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
                 Arrays.sort(featureNumbers, comparator)
                 return@map Pair(featureMeasures, featureNumbers)
             } //max first
-    val cutsForAllPoints = rawCutsForAllPoints
+    return rawCutsForAllPoints
             .map { it.second.take(cutSize).toHashSet() }
-    return Pair(evaluatedData, cutsForAllPoints)
 }
 
 fun getAngle(epsilon: Int, x: Int): Double {
