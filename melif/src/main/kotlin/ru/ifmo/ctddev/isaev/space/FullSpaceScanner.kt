@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.space
 
+import org.roaringbitmap.RoaringBitmap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import ru.ifmo.ctddev.isaev.*
@@ -54,14 +55,14 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
 private data class PointProcessingResult2d(
         val evaluatedData: List<DoubleArray>,
         val cuttingLineY: List<Double>,
-        val cutsForAllPoints: List<Set<Int>>,
+        val cutsForAllPoints: List<RoaringBitmap>,
         val cutChangePositions: List<Int>
 )
 
 public data class PointProcessingFinalResult2d(
         val evaluatedData: List<DoubleArray>,
         val cuttingLineY: List<Double>,
-        val cutsForAllPoints: List<Set<Int>>,
+        val cutsForAllPoints: List<RoaringBitmap>,
         val cutChangePositions: List<Int>,
         val pointsToTry: List<Point>,
         val angles: List<Double>
@@ -125,7 +126,7 @@ private fun processAllPoints(angles: List<Double>,
     logToConsole("Started the processing")
     logToConsole("${angles.size} points to calculate measures on")
     val chunkSize = getChunkSize(cutSize, dataSet, measures)
-    val cutsForAllPoints = ArrayList<Set<Int>>(angles.size)
+    val cutsForAllPoints = ArrayList<RoaringBitmap>(angles.size)
     val evaluatedData = ArrayList<DoubleArray>(angles.size)
     val cuttingLineY = ArrayList<Double>(angles.size)
     angles.chunked(chunkSize)
@@ -133,7 +134,7 @@ private fun processAllPoints(angles: List<Double>,
                 logToConsole("Processing chunk of ${cut.size} points")
                 val pointsInProjectiveCoords = cut.map { getPointOnUnitSphere(it) }
                 val (evaluatedDataChunk, cuttingLineYChunk, cutsForAllPointsRaw) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
-                val cutsForAllPointsChunk = cutsForAllPointsRaw.map { it.toSet() }
+                val cutsForAllPointsChunk = cutsForAllPointsRaw.map { calculateBitMap(it) }
                 cutsForAllPoints.addAll(cutsForAllPointsChunk)
                 evaluatedData.addAll(evaluatedDataChunk)
                 cuttingLineY.addAll(cuttingLineYChunk)
@@ -149,6 +150,15 @@ private fun processAllPoints(angles: List<Double>,
 
     // end first stage (before enrichment)
     return PointProcessingResult2d(evaluatedData, cuttingLineY, cutsForAllPoints, cutChangePositions)
+}
+
+fun calculateBitMap(bitsToSet: List<Int>): RoaringBitmap {
+    val result = RoaringBitmap()
+    bitsToSet.forEach { 
+        result.add(it)
+    }
+    result.runOptimize()
+    return result
 }
 
 fun processAllPoints(xData: List<Point>,
@@ -251,8 +261,8 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
                        measures: List<KClass<out RelevanceMeasure>>,
                        epsilon: Int,
                        cutSize: Int)
-        : Map<SpacePoint, Set<Int>> {
-    val cutsForAllPoints = HashMap<SpacePoint, Set<Int>>(xDataRaw.size)
+        : Map<SpacePoint, RoaringBitmap> {
+    val cutsForAllPoints = HashMap<SpacePoint, RoaringBitmap>(xDataRaw.size)
     val chunkSize = getChunkSize(cutSize, dataSet, measures) // to ensure computation is filled in memory
     xDataRaw.chunked(chunkSize)
             .forEach {
@@ -270,7 +280,7 @@ private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
                                     dataSet: FeatureDataSet,
                                     measures: List<KClass<out RelevanceMeasure>>,
                                     cutSize: Int)
-        : List<Set<Int>> {
+        : List<RoaringBitmap> {
     val angles = xDataRaw.map { getAngle(epsilon, it) }
     val xData = angles.map { getPointOnUnitSphere(it) }
     val evaluatedData = getEvaluatedData(xData, dataSet, measures)
@@ -285,7 +295,7 @@ private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
                 return@map Pair(featureMeasures, featureNumbers)
             } //max first
     return rawCutsForAllPoints
-            .map { it.second.take(cutSize).toHashSet() }
+            .map { calculateBitMap(it.second.take(cutSize)) }
 }
 
 fun getAngle(epsilon: Int, x: Int): Double {

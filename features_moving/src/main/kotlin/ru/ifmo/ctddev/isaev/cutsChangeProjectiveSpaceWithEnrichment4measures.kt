@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev
 
+import org.roaringbitmap.RoaringBitmap
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.*
@@ -16,12 +17,12 @@ private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
 
 private data class PointProcessingResult(
-        val cutsForAllPoints: Map<SpacePoint, Set<Int>>,
+        val cutsForAllPoints: Map<SpacePoint, RoaringBitmap>,
         val cutChangePositions: Set<SpacePoint>
 )
 
 private data class PointProcessingFinalResult(
-        val cutsForAllPoints: Map<SpacePoint, Set<Int>>,
+        val cutsForAllPoints: Map<SpacePoint, RoaringBitmap>,
         val pointsToTry: List<Point>
 )
 
@@ -68,7 +69,7 @@ private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessin
     var prevEpsilon = startingEpsilon //TODO: recalculate only changes
     val space = getBasicSpace(measures.size - 1, prevEpsilon).toHashSet()
     var prevIterChangePositions: HashSet<SpacePoint>
-    val allCuts = HashMap<SpacePoint, Set<Int>>()
+    val allCuts = HashMap<SpacePoint, RoaringBitmap>()
     var (cuts, currIterChangePositions) = processAllPoints(space, startingEpsilon)
     allCuts.putAll(cuts)
 
@@ -121,7 +122,7 @@ fun getFirstDifferentBelow(coord: Int, validate: (SpacePoint) -> Boolean, point:
     return null
 }
 
-fun calculateCutChanges(currentResult: Map<SpacePoint, Set<Int>>): Set<SpacePoint> {
+fun calculateCutChanges(currentResult: Map<SpacePoint, RoaringBitmap>): Set<SpacePoint> {
     val results = HashSet<SpacePoint>()
     currentResult
             .forEach { point, cut ->
@@ -175,7 +176,7 @@ private fun processAllPoints(intPoints: Collection<SpacePoint>, epsilon: Int): P
     return PointProcessingResult(cutsForAllPoints, cutChangePositions)
 }
 
-private fun getFilteredDataSet(cutsForAllPoints: List<Set<Int>>, evaluatedData: List<DoubleArray>): List<DoubleArray> {
+private fun getFilteredDataSet(cutsForAllPoints: List<RoaringBitmap>, evaluatedData: List<DoubleArray>): List<DoubleArray> {
     val sometimesInCut = cutsForAllPoints
             .flatMap { it }
             .toSet()

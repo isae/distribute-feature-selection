@@ -5,6 +5,7 @@ import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.style.markers.None
+import org.roaringbitmap.RoaringBitmap
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.space.calculateAllPointsWithEnrichment2d
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
@@ -95,7 +96,7 @@ private fun drawSemiSphere(chart: XYChart) {
     }
 }
 
-private fun getFeaturesToDraw(cutsForAllPoints: List<Set<Int>>, evaluatedData: List<DoubleArray>): List<DoubleArray> {
+private fun getFeaturesToDraw(cutsForAllPoints: List<RoaringBitmap>, evaluatedData: List<DoubleArray>): List<DoubleArray> {
     val sometimesInCut = cutsForAllPoints
             .flatMap { it }
             .toSet()
