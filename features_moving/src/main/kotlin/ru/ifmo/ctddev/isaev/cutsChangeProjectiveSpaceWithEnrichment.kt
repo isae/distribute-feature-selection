@@ -6,8 +6,9 @@ import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.style.markers.None
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
-import ru.ifmo.ctddev.isaev.point.Point
-import ru.ifmo.ctddev.isaev.space.*
+import ru.ifmo.ctddev.isaev.space.calculateAllPointsWithEnrichment2d
+import ru.ifmo.ctddev.isaev.space.getFeaturePositions
+import ru.ifmo.ctddev.isaev.space.logToConsole
 import java.awt.BasicStroke
 import java.awt.Color
 import java.time.LocalDateTime
@@ -24,25 +25,10 @@ private val measures = listOf(SpearmanRankCorrelation::class, VDM::class)
 private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
 
-private data class PointProcessingResult2d(
-        val evaluatedData: List<DoubleArray>,
-        val cuttingLineY: List<Double>,
-        val cutsForAllPoints: List<Set<Int>>,
-        val cutChangePositions: List<Int>
-)
-
-private data class PointProcessingFinalResult2d(
-        val evaluatedData: List<DoubleArray>,
-        val cuttingLineY: List<Double>,
-        val cutsForAllPoints: List<Set<Int>>,
-        val pointsToTry: List<Point>,
-        val angles: List<Double>
-)
-
 fun main(args: Array<String>) {
-    val (evaluatedData, cuttingLineY, cutsForAllPoints, pointsToTry, angles) = processAllPointsWithEnrichment(10)
+    val (evaluatedData, cuttingLineY, cutsForAllPoints, cutChangePositions, pointsToTry, angles) = calculateAllPointsWithEnrichment2d(1000, dataSet, measures, cutSize)
     println("Found ${pointsToTry.size} points to try with enrichment")
-    println(pointsToTry)
+    println(cutChangePositions)
 
     val features = getFeaturesToDraw(cutsForAllPoints, evaluatedData)
 
@@ -78,70 +64,6 @@ fun main(args: Array<String>) {
 
     }
     drawChart(chart)
-}
-
-private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessingFinalResult2d {
-    var prevEpsilon = startingEpsilon
-    var prevPositions = (0..prevEpsilon).toSortedSet()
-    var prevAngles = prevPositions.map { getAngle(prevEpsilon, it) }
-    var (evaluatedData, cuttingLineY, cutsForAllPoints, currCutChangePositions) = processAllPoints(prevAngles)
-    var prevCutChangePositions: List<Int>
-
-    // after enrichment
-    do {
-        prevCutChangePositions = currCutChangePositions
-
-        val newEpsilon = prevEpsilon * 10
-        val newPositions = prevPositions.map { it * 10 }.toSortedSet()
-        prevCutChangePositions.forEach {
-            val prev = it - 1
-            newPositions.addAll((prev * 10)..(it * 10))
-        }
-        val newAngles = newPositions.map { getAngle(newEpsilon, it) }
-        val newResult = processAllPoints(newAngles)
-
-        evaluatedData = newResult.evaluatedData
-        cuttingLineY = newResult.cuttingLineY
-        cutsForAllPoints = newResult.cutsForAllPoints
-        currCutChangePositions = newResult.cutChangePositions
-        prevEpsilon = newEpsilon
-        prevPositions = newPositions
-        prevAngles = newAngles
-    } while (currCutChangePositions.size != prevCutChangePositions.size)
-
-    val pointsToTry = currCutChangePositions
-            .map {
-                val angle = getAngle(prevEpsilon, it)
-                getPointOnUnitSphere(angle)
-            }
-
-    return PointProcessingFinalResult2d(
-            evaluatedData,
-            cuttingLineY,
-            cutsForAllPoints,
-            pointsToTry,
-            prevAngles
-    )
-}
-
-private fun processAllPoints(angles: List<Double>): PointProcessingResult2d {
-    // begin first stage (before enrichment)
-    logToConsole("Started the processing")
-    val pointsInProjectiveCoords = angles.map { getPointOnUnitSphere(it) }
-    logToConsole("${pointsInProjectiveCoords.size} points to calculate measures on")
-    val (evaluatedData, cuttingLineY, cutsForAllPointsRaw) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
-    val cutsForAllPoints = cutsForAllPointsRaw.map { it.toSet() }
-    logToConsole("Evaluated data, calculated cutting line and cuts for all points")
-
-    val cutChangePositions = cutsForAllPoints
-            .mapIndexed { index, cut -> Pair(index, cut) }
-            .filter { it.first != 0 && it.second != cutsForAllPoints[it.first - 1] }
-            .map { it.first }
-
-    logToConsole("Found ${cutChangePositions.size} points to try")
-
-    // end first stage (before enrichment)
-    return PointProcessingResult2d(evaluatedData, cuttingLineY, cutsForAllPoints, cutChangePositions)
 }
 
 private fun drawAxisY(chart: XYChart) {

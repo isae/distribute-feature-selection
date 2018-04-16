@@ -10,6 +10,8 @@ import ru.ifmo.ctddev.isaev.space.*
  */
 
 private val measures = listOf(SpearmanRankCorrelation::class, VDM::class)
+//private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class, SymmetricUncertainty::class)
+
 private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
 
@@ -64,31 +66,31 @@ fun main(args: Array<String>) {
 
 private fun processAllPointsWithEnrichment(startingEpsilon: Int): PointProcessingFinalResult {
     var prevEpsilon = startingEpsilon //TODO: recalculate only changes
-    val startingSpace = getBasicSpace(measures.size - 1, prevEpsilon)
-    val changePositions = HashSet<SpacePoint>()
+    val space = getBasicSpace(measures.size - 1, prevEpsilon).toHashSet()
+    var prevIterChangePositions: HashSet<SpacePoint>
     val allCuts = HashMap<SpacePoint, Set<Int>>()
-    val (cuts, cutChangePositions) = processAllPoints(startingSpace, startingEpsilon)
-    changePositions.addAll(cutChangePositions)
+    var (cuts, currIterChangePositions) = processAllPoints(space, startingEpsilon)
     allCuts.putAll(cuts)
 
-    var prevChangePositionsSize: Int
     // after enrichment
     do {
-        prevChangePositionsSize = allCuts.size
-
+        prevIterChangePositions = currIterChangePositions.toHashSet()
+        space.addAll(prevIterChangePositions)
         val newEpsilon = prevEpsilon * 10
-        changePositions.onEach { it *= 10 }
-        rehash(changePositions)
-        logToConsole("Points to try before enrichment: ${changePositions.size}")
-        val enrichment = calculateEnrichment(changePositions)
-        val newResult = processAllPoints(enrichment, newEpsilon)
+        space.onEach { it *= 10 }
+        prevIterChangePositions.onEach { it *= 10 }
+        rehash(prevIterChangePositions)
+        logToConsole("Points to try before enrichment: ${space.size}")
+        val enrichment = calculateEnrichment(prevIterChangePositions)
+        space.addAll(enrichment)
+        val newResult = processAllPoints(space, newEpsilon)
 
         allCuts.putAll(newResult.cutsForAllPoints)
-        changePositions.addAll(newResult.cutChangePositions)
+        currIterChangePositions = newResult.cutChangePositions
         prevEpsilon = newEpsilon
-    } while (changePositions.size != prevChangePositionsSize)
+    } while (prevIterChangePositions.size != currIterChangePositions.size)
 
-    val pointsToTry = changePositions
+    val pointsToTry = prevIterChangePositions
             .map {
                 val angle = getAngle(prevEpsilon, it)
                 getPointOnUnitSphere(angle)
