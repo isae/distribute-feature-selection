@@ -31,7 +31,7 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
     fun run(): RunStats {
         val runStats = RunStats(config, dataSet, javaClass.simpleName)
         logger.info("Started {} at {}", javaClass.simpleName, runStats.startTime)
-        val (_, _, _, _, points, _) = calculateAllPointsWithEnrichment2d(100, featureDataSet, config.measureClasses, 50)
+        val (_, _, _, _, points, _) = calculateAllPointsWithEnrichment2d(1000, featureDataSet, config.measureClasses, 50)
         logger.info("Found ${points.size} points to process")
         val scoreFutures = points.map { p ->
             executorService.submit(Callable<SelectionResult> { foldsEvaluator.getSelectionResult(dataSet, p, runStats) })
@@ -133,6 +133,8 @@ private fun processAllPoints(angles: List<Double>,
             .forEach { cut ->
                 logToConsole("Processing chunk of ${cut.size} points")
                 val pointsInProjectiveCoords = cut.map { getPointOnUnitSphere(it) }
+                //logToConsole("Points to process: ")
+                //pointsInProjectiveCoords.forEach { println(it) }
                 val (evaluatedDataChunk, cuttingLineYChunk, cutsForAllPointsRaw) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
                 val cutsForAllPointsChunk = cutsForAllPointsRaw.map { calculateBitMap(it) }
                 cutsForAllPoints.addAll(cutsForAllPointsChunk)

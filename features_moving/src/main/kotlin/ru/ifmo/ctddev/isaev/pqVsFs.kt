@@ -3,9 +3,11 @@ package ru.ifmo.ctddev.isaev
 import org.slf4j.LoggerFactory
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.melif.impl.PriorityQueueMeLiF
+import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.FullSpaceScanner
 import ru.ifmo.ctddev.isaev.space.calculateTime
 import java.io.File
+import java.util.*
 
 /**
  * @author iisaev
@@ -16,11 +18,11 @@ private val LOGGER = LoggerFactory.getLogger("pqVsFs")
 
 fun main(args: Array<String>) {
     File("results.txt").printWriter().use { out ->
-        KnownDatasets.values().forEach {
+        EnumSet.allOf(KnownDatasets::class.java).forEach {
             try {
                 val dataSet = it.read()
                 val res = processDataSet(dataSet)
-                out.println("$it, ${res.pqVisited}, ${res.pqTime}, ${res.pqScore}, ${res.fsVisited}, ${res.fsTime}, ${res.fsScore}")
+                out.println("$it, ${res.pqVisited}, ${res.pqTime}, ${res.pqScore}, ${res.pqPoint}, ${res.fsVisited}, ${res.fsTime}, ${res.fsScore}, ${res.fsPoint}")
                 out.flush()
             } catch (e: Exception) {
                 LOGGER.error("Some error!", e)
@@ -28,8 +30,7 @@ fun main(args: Array<String>) {
         }
     }
 }
-/*
-fun main(args: Array<String>) {
+/*fun main(args: Array<String>) {
     val dataSet = KnownDatasets.ARIZONA1.read()
     val order = 0.until(dataSet.getInstanceCount()).shuffled()
     val algorithmConfig = AlgorithmConfig(
@@ -56,9 +57,11 @@ data class ComparisonResult(
         val pqVisited: Long,
         val pqTime: Long,
         val pqScore: Double,
+        val pqPoint: Point,
         val fsVisited: Long,
         val fsTime: Long,
-        val fsScore: Double
+        val fsScore: Double,
+        val fsPoint: Point
 )
 
 private fun processDataSet(dataSet: FeatureDataSet): ComparisonResult {
@@ -94,8 +97,10 @@ private fun processDataSet(dataSet: FeatureDataSet): ComparisonResult {
             pqStats.visitedPoints,
             pqTime / 1000,
             pqStats.bestResult.score,
+            pqStats.bestResult.point,
             fullSpaceStats.visitedPoints,
             fullSpaceTime / 1000,
-            fullSpaceStats.bestResult.score
+            fullSpaceStats.bestResult.score,
+            fullSpaceStats.bestResult.point
     )
 }
