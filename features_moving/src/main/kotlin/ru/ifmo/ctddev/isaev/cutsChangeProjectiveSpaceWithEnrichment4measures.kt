@@ -70,20 +70,20 @@ private fun processAllPointsWithEnrichment(startingEpsilon: Int,
     var space = getBasicSpace(measures.size - 1, prevEpsilon).toSet()
     var prevIterChangePositions: Set<SpacePoint>
     var (cuts, currIterChangePositions) = processAllPoints(space, startingEpsilon)
-    logToConsole({ "Cut change positions: ${currIterChangePositions.sorted()}" })
+    logToConsole { "Cut change positions: ${currIterChangePositions.sorted()}" }
 
     // after enrichment
     do {
         prevIterChangePositions = currIterChangePositions
-        logToConsole({ "Points to try before enrichment: ${space.size}" })
+        logToConsole { "Points to try before enrichment: ${space.size}" }
         val (newSpace, newEpsilon) = calculateEnrichment(space, prevIterChangePositions, prevEpsilon, zoom)
         space = newSpace
-        logToConsole({ "Points to try after enrichment: ${space.size}" })
+        logToConsole { "Points to try after enrichment: ${space.size}" }
         val newResult = processAllPoints(space, newEpsilon)
-        logToConsole({
+        logToConsole {
             "Cut change positions: ${newResult.cutChangePositions.sorted()
                     .map { it.point }.map { it.map { i -> twoDecimalPlaces.format(i.toDouble() / (newEpsilon / startingEpsilon)) } }}}"
-        })
+        }
         // TODO: holy fuck, this may significantly increase the time of processing
 
         cuts = newResult.cutsForAllPoints
@@ -98,12 +98,6 @@ private fun processAllPointsWithEnrichment(startingEpsilon: Int,
             cuts,
             pointsToTry
     )
-}
-
-private fun rehash(set: HashSet<SpacePoint>) {
-    val rehashedPoints = HashSet(set)
-    set.clear()
-    set.addAll(rehashedPoints)
 }
 
 fun getFirstDifferentBelowInIndex(index: Int, space: Set<SpacePoint>, pointToClone: SpacePoint): SpacePoint? {
@@ -141,7 +135,7 @@ fun calculateEnrichment(
         changePositions: Set<SpacePoint>,
         prevEpsilon: Int,
         zoom: Int): Pair<Set<SpacePoint>, Int> {
-    logToConsole({ "Started calculating the enrichment of set with ${changePositions.size} points" })
+    logToConsole { "Started calculating the enrichment of set with ${changePositions.size} points" }
     val newEpsilon = prevEpsilon * zoom
     val result = HashSet<SpacePoint>()
     oldSpace.forEach {
@@ -167,7 +161,7 @@ fun calculateEnrichment(
         }
     }
     result.addAll(enrichment)
-    logToConsole({ "Finished enrichment calculation" })
+    logToConsole { "Finished enrichment calculation" }
     return Pair(result, newEpsilon)
 }
 
@@ -179,12 +173,12 @@ private operator fun SpacePoint.timesAssign(multiplier: Int) {
 
 private fun processAllPoints(intPoints: Collection<SpacePoint>, epsilon: Int): PointProcessingResult {
     // begin first stage (before enrichment)
-    logToConsole({ "Started the processing" })
-    logToConsole({ "${intPoints.size} points to calculate measures on" })
+    logToConsole { "Started the processing" }
+    logToConsole { "${intPoints.size} points to calculate measures on" }
     val cutsForAllPoints = processAllPointsHd(intPoints.toList(), dataSet, measures, epsilon, cutSize)
-    logToConsole({ "Evaluated data, calculated cutting line and cuts for all points" })
+    logToConsole { "Evaluated data, calculated cutting line and cuts for all points" }
     val cutChangePositions = calculateCutChanges(cutsForAllPoints)
-    logToConsole({ "Found ${cutChangePositions.size} cut change positions (aka points to try)" })
+    logToConsole { "Found ${cutChangePositions.size} cut change positions (aka points to try)" }
     // end first stage (before enrichment)
     return PointProcessingResult(cutsForAllPoints, cutChangePositions)
 }
@@ -193,13 +187,13 @@ private fun getFilteredDataSet(cutsForAllPoints: List<RoaringBitmap>, evaluatedD
     val sometimesInCut = cutsForAllPoints
             .flatMap { it }
             .toSet()
-    logToConsole({ "Sometimes in cut: ${sometimesInCut.size} features" })
+    logToConsole { "Sometimes in cut: ${sometimesInCut.size} features" }
     val alwaysInCut = sometimesInCut.filter { featureNum ->
         cutsForAllPoints.all { it.contains(featureNum) }
     }
-    logToConsole({ "Always in cut: ${alwaysInCut.size} features: $alwaysInCut" })
+    logToConsole { "Always in cut: ${alwaysInCut.size} features: $alwaysInCut" }
     val needToProcess = sometimesInCut - alwaysInCut
-    logToConsole({ "Need to process: ${needToProcess.size} features" })
+    logToConsole { "Need to process: ${needToProcess.size} features" }
 
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
 

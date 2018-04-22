@@ -52,12 +52,12 @@ fun main(args: Array<String>) {
         val c2 = it.second.toDouble() / 100
         Point(c1, c2, 1 - c1 - c2)
     }
-    logToConsole({ "Found ${xyData.size} points" })
+    logToConsole { "Found ${xyData.size} points" }
     val evaluatedData = getEvaluatedData(xyData, dataSet, measures)
-    logToConsole({ "Evaluated all data" })
+    logToConsole { "Evaluated all data" }
     val range = Array(evaluatedData[0].size, { it })
     val evaluatedDataWithNumbers = evaluatedData.map { Pair(it, range.clone()) }
-    logToConsole({ "Indexed all data" })
+    logToConsole { "Indexed all data" }
     val cutSize = 50
     val rawCutsForAllPoints = evaluatedDataWithNumbers
             .map {
@@ -68,7 +68,7 @@ fun main(args: Array<String>) {
                 return@map Pair(featureMeasures, featureNumbers)
             } //max first
             .map { it.second.take(cutSize) }
-    logToConsole({ "Calculated cuts" })
+    logToConsole { "Calculated cuts" }
     //val cuttingLineY = rawCutsForAllPoints.map { it.first.last() }
     val cutsForAllPoints = rawCutsForAllPoints
     val sometimesInCut = cutsForAllPoints

@@ -26,22 +26,22 @@ fun main(args: Array<String>) {
     val cutSize = 50
     val dataSet = KnownDatasets.DLBCL.read()
 
-    logToConsole({ "Started the processing" })
+    logToConsole { "Started the processing" }
     val xData = 0.rangeTo(epsilon).map { x -> Point(x.toDouble() / epsilon, (epsilon - x).toDouble() / epsilon) }
-    logToConsole({ "${xData.size} points to calculate measures on" })
+    logToConsole { "${xData.size} points to calculate measures on" }
     val (evaluatedData, cuttingLineY, cutsForAllPoints) = processAllPointsFast(xData, dataSet, measures, cutSize)
     val lastFeatureInAllCuts = cutsForAllPoints.map { it.last() }
-    logToConsole({ "Evaluated data, calculated cutting line and cuts for all points" })
+    logToConsole { "Evaluated data, calculated cutting line and cuts for all points" }
     val sometimesInCut = cutsForAllPoints
             .flatMap { it }
             .toSet()
-    logToConsole({ "Sometimes in cut: ${sometimesInCut.size} features" })
+    logToConsole { "Sometimes in cut: ${sometimesInCut.size} features" }
     val alwaysInCut = sometimesInCut.filter { featureNum ->
         cutsForAllPoints.all { it.contains(featureNum) }
     }
-    logToConsole({ "Always in cut: ${alwaysInCut.size} features: $alwaysInCut" })
+    logToConsole { "Always in cut: ${alwaysInCut.size} features: $alwaysInCut" }
     val needToProcess = sometimesInCut - alwaysInCut
-    logToConsole({ "Need to process: ${needToProcess.size} features" })
+    logToConsole { "Need to process: ${needToProcess.size} features" }
 
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
 
@@ -60,7 +60,7 @@ fun main(args: Array<String>) {
             .map { LinePoint(it.toDouble() / epsilon, cuttingLineY[it]) }
 
 
-    logToConsole({ "Found ${pointsToTry.size} points to try" })
+    logToConsole { "Found ${pointsToTry.size} points to try" }
 
     draw(measures, features, xData, bottomFrontOfCuttingRule, cuttingLineY)
 }
@@ -94,9 +94,9 @@ private fun draw(measures: List<KClass<out RelevanceMeasure>>,
         series.lineStyle = BasicStroke(0.1f)
     }
     // Show it
-    logToConsole({ "Finished calculations; visualizing..." })
+    logToConsole { "Finished calculations; visualizing..." }
     SwingWrapper(chart).displayChart()
-    logToConsole({ "Finished visualization" })
+    logToConsole { "Finished visualization" }
 
     // or save it in high-res
     BitmapEncoder.saveBitmapWithDPI(chart, "./charts/Test_Chart_${LocalDateTime.now()}", BitmapEncoder.BitmapFormat.PNG, 200);
