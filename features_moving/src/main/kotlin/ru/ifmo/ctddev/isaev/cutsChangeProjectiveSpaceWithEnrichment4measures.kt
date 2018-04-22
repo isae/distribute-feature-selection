@@ -117,14 +117,17 @@ fun calculateCutChanges(cutsForAllPoints: Map<SpacePoint, RoaringBitmap>): Set<S
     val results = HashSet<SpacePoint>()
     cutsForAllPoints
             .forEach { point, cut ->
-                0.until(point.size).forEach { coord ->
+                val changesOnEveryCoordinate = 0.until(point.size).all { coord ->
                     val firstBelow = getFirstDifferentBelowInIndex(coord, cutsForAllPoints.keys, point)
                     if (firstBelow != null) {
                         val firstBelowCut = cutsForAllPoints[firstBelow]
-                        if (firstBelowCut != null && firstBelowCut != cut) {
-                            results.add(point)
-                        }
+                        firstBelowCut != null && firstBelowCut != cut
+                    } else {
+                        false
                     }
+                }
+                if (changesOnEveryCoordinate) {
+                    results.add(point)
                 }
             }
     return results
