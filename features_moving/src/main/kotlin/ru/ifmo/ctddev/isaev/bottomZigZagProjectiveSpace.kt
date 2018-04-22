@@ -25,24 +25,24 @@ fun main(args: Array<String>) {
     val cutSize = 50
     val dataSet = KnownDatasets.DLBCL.read()
 
-    logToConsole("Started the processing")
+    logToConsole({ "Started the processing" })
     val angles = 0.rangeTo(epsilon).map { getAngle(epsilon, it) }
-    logToConsole("Angles: $angles")
+    logToConsole({ "Angles: $angles" })
     val pointsInProjectiveCoords = angles.map { getPointOnUnitSphere(it) }
-    logToConsole("${pointsInProjectiveCoords.size} points to calculate measures on")
+    logToConsole({ "${pointsInProjectiveCoords.size} points to calculate measures on" })
     val (evaluatedData, cuttingLineY, cutsForAllPoints) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
     val lastFeatureInAllCuts = cutsForAllPoints.map { it.last() }
-    logToConsole("Evaluated data, calculated cutting line and cuts for all points")
+    logToConsole({ "Evaluated data, calculated cutting line and cuts for all points" })
     val sometimesInCut = cutsForAllPoints
             .flatMap { it }
             .toSet()
-    logToConsole("Sometimes in cut: ${sometimesInCut.size} features")
+    logToConsole({ "Sometimes in cut: ${sometimesInCut.size} features" })
     val alwaysInCut = sometimesInCut.filter { featureNum ->
         cutsForAllPoints.all { it.contains(featureNum) }
     }
-    logToConsole("Always in cut: ${alwaysInCut.size} features: $alwaysInCut")
+    logToConsole({ "Always in cut: ${alwaysInCut.size} features: $alwaysInCut" })
     val needToProcess = sometimesInCut - alwaysInCut
-    logToConsole("Need to process: ${needToProcess.size} features")
+    logToConsole({ "Need to process: ${needToProcess.size} features" })
 
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
 
@@ -69,7 +69,7 @@ fun main(args: Array<String>) {
             }
 
 
-    logToConsole("Found ${pointsToTry.size} points to try")
+    logToConsole({ "Found ${pointsToTry.size} points to try" })
 
     val chartBuilder = XYChartBuilder()
             .width(1024)
@@ -117,9 +117,9 @@ fun main(args: Array<String>) {
 }
 
 private fun drawChart(chart: XYChart) {
-    logToConsole("Finished calculations; visualizing...")
+    logToConsole({ "Finished calculations; visualizing..." })
     SwingWrapper(chart).displayChart()
-    logToConsole("Finished visualization")
+    logToConsole({ "Finished visualization" })
 
     BitmapEncoder.saveBitmapWithDPI(chart, "./charts/Test_Chart_${LocalDateTime.now()}", BitmapEncoder.BitmapFormat.PNG, 200);
 }

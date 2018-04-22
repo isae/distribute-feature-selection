@@ -7,7 +7,6 @@ import ru.ifmo.ctddev.isaev.*
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.results.RunStats
 import java.text.DecimalFormat
-import java.time.Duration
 import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.Callable
@@ -80,7 +79,7 @@ fun calculateAllPointsWithEnrichment2d(startingEpsilon: Int,
     var prevPositions = calculateBitMap(0..prevEpsilon)
     var (evaluatedData, cuttingLineY, cutsForAllPoints, currCutChangePositions) = processAllPoints(prevPositions, prevEpsilon, dataSet, measures, cutSize)
     var prevCutChangePositions: List<Int>
-    logToConsole("Cut change positions: $currCutChangePositions")
+    logToConsole({ "Cut change positions: $currCutChangePositions" })
 
     // after enrichment
     do {
@@ -93,7 +92,7 @@ fun calculateAllPointsWithEnrichment2d(startingEpsilon: Int,
         cuttingLineY = newResult.cuttingLineY
         cutsForAllPoints = newResult.cutsForAllPoints
         currCutChangePositions = newResult.cutChangePositions
-        logToConsole("Cut change positions: ${currCutChangePositions.map { twoDecimalPlaces.format(it.toDouble() / (newEpsilon / startingEpsilon)) }}")
+        logToConsole({ "Cut change positions: ${currCutChangePositions.map { twoDecimalPlaces.format(it.toDouble() / (newEpsilon / startingEpsilon)) }}" })
         prevEpsilon = newEpsilon
         prevPositions = newPositions
     } while (currCutChangePositions.size != prevCutChangePositions.size)
@@ -127,8 +126,8 @@ private fun processAllPoints(positions: RoaringBitmap,
                              cutSize: Int
 ): PointProcessingResult2d {
     // begin first stage (before enrichment)
-    logToConsole("Started the processing")
-    logToConsole("${positions.cardinality} points to calculate measures on")
+    logToConsole({ "Started the processing" })
+    logToConsole({ "${positions.cardinality} points to calculate measures on" })
     val angles = positions.map { getAngle(epsilon, it) }
     val chunkSize = getChunkSize(cutSize, dataSet, measures)
     val cutsForAllPoints = ArrayList<RoaringBitmap>(angles.size)
@@ -136,7 +135,7 @@ private fun processAllPoints(positions: RoaringBitmap,
     val cuttingLineY = ArrayList<Double>(angles.size)
     angles.chunked(chunkSize)
             .forEach { cut ->
-                logToConsole("Processing chunk of ${cut.size} points")
+                logToConsole({ "Processing chunk of ${cut.size} points" })
                 val pointsInProjectiveCoords = cut.map { getPointOnUnitSphere(it) }
                 //logToConsole("Points to process: ")
                 //pointsInProjectiveCoords.forEach { println(it) }
@@ -146,11 +145,11 @@ private fun processAllPoints(positions: RoaringBitmap,
                 evaluatedData.addAll(evaluatedDataChunk)
                 cuttingLineY.addAll(cuttingLineYChunk)
             }
-    logToConsole("Evaluated data, calculated cutting line and cuts for all points")
+    logToConsole({ "Evaluated data, calculated cutting line and cuts for all points" })
 
     val cutChangePositions = positions
             .filterIndexed { i, pos -> i != 0 && cutsForAllPoints[i] != cutsForAllPoints[i - 1] }
-    logToConsole("Found ${cutChangePositions.size} points to try")
+    logToConsole({ "Found ${cutChangePositions.size} points to try" })
 
     // end first stage (before enrichment)
     return PointProcessingResult2d(evaluatedData, cuttingLineY, cutsForAllPoints, cutChangePositions)
@@ -210,7 +209,24 @@ fun processAllPointsFast(xData: List<Point>,
     return Triple(evaluatedData, cuttingLineY, cutsForAllPoints)
 }
 
-class SpacePoint(val point: IntArray) : Iterable<Int> { // wrapper for int array for proper hashcode implementation
+class SpacePoint(val point: IntArray) : Iterable<Int>, Comparable<SpacePoint> {
+    // wrapper for int array for proper hashcode and compareTo implementation
+    override fun compareTo(other: SpacePoint): Int {
+        val first = point
+        val second = other.point
+        if (first.size != second.size) {
+            throw IllegalStateException("Trying to compare invalid points")
+        }
+        for (i in first.indices) {
+            if (first[i] < second[i]) {
+                return -1
+            }
+            if (first[i] > second[i]) {
+                return 1
+            }
+        }
+        return 0
+    }
 
 
     override fun iterator(): Iterator<Int> {
@@ -242,20 +258,22 @@ class SpacePoint(val point: IntArray) : Iterable<Int> { // wrapper for int array
     val size: Int = point.size
     operator fun get(coord: Int): Int = point[coord]
     override fun toString(): String = Arrays.toString(point)
+    fun indices(): IntRange = point.indices
 }
 
 const val DOUBLE_SIZE = 8
 private fun getChunkSize(cutSize: Int, dataSet: FeatureDataSet, measures: List<KClass<out RelevanceMeasure>>): Int {
+    return 5000
     val numberOfFeatures = dataSet.features.size
-    logToConsole("Number of features: $numberOfFeatures")
+    logToConsole({ "Number of features: $numberOfFeatures" })
     val allocatedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
     val presumableFreeMemory = Runtime.getRuntime().maxMemory() - allocatedMemory
 
-    logToConsole("Available memory: ${presumableFreeMemory / 1024 / 1024} mb")
+    logToConsole({ "Available memory: ${presumableFreeMemory / 1024 / 1024} mb" })
     val calculatedChunkSize = (presumableFreeMemory / DOUBLE_SIZE / numberOfFeatures / measures.size).toInt()
-    logToConsole("Calculated chunk size: $calculatedChunkSize")
+    logToConsole({ "Calculated chunk size: $calculatedChunkSize" })
     val chunkSize = calculatedChunkSize
-    logToConsole("Chunk size to use: $chunkSize")
+    logToConsole({ "Chunk size to use: $chunkSize" })
     return chunkSize
 }
 
@@ -270,7 +288,7 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
     val chunkSize = getChunkSize(cutSize, dataSet, measures) // to ensure computation is filled in memory
     xDataRaw.chunked(chunkSize)
             .forEach {
-                logToConsole("Processing chunk of ${it.size} points")
+                logToConsole({ "Processing chunk of ${it.size} points" })
                 processAllPointsHdChunk(it, epsilon, dataSet, measures, cutSize)
                         .forEachIndexed { index, set ->
                             cutsForAllPoints[it[index]] = set
@@ -302,23 +320,25 @@ private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
             .map { calculateBitMap(it.second.take(cutSize)) }
 }
 
+
+const val MAX_ANGLE = Math.PI / 2
+
 fun getAngle(epsilon: Int, x: Int): Double {
-    val maxAngle = Math.PI / 2
-    val fractionOfPi = maxAngle / epsilon
-    return maxAngle - (fractionOfPi * x)
+    val fractionOfPi = MAX_ANGLE / epsilon
+    return MAX_ANGLE - (fractionOfPi * x)
 }
 
 fun getAngle(epsilon: Int, xs: SpacePoint): DoubleArray {
-    val fractionOfPi = Math.PI / epsilon
     val result = DoubleArray(xs.size)
     xs.forEachIndexed { i, x ->
-        result[i] = Math.PI - (fractionOfPi * x)
+        result[i] = getAngle(epsilon, x)
     }
     return result
 }
 
 private val startTime = LocalDateTime.now()
 
-fun logToConsole(msg: String) {
-    println("${Duration.between(startTime, LocalDateTime.now()).toMillis()} ms: " + msg)
+
+fun logToConsole(msgGetter: () -> String) {
+    println(msgGetter())
 }

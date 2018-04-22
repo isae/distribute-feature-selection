@@ -102,13 +102,13 @@ private fun getFeaturesToDraw(cutsForAllPoints: List<RoaringBitmap>, evaluatedDa
     val sometimesInCut = cutsForAllPoints
             .flatMap { it }
             .toSet()
-    logToConsole("Sometimes in cut: ${sometimesInCut.size} features")
+    logToConsole({ "Sometimes in cut: ${sometimesInCut.size} features" })
     val alwaysInCut = sometimesInCut.filter { featureNum ->
         cutsForAllPoints.all { it.contains(featureNum) }
     }
-    logToConsole("Always in cut: ${alwaysInCut.size} features: $alwaysInCut")
+    logToConsole({ "Always in cut: ${alwaysInCut.size} features: $alwaysInCut" })
     val needToProcess = sometimesInCut - alwaysInCut
-    logToConsole("Need to process: ${needToProcess.size} features")
+    logToConsole({ "Need to process: ${needToProcess.size} features" })
 
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
 
@@ -116,9 +116,9 @@ private fun getFeaturesToDraw(cutsForAllPoints: List<RoaringBitmap>, evaluatedDa
 }
 
 private fun drawChart(chart: XYChart) {
-    logToConsole("Finished calculations; visualizing...")
+    logToConsole({ "Finished calculations; visualizing..." })
     SwingWrapper(chart).displayChart()
-    logToConsole("Finished visualization")
+    logToConsole({ "Finished visualization" })
 
     BitmapEncoder.saveBitmapWithDPI(chart, "./charts/Test_Chart_${LocalDateTime.now()}", BitmapEncoder.BitmapFormat.PNG, 200);
 }
