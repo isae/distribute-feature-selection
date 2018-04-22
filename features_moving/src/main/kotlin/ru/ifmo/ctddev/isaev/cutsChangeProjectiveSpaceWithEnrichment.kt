@@ -27,9 +27,11 @@ private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
 
 fun main(args: Array<String>) {
-    val (evaluatedData, cuttingLineY, cutsForAllPoints, cutChangePositions, pointsToTry, angles) = calculateAllPointsWithEnrichment2d(1000, dataSet, measures, cutSize)
+    val (evaluatedData, cuttingLineY, cutsForAllPoints, cutChangePositions, pointsToTry, angles) =
+            calculateAllPointsWithEnrichment2d(100, dataSet, measures, cutSize, 2)
     println("Found ${pointsToTry.size} points to try with enrichment")
     println(cutChangePositions)
+    pointsToTry.forEach { println(it) }
 
     val features = getFeaturesToDraw(cutsForAllPoints, evaluatedData)
 

@@ -27,6 +27,7 @@ fun main(args: Array<String>) {
 
     logToConsole("Started the processing")
     val angles = 0.rangeTo(epsilon).map { getAngle(epsilon, it) }
+    logToConsole("Angles: $angles")
     val pointsInProjectiveCoords = angles.map { getPointOnUnitSphere(it) }
     logToConsole("${pointsInProjectiveCoords.size} points to calculate measures on")
     val (evaluatedData, cuttingLineY, cutsForAllPoints) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)

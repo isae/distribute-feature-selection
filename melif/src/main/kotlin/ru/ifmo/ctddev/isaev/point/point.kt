@@ -79,6 +79,8 @@ open class Point : Comparable<Point> {
         }
         return points
     }
+
+    operator fun get(i: Int): Double = coordinates[i]
 }
 
 class PriorityPoint(var priority: Double, p: Point) : Point(p) {

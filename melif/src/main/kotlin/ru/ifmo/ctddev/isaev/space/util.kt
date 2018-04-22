@@ -117,12 +117,12 @@ fun getPointOnUnitSphere(angles: DoubleArray): Point { //TODO: review for
         sines[i] = sin(angle)
         cosines[i] = cos(angle)
     })
-    0.rangeTo(angles.size).forEach { i ->
+    0.until(result.size - 1).forEach { i ->
         i.until(angles.size).forEach { j ->
             result[i] *= sines[j]
         }
     }
-    1.rangeTo(angles.size).forEach { i ->
+    1.until(result.size).forEach { i ->
         result[i] *= cosines[i - 1]
     }
     return Point.fromRawCoords(*result)
