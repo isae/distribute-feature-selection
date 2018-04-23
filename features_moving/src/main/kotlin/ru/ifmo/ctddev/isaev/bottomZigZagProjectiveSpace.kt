@@ -30,8 +30,8 @@ fun main(args: Array<String>) {
     logToConsole { "Angles: $angles" }
     val pointsInProjectiveCoords = angles.map { getPointOnUnitSphere(it) }
     logToConsole { "${pointsInProjectiveCoords.size} points to calculate measures on" }
-    val (evaluatedData, cuttingLineY, cutsForAllPoints) = processAllPointsFastOld(pointsInProjectiveCoords, dataSet, measures, cutSize)
-    val lastFeatureInAllCuts = cutsForAllPoints.map { it.last() }
+    val (evaluatedData, lastFeatureInAllCuts, cutsForAllPoints) = processAllPointsFastOld(pointsInProjectiveCoords, dataSet, measures, cutSize)
+    val cuttingLineY = lastFeatureInAllCuts.mapIndexed { index, f -> evaluatedData[index][f] }
     logToConsole { "Evaluated data, calculated cutting line and cuts for all points" }
     val sometimesInCut = cutsForAllPoints
             .flatMap { it }

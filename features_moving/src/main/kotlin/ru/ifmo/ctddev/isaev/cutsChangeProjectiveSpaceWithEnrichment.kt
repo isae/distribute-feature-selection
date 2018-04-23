@@ -27,7 +27,7 @@ private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
 
 fun main(args: Array<String>) {
-    val (evaluatedData, cutsForAllPoints, cutChangePositions, pointsToTry, angles) =
+    val (evaluatedData, cutsForAllPoints, cutChangePositions, pointsToTry, angles, lastFeatureInAllCuts) =
             calculateAllPointsWithEnrichment2d(100, dataSet, measures, cutSize, 2)
     println("Found ${pointsToTry.size} points to try with enrichment")
     println(cutChangePositions)
@@ -57,11 +57,11 @@ fun main(args: Array<String>) {
                 }
     }
     //TODO restore cutting line data from other sources (value of last cut feature measure in each point)
-    /*val cuttingLineDataToDraw = cuttingLineY.zip(angles)
-            .map { (d, angle) ->
-                sin(angle) * d // y coord by definition of sinus
-            }*/
-    val cuttingLineDataToDraw = DoubleArray(xDataForFeatures.size, {0.0}).toList()
+    val cuttingLineDataToDraw = lastFeatureInAllCuts.mapIndexed { i, f ->
+        val angle = angles[i]
+        val d = evaluatedData[i][f]
+        sin(angle) * d // y coord by definition of sinus
+    }
     chart.addSeries("Bottom front", xDataForFeatures, cuttingLineDataToDraw).apply {
         this.marker = None()
         this.lineColor = Color.BLACK

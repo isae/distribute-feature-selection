@@ -29,8 +29,8 @@ fun main(args: Array<String>) {
     logToConsole { "Started the processing" }
     val xData = 0.rangeTo(epsilon).map { x -> Point(x.toDouble() / epsilon, (epsilon - x).toDouble() / epsilon) }
     logToConsole { "${xData.size} points to calculate measures on" }
-    val (evaluatedData, cuttingLineY, cutsForAllPoints) = processAllPointsFastOld(xData, dataSet, measures, cutSize)
-    val lastFeatureInAllCuts = cutsForAllPoints.map { it.last() }
+    val (evaluatedData, lastFeatureInAllCuts, cutsForAllPoints) = processAllPointsFastOld(xData, dataSet, measures, cutSize)
+    val cuttingLineY = lastFeatureInAllCuts.mapIndexed { index, f -> evaluatedData[index][f] }
     logToConsole { "Evaluated data, calculated cutting line and cuts for all points" }
     val sometimesInCut = cutsForAllPoints
             .flatMap { it }
