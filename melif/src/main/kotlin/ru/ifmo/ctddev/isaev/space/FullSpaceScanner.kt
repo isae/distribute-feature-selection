@@ -316,18 +316,13 @@ private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
     val angles = xDataRaw.map { getAngle(epsilon, it) }
     val xData = angles.map { getPointOnUnitSphere(it) }
     val evaluatedData = getEvaluatedData(xData, dataSet, measures)
-    val range = Array(evaluatedData[0].size, { it })
-    val evaluatedDataWithNumbers = evaluatedData.map { Pair(it, range.clone()) }
-    val rawCutsForAllPoints = evaluatedDataWithNumbers
-            .map {
-                val featureNumbers = it.second
-                val featureMeasures = it.first
+    val featureNumbers = Array(evaluatedData[0].size, { it })
+    return evaluatedData
+            .map { featureMeasures ->
                 val comparator = kotlin.Comparator<Int> { o1, o2 -> compareValuesBy(o1, o2, { -featureMeasures[it] }) }
                 Arrays.sort(featureNumbers, comparator)
-                return@map Pair(featureMeasures, featureNumbers)
+                return@map calculateBitMap(featureNumbers.take(cutSize))
             } //max first
-    return rawCutsForAllPoints
-            .map { calculateBitMap(it.second.take(cutSize)) }
 }
 
 
