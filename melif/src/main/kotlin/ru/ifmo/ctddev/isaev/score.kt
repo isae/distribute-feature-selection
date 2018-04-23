@@ -19,21 +19,21 @@ class F1Score : Score {
         var trueNegative = 0
         var falsePositive = 0
         var falseNegative = 0
-        expected.zip(actual)
-                .forEach { (ex, act) ->
-                    if (ex == 1 && act == 1) {
-                        ++truePositive
-                    }
-                    if (ex == 0 && act == 0) {
-                        ++trueNegative
-                    }
-                    if (ex == 0 && act == 1) {
-                        ++falsePositive
-                    }
-                    if (ex == 1 && act == 0) {
-                        ++falseNegative
-                    }
-                }
+        expected.forEachIndexed { i, ex ->
+            val act = actual[i]
+            if (ex == 1 && act == 1) {
+                ++truePositive
+            }
+            if (ex == 0 && act == 0) {
+                ++trueNegative
+            }
+            if (ex == 0 && act == 1) {
+                ++falsePositive
+            }
+            if (ex == 1 && act == 0) {
+                ++falseNegative
+            }
+        }
         val precision = truePositive.toDouble() / (truePositive + falsePositive)
         val recall = truePositive.toDouble() / (truePositive + falseNegative)
         var result = 2.0 * precision * recall / (precision + recall)

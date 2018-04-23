@@ -25,8 +25,7 @@ class DataSetEvaluator(private val normMode: NormalizationMode) {
     private fun evaluateMeasuresHelper(original: FeatureDataSet,
                                        measures: List<RelevanceMeasure>): List<DoubleArray> {
         return measures.map { m ->
-            val evaluated = original.features.map { m.evaluate(it, original.classes) }
-                    .toDoubleArray()
+            val evaluated = m.evaluate(original)
             when (normMode) {
                 NormalizationMode.NONE -> Unit
                 NormalizationMode.VALUE_BASED -> evaluated.normalize(evaluated.min()!!, evaluated.max()!!)

@@ -93,9 +93,7 @@ fun evaluateTransponedDataSet(measureCosts: Point,
 ): DoubleArray {
     val result = DoubleArray(valuesForEachMeasure[0].size)
     valuesForEachMeasure[0].indices.forEach { i ->
-        val m = (0 until measureCosts.coordinates.size)
-                .sumByDouble { measureCosts.coordinates[it] * valuesForEachMeasure[it][i] }
-        result[i] = m
+        result[i] = measureCosts.coordinates.indices.sumByDouble { measureCosts.coordinates[it] * valuesForEachMeasure[it][i] }
     }
     return result
 }

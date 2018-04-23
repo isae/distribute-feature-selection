@@ -6,36 +6,54 @@ package ru.ifmo.ctddev.isaev
 abstract class RelevanceMeasure(val minValue: Double, val maxValue: Double) {
     abstract fun evaluate(feature: Feature, classes: List<Int>): Double
 
+    fun evaluate(original: FeatureDataSet): DoubleArray {
+        return original.features.map { evaluate(it, original.classes) }
+                .toDoubleArray()
+    }
+
     override fun toString(): String {
         return javaClass.simpleName
     }
 }
 
+private fun toDoubleArray(values: List<Int>): DoubleArray {
+    val featureValues = DoubleArray(values.size)
+    values.forEachIndexed { index, value ->
+        featureValues[index] = value.toDouble()
+    }
+    return featureValues
+}
+
 class SpearmanRankCorrelation : RelevanceMeasure(-1.0, 1.0) {
 
     override fun evaluate(feature: Feature, classes: List<Int>): Double {
+        val featureValues = toDoubleArray(feature.values)
+        val doubleClasses = toDoubleArray(classes)
         return evaluate(
-                feature.values.map { it.toDouble() },
-                classes.map { it.toDouble() }
+                featureValues,
+                doubleClasses
         )
     }
 
-    fun evaluate(values: List<Double>, classes: List<Double>): Double {
+    fun evaluate(values: DoubleArray, classes: DoubleArray): Double {
 
         val xMean = values.average()
         val yMean = classes.average()
 
-        val sumDeviationsXY = values.map { it - xMean }
-                .zip(classes.map { it - yMean })
-                .map { (devX, devY) -> devX * devY }
+        val sumDeviationsXY = values.indices
+                .map { i ->
+                    val devX = values[i] - xMean
+                    val devY = classes[i] - yMean
+                    devX * devY
+                }
                 .sum()
 
-        val squaredDeviationX = values
+        val squaredDeviationX = values.asSequence()
                 .map { it - xMean }
                 .map { it * it }
                 .sum()
 
-        val squaredDeviationY = classes
+        val squaredDeviationY = classes.asSequence()
                 .map { it - yMean }
                 .map { it * it }
                 .sum()
@@ -52,22 +70,25 @@ class FitCriterion : RelevanceMeasure(0.0, 1.0) {
         val var0 = calculateVariance(0, mean0, values, classes)
         val var1 = calculateVariance(1, mean1, values, classes)
 
-        val fcpSum = values.map { calculateFCP(it, mean0, mean1, var0, var1) }
-                .zip(classes)
-                .filter { (fcp, clazz) -> fcp == clazz }
+        val fcpSum = values.indices
+                .filter { i ->
+                    val fcp = calculateFCP(values[i], mean0, mean1, var0, var1)
+                    val clazz = classes[i]
+                    fcp == clazz
+                }
                 .count()
         return fcpSum.toDouble() / classes.size
     }
 
     private fun calculateVariance(clazz: Int, mean0: Double, values: List<Int>, classes: List<Int>): Double {
-        return (0 until classes.size)
+        return classes.indices
                 .filter { i -> classes[i] == clazz }
                 .map { index -> Math.pow(values[index] - mean0, 2.0) }
                 .average()
     }
 
     private fun calculateMean(clazz: Int, values: List<Int>, classes: List<Int>): Double {
-        return (0 until classes.size)
+        return classes.indices
                 .filter { classes[it] == clazz }
                 .map({ values[it] })
                 .average()
