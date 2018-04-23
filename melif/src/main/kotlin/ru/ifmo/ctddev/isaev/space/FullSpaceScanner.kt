@@ -138,7 +138,10 @@ private fun processAllPoints(positions: RoaringBitmap,
             .forEach { cut ->
                 logToConsole { "Processing chunk of ${cut.size} points" }
                 val pointsInProjectiveCoords = cut.map { getPointOnUnitSphere(it) }
-                val (evaluatedDataChunk, cuttingLineYChunk, cutsForAllPointsChunk) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
+                //logToConsole("Points to process: ")
+                //pointsInProjectiveCoords.forEach { println(it) }
+                val (evaluatedDataChunk, cuttingLineYChunk, cutsForAllPointsRaw) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
+                val cutsForAllPointsChunk = cutsForAllPointsRaw.map { calculateBitMap(it) }
                 cutsForAllPoints.addAll(cutsForAllPointsChunk)
                 evaluatedData.addAll(evaluatedDataChunk)
                 cuttingLineY.addAll(cuttingLineYChunk)
@@ -182,7 +185,7 @@ fun processAllPointsFast(xData: List<Point>,
                          dataSet: FeatureDataSet,
                          measures: List<KClass<out RelevanceMeasure>>,
                          cutSize: Int)
-        : Triple<List<DoubleArray>, List<Double>, List<RoaringBitmap>> {
+        : Triple<List<DoubleArray>, List<Double>, List<List<Int>>> {
     if (xData[0].coordinates.size != 2) {
         throw IllegalArgumentException("Only two-dimensioned points are supported")
     }
@@ -203,11 +206,7 @@ fun processAllPointsFast(xData: List<Point>,
                 it.first[lastFeatureInCut]
             }
     val cutsForAllPoints = rawCutsForAllPoints
-            .map {
-                val result = RoaringBitmap()
-                it.second.take(cutSize).forEach(result::add) 
-                result
-            }
+            .map { it.second.take(cutSize) }
     return Triple(evaluatedData, cuttingLineY, cutsForAllPoints)
 }
 
