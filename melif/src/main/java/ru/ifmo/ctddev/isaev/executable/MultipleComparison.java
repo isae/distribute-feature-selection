@@ -145,12 +145,13 @@ public class MultipleComparison extends Comparison {
         executorService.shutdown();
         MDC.put("fileName", "COMMON-" + startTimeString);
 
-        List<Double> expected = new ArrayList<>();
-        List<Double> actual = new ArrayList<>();
-        results.forEach(pr -> {
-            expected.add(pr.getBasic());
-            actual.add(pr.getParallel());
-        });
+        double[] expected = new double[results.size()];
+        double[] actual = new double[results.size()];
+        IntStream.range(0, results.size())
+                .forEach(i -> {
+                    expected[i] = results.get(i).getBasic();
+                    actual[i] = results.get(i).getParallel();
+                });
         LOGGER.info("Expected values over all datasets: {}", expected);
         LOGGER.info("Actual values over all datasets: {}", actual);
         LOGGER.info("Spearman rank correlation: {}", new SpearmanRankCorrelation().evaluate(actual, expected));
