@@ -310,9 +310,9 @@ private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
 }
 
 
-const val MAX_ANGLE = Math.PI /// 2
+const val MAX_ANGLE = Math.PI //TODO: investigate why GDS4901 does not work with processing from PI to -PI/2
 
-const val MIN_ANGLE = -Math.PI / 2
+const val MIN_ANGLE = 0 //-Math.PI / 2
 
 const val ANGLE_RANGE = MAX_ANGLE - MIN_ANGLE
 

@@ -18,7 +18,7 @@ private val LOGGER = LoggerFactory.getLogger("pqVsFs")
 
 fun main(args: Array<String>) {
     File("results.txt").printWriter().use { out ->
-        EnumSet.of(KnownDatasets.DLBCL).forEach {
+        EnumSet.of(KnownDatasets.GDS4901).forEach {
             try {
                 val dataSet = it.read()
                 val res = processDataSet(dataSet)
