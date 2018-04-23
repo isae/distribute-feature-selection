@@ -126,7 +126,7 @@ private fun processAllPoints(positions: RoaringBitmap,
     logToConsole { "Started the processing" }
     logToConsole { "${positions.cardinality} points to calculate measures on" }
     val angles = positions.map { getAngle(epsilon, it) }
-    val chunkSize = getChunkSize(cutSize, dataSet, measures)
+    val chunkSize = getChunkSize(dataSet, measures)
     val cutsForAllPoints = ArrayList<RoaringBitmap>(angles.size)
     val evaluatedData = ArrayList<DoubleArray>(angles.size)
     angles.chunked(chunkSize)
@@ -154,22 +154,6 @@ fun calculateBitMap(bitsToSet: Iterable<Int>): RoaringBitmap {
     }
     result.runOptimize()
     return result
-}
-
-fun processAllPoints(xData: List<Point>,
-                     dataSet: FeatureDataSet,
-                     measures: List<KClass<out RelevanceMeasure>>,
-                     cutSize: Int): Triple<List<DoubleArray>, List<Double>, List<List<Int>>> {
-    val evaluatedData = getEvaluatedData(xData, dataSet, measures)
-    val evaluatedDataWithNumbers = evaluatedData.map { it.mapIndexed { index, d -> Pair(index, d) } }
-
-    val rawCutsForAllPoints = evaluatedDataWithNumbers
-            .map { it.sortedBy { pair -> -pair.second } } //max first
-    val cuttingLineY = rawCutsForAllPoints.map { it[cutSize - 1].second }
-    val cutsForAllPoints = rawCutsForAllPoints
-            .map { it.take(cutSize) }
-            .map { it.map { pair -> pair.first } }
-    return Triple(evaluatedData, cuttingLineY, cutsForAllPoints)
 }
 
 fun processAllPointsChunk(xData: List<Point>,
@@ -273,7 +257,7 @@ class SpacePoint(val point: IntArray) : Iterable<Int>, Comparable<SpacePoint> {
 }
 
 const val DOUBLE_SIZE = 8
-private fun getChunkSize(cutSize: Int, dataSet: FeatureDataSet, measures: List<KClass<out RelevanceMeasure>>): Int {
+private fun getChunkSize(dataSet: FeatureDataSet, measures: List<KClass<out RelevanceMeasure>>): Int {
     val numberOfFeatures = dataSet.features.size
     logToConsole { "Number of features: $numberOfFeatures" }
     val allocatedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
@@ -282,9 +266,8 @@ private fun getChunkSize(cutSize: Int, dataSet: FeatureDataSet, measures: List<K
     logToConsole { "Available memory: ${presumableFreeMemory / 1024 / 1024} mb" }
     val calculatedChunkSize = (presumableFreeMemory / DOUBLE_SIZE / numberOfFeatures / measures.size).toInt()
     logToConsole { "Calculated chunk size: $calculatedChunkSize" }
-    val chunkSize = calculatedChunkSize
-    logToConsole { "Chunk size to use: $chunkSize" }
-    return chunkSize
+    logToConsole { "Chunk size to use: $calculatedChunkSize" }
+    return calculatedChunkSize
 }
 
 
@@ -295,7 +278,7 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
                        cutSize: Int)
         : Map<SpacePoint, RoaringBitmap> {
     val cutsForAllPoints = HashMap<SpacePoint, RoaringBitmap>(xDataRaw.size)
-    val chunkSize = getChunkSize(cutSize, dataSet, measures) // to ensure computation is filled in memory
+    val chunkSize = getChunkSize(dataSet, measures) // to ensure computation is filled in memory
     xDataRaw.chunked(chunkSize)
             .forEach {
                 logToConsole { "Processing chunk of ${it.size} points" }
