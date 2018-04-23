@@ -18,7 +18,7 @@ private val LOGGER = LoggerFactory.getLogger("pqVsFs")
 
 fun main(args: Array<String>) {
     File("results.txt").printWriter().use { out ->
-        EnumSet.allOf(KnownDatasets::class.java).forEach {
+        EnumSet.of(KnownDatasets.GDS4901).forEach {
             try {
                 val dataSet = it.read()
                 val res = processDataSet(dataSet)
@@ -76,14 +76,14 @@ private fun processDataSet(dataSet: FeatureDataSet): ComparisonResult {
             ),
             listOf(VDM::class, SpearmanRankCorrelation::class)
     )
-    val (pqTime, pqStats) = calculateTime {
-        PriorityQueueMeLiF(algorithmConfig, dataSet, 4)
-                .run("PqMeLif", 100)
-    }
 
     val (fullSpaceTime, fullSpaceStats) = calculateTime {
         FullSpaceScanner(algorithmConfig, dataSet, 4)
                 .run()
+    }
+    val (pqTime, pqStats) = calculateTime {
+        PriorityQueueMeLiF(algorithmConfig, dataSet, 4)
+                .run("PqMeLif", 100)
     }
     LOGGER.info("""
           PQ: processed ${pqStats.visitedPoints} points in ${pqTime / 1000} seconds, 

@@ -140,8 +140,7 @@ private fun processAllPoints(positions: RoaringBitmap,
                 val pointsInProjectiveCoords = cut.map { getPointOnUnitSphere(it) }
                 //logToConsole("Points to process: ")
                 //pointsInProjectiveCoords.forEach { println(it) }
-                val (evaluatedDataChunk, cuttingLineYChunk, cutsForAllPointsRaw) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
-                val cutsForAllPointsChunk = cutsForAllPointsRaw.map { calculateBitMap(it) }
+                val (evaluatedDataChunk, cuttingLineYChunk, cutsForAllPointsChunk) = processAllPointsFast(pointsInProjectiveCoords, dataSet, measures, cutSize)
                 cutsForAllPoints.addAll(cutsForAllPointsChunk)
                 evaluatedData.addAll(evaluatedDataChunk)
                 cuttingLineY.addAll(cuttingLineYChunk)
@@ -185,7 +184,7 @@ fun processAllPointsFast(xData: List<Point>,
                          dataSet: FeatureDataSet,
                          measures: List<KClass<out RelevanceMeasure>>,
                          cutSize: Int)
-        : Triple<List<DoubleArray>, List<Double>, List<List<Int>>> {
+        : Triple<List<DoubleArray>, List<Double>, List<RoaringBitmap>> {
     if (xData[0].coordinates.size != 2) {
         throw IllegalArgumentException("Only two-dimensioned points are supported")
     }
@@ -206,7 +205,7 @@ fun processAllPointsFast(xData: List<Point>,
                 it.first[lastFeatureInCut]
             }
     val cutsForAllPoints = rawCutsForAllPoints
-            .map { it.second.take(cutSize) }
+            .map { calculateBitMap(it.second.take(cutSize)) }
     return Triple(evaluatedData, cuttingLineY, cutsForAllPoints)
 }
 
@@ -323,8 +322,12 @@ private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
 
 const val MAX_ANGLE = Math.PI / 2
 
+const val MIN_ANGLE = 0//-Math.PI / 2
+
+const val ANGLE_RANGE = MAX_ANGLE - MIN_ANGLE
+
 fun getAngle(epsilon: Int, x: Int): Double {
-    val fractionOfPi = MAX_ANGLE / epsilon
+    val fractionOfPi = ANGLE_RANGE / epsilon
     return MAX_ANGLE - (fractionOfPi * x)
 }
 
@@ -336,8 +339,8 @@ fun getAngle(epsilon: Int, xs: SpacePoint): DoubleArray {
     return result
 }
 
-private val startTime = LocalDateTime.now()
+val startTime = LocalDateTime.now()!!
 
-fun logToConsole(msgGetter: () -> String) {
+inline fun logToConsole(msgGetter: () -> String) {
     println("${Duration.between(startTime, LocalDateTime.now()).toMillis()} ms: " + msgGetter())
 }
