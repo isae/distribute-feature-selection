@@ -36,7 +36,7 @@ enum class KnownDatasets(name: String) {
     GDS4129("GDS4129_norm_ova_discrete.csv"),
     GDS4130("GDS4130_norm_ova_discrete.csv"),
     GDS4222("GDS4222_norm_ova_discrete.csv"),
-    //GDS4261("GDS4261_norm_ova_discrete.csv"), shitty dataset
+    GDS4261("GDS4261_norm_ova_discrete.csv"),
     GDS4318("GDS4318_norm_1_ova_discrete.csv"),
     GDS4336("GDS4336_norm_ova_discrete.csv"),
     GDS4431("GDS4431_norm_ova_discrete.csv"),
