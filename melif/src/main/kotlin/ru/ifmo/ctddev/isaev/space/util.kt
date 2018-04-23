@@ -54,11 +54,7 @@ fun getEvaluatedData(xData: List<Point>,
                      measureClasses: List<KClass<out RelevanceMeasure>>
 ): List<DoubleArray> {
     val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)// [number of measures x number of features]
-    val measuresForEachFeature = dataSet.features.indices.map { i -> valuesForEachMeasure.map { it[i] } } // [number of features x number of measures]
-    return xData
-            .map { point ->
-                evaluateDataSet(point, measuresForEachFeature)
-            }
+    return xData.map { point -> evaluateTransponedDataSet(point, valuesForEachMeasure) }
 }
 
 fun getEvaluatedData(xData: List<Point>,
@@ -91,6 +87,19 @@ fun <T> calculateTime(block: () -> T): Pair<Long, T> {
     val result = block()
     return Pair(System.currentTimeMillis() - start, result)
 }
+
+fun evaluateTransponedDataSet(measureCosts: Point,
+                              valuesForEachMeasure: List<DoubleArray> // [number of measures x number of features]
+): DoubleArray {
+    val result = DoubleArray(valuesForEachMeasure[0].size)
+    valuesForEachMeasure[0].indices.forEach { i ->
+        val m = (0 until measureCosts.coordinates.size)
+                .sumByDouble { measureCosts.coordinates[it] * valuesForEachMeasure[it][i] }
+        result[i] = m
+    }
+    return result
+}
+
 
 fun evaluateDataSet(measureCosts: Point,
                     measuresForEachFeature: Matrix
