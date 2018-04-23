@@ -54,7 +54,7 @@ fun getEvaluatedData(xData: List<Point>,
                      measureClasses: List<KClass<out RelevanceMeasure>>
 ): List<DoubleArray> {
     val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)// [number of measures x number of features]
-    val measuresForEachFeature = 0.until(dataSet.features.size).map { i -> valuesForEachMeasure.map { it[i] } } // [number of features x number of measures]
+    val measuresForEachFeature = dataSet.features.indices.map { i -> valuesForEachMeasure.map { it[i] } } // [number of features x number of measures]
     return xData
             .map { point ->
                 evaluateDataSet(point, measuresForEachFeature)

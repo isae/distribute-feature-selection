@@ -13,26 +13,26 @@ import kotlin.reflect.full.createInstance
 
 enum class NormalizationMode { NONE, VALUE_BASED, MEASURE_BASED }
 
-fun Iterable<Double>.normalize(min: Double, max: Double): List<Double> {
-    if (!this.iterator().hasNext()) {
-        return emptyList()
+fun DoubleArray.normalize(min: Double, max: Double) {
+    this.forEachIndexed { i, value ->
+        this[i] = (value - min) / (max - min)
     }
-    return this.map { (it - min) / (max - min) }
 }
 
 class DataSetEvaluator(private val normMode: NormalizationMode) {
     constructor() : this(NormalizationMode.VALUE_BASED)
 
     private fun evaluateMeasuresHelper(original: FeatureDataSet,
-                                       measures: List<RelevanceMeasure>): List<List<Double>> {
+                                       measures: List<RelevanceMeasure>): List<DoubleArray> {
         return measures.map { m ->
             val evaluated = original.features.map { m.evaluate(it, original.classes) }
-                    .toList()
+                    .toDoubleArray()
             when (normMode) {
-                NormalizationMode.NONE -> evaluated
+                NormalizationMode.NONE -> Unit
                 NormalizationMode.VALUE_BASED -> evaluated.normalize(evaluated.min()!!, evaluated.max()!!)
                 NormalizationMode.MEASURE_BASED -> evaluated.normalize(m.minValue, m.maxValue)
             }
+            return@map evaluated
         }
     }
 
@@ -63,8 +63,8 @@ class DataSetEvaluator(private val normMode: NormalizationMode) {
                 .asSequence()
     }
 
-    fun evaluateMeasures(dataSet: FeatureDataSet, 
-                         measures: List<KClass<out RelevanceMeasure>>): List<List<Double>> {
+    fun evaluateMeasures(dataSet: FeatureDataSet,
+                         measures: List<KClass<out RelevanceMeasure>>): List<DoubleArray> {
         return evaluateMeasuresHelper(dataSet, measures.map { k -> k.createInstance() })
     }
 }

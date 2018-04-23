@@ -257,6 +257,7 @@ class SpacePoint(val point: IntArray) : Iterable<Int>, Comparable<SpacePoint> {
 }
 
 const val DOUBLE_SIZE = 8
+
 private fun getChunkSize(dataSet: FeatureDataSet, measures: List<KClass<out RelevanceMeasure>>): Int {
     val numberOfFeatures = dataSet.features.size
     logToConsole { "Number of features: $numberOfFeatures" }
