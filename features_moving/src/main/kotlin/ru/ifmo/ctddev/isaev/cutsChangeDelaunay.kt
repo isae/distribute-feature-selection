@@ -23,6 +23,7 @@ private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
 private val evaluatedDs = evaluateDataSet(dataSet, measures)
 val range = Array(evaluatedDs[0].size, { it })
+const val MAX = 700.0
 
 interface CutCache {
 
@@ -49,29 +50,28 @@ class NopCache : CutCache {
 }
 
 fun main(args: Array<String>) {
-    val max = 700.0
-    val envelope = Envelope(Coordinate(0.0, 0.0), Coordinate(max, max))
+    val envelope = Envelope(Coordinate(0.0, 0.0), Coordinate(MAX, MAX))
     val subDiv = QuadEdgeSubdivision(envelope, 1E-6)
     val delaunay = IncrementalDelaunayTriangulator(subDiv)
-    delaunay.insertSite(Vertex(0.0, 0.0))
-    delaunay.insertSite(Vertex(0.0, max))
-    delaunay.insertSite(Vertex(max, 0.0))
-    delaunay.insertSite(Vertex(max, max))
+    delaunay.insertSite(Vertex(0.0, MAX))
+    delaunay.insertSite(Vertex(MAX, 0.0))
+    delaunay.insertSite(Vertex(MAX, MAX))
     val pointCache = MapCache()
     val geomFact = GeometryFactory()
-    val range = Array(evaluatedDs[0].size, { it })
     do {
         val isChanged = performEnrichment(delaunay, pointCache, geomFact, subDiv)
     } while (isChanged)
 
     val pointsToTry = pointCache.getAll()
     println("Found ${pointsToTry.size} points to try with enrichment")
+    pointsToTry.forEach { println(it) }
     visualizeDelaunay(envelope, subDiv, geomFact, delaunay)
-    //pointsToTry.forEach { println(it) }
 }
 
 fun process(coord: Coordinate, cache: CutCache): RoaringBitmap {
-    val point = Point(coord.x, coord.y, 1.0) //conversion from homogeneous to euclidean
+    val point = Point(coord.x, coord.y, MAX) //conversion from homogeneous to euclidean
+    /* val divisor = coord.x + coord.y
+     val point = if (Point.ZERO_RANGE.contains(divisor)) Point.fromRawCoords(Point.EPSILON, Point.EPSILON) else Point.fromRawCoords(coord.x, coord.y)*/
     return cache.compute(point, { processPoint(it, evaluatedDs, cutSize, range) })
 }
 
@@ -95,7 +95,7 @@ fun performEnrichment(delaunay: IncrementalDelaunayTriangulator,
         val center = getCenter(p0, p1, p2)
         val centerCut = process(center, cache)
         if (centerCut != cut0 && centerCut != cut1 && centerCut != cut2) {
-            /*if (allTriangles.size > 20000) {
+            if (allTriangles.size > 20000) {
                 val centerCut2 = process(center, cache)
                 val cut01 = cut0.clone()
                 cut01.andNot(cut1)
@@ -106,7 +106,7 @@ fun performEnrichment(delaunay: IncrementalDelaunayTriangulator,
                 logToConsole { "Cut 0 equals to cut 1: ${cut0 == cut1} $cut01" }
                 logToConsole { "Cut 1 equals to cut 2: ${cut1 == cut2} $cut12" }
                 logToConsole { "Cut 0 equals to cut 2: ${cut0 == cut2} $cut02" }
-            }*/
+            }
             delaunay.insertSite(Vertex(center.x, center.y))
             isChanged = true
         } else {
