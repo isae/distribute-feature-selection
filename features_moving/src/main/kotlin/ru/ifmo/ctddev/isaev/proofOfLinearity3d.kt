@@ -14,7 +14,7 @@ import org.jzy3d.plot3d.rendering.canvas.Quality
 import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
-import ru.ifmo.ctddev.isaev.space.getEvaluatedData
+import ru.ifmo.ctddev.isaev.space.evaluatePoints
 
 
 /**
@@ -37,7 +37,7 @@ fun main(args: Array<String>) {
     }
     //val xyData = listOf(Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0))
     println("Found ${xyData.size} points")
-    val data = getEvaluatedData(xyData, dataSet, measures, 0)
+    val data = evaluatePoints(xyData, dataSet, measures, 0)
     val forDraw = intValues.zip(data).toMap()
     AnalysisLauncher.open(ProofOfLinearity(forDraw))
 }

@@ -9,7 +9,8 @@ import org.knowm.xchart.style.markers.SeriesMarkers
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.Line
-import ru.ifmo.ctddev.isaev.space.getEvaluatedData
+import ru.ifmo.ctddev.isaev.space.evaluateDataSet
+import ru.ifmo.ctddev.isaev.space.evaluatePoints
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
 import java.awt.BasicStroke
 import java.awt.Color
@@ -29,7 +30,8 @@ fun main(args: Array<String>) {
     //val xData = 0.rangeTo(n).map { (it.toDouble()) / n }
     val xData = 0.rangeTo(100).map { x -> Point(x.toDouble() / 100, (100 - x).toDouble() / 100) }//listOf(listOf(0.0, 1.0), listOf(1.0, 0.0))
     println(xData.map { x -> x.toString() })
-    val evaluatedData = getEvaluatedData(xData, dataSet, measures)
+    val evaluatedDs = evaluateDataSet(dataSet, measures)
+    val evaluatedData = evaluatePoints(xData, evaluatedDs)
 
     fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
 

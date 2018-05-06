@@ -5,8 +5,13 @@ import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.XYChart
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.style.markers.None
+import org.locationtech.jts.geom.*
+import org.locationtech.jts.triangulate.IncrementalDelaunayTriangulator
+import org.locationtech.jts.triangulate.quadedge.QuadEdgeSubdivision
+import org.locationtech.jts.triangulate.quadedge.Vertex
 import org.roaringbitmap.RoaringBitmap
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
+import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.calculateAllPointsWithEnrichment2d
 import ru.ifmo.ctddev.isaev.space.evaluateDataSet
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
@@ -28,7 +33,34 @@ private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
 private val evaluatedDs = evaluateDataSet(dataSet, measures)
 
+/* val geomFactory = GeometryFactory()
+  val trgBuilder = DelaunayTriangulationBuilder()
+  trgBuilder.setSites(arrayListOf(
+          Coordinate(0.0, 0.0),
+          Coordinate(0.0, 1.0),
+          Coordinate(1.0, 0.0),
+          Coordinate(1.0, 1.0)
+  ))
+  val triangles = trgBuilder.getTriangles(geomFactory)*/
 fun main(args: Array<String>) {
+    val envelope = Envelope(Coordinate(-1.0, -1.0), Coordinate(2.0, 2.0))
+    val subDiv = QuadEdgeSubdivision(envelope, 0.000001)
+    val incDelaunay = IncrementalDelaunayTriangulator(subDiv)
+    incDelaunay.insertSite(Vertex(0.0, 0.0))
+    incDelaunay.insertSite(Vertex(0.0, 1.0))
+    incDelaunay.insertSite(Vertex(1.0, 0.0))
+    incDelaunay.insertSite(Vertex(1.0, 1.0))
+    val cache = HashMap<Point, RoaringBitmap>()
+    do {
+        val smthChanged = performEnrichment(incDelaunay)
+    } while (smthChanged)
+    val geomFact = GeometryFactory()
+    val trianglesGeom = subDiv.getTriangles(geomFact) as GeometryCollection
+    val allTriangles = 0.until(trianglesGeom.numGeometries)
+            .map { trianglesGeom.getGeometryN(it) }
+            .map { Triangle(it.coordinates[0], it.coordinates[1], it.coordinates[2]) }
+    val f = true
+
     val (evaluatedData, cutsForAllPoints, cutChangePositions, pointsToTry, angles, lastFeatureInAllCuts) =
             calculateAllPointsWithEnrichment2d(100, evaluatedDs, cutSize, 2)
     println("Found ${pointsToTry.size} points to try with enrichment")
@@ -71,6 +103,10 @@ fun main(args: Array<String>) {
 
     }
     drawChart(chart)
+}
+
+fun performEnrichment(delaunay: IncrementalDelaunayTriangulator): Boolean {
+    return false
 }
 
 private fun drawAxisY(chart: XYChart) {

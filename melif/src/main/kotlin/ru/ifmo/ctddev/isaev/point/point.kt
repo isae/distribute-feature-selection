@@ -11,6 +11,7 @@ import java.util.stream.IntStream
  */
 open class Point : Comparable<Point> {
     companion object {
+        const val EPSILON = 0.00001
         fun fromRawCoords(vararg coordinates: Double): Point {
             return Point(true, *coordinates)
         }
@@ -54,10 +55,10 @@ open class Point : Comparable<Point> {
 
     override fun compareTo(other: Point): Int {
         for (i in coordinates.indices) {
-            if (coordinates[i] - other.coordinates[i] > 0.00001) {
+            if (coordinates[i] - other.coordinates[i] > EPSILON) {
                 return 1
             }
-            if (coordinates[i] - other.coordinates[i] < -0.00001) {
+            if (coordinates[i] - other.coordinates[i] < -EPSILON) {
                 return -1
             }
         }

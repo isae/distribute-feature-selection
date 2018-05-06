@@ -29,11 +29,13 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
 
     private val featureDataSet = dataSet.toFeatureSet()
 
+    private val evaluatedDs = evaluateDataSet(featureDataSet, config.measureClasses)
+
     fun run(): RunStats {
         val runStats = RunStats(config, dataSet, javaClass.simpleName)
         logger.info("Started {} at {}", javaClass.simpleName, runStats.startTime)
         val (_, _, _, points, _, _) =
-                calculateAllPointsWithEnrichment2d(100, featureDataSet, config.measureClasses, 50, 10)
+                calculateAllPointsWithEnrichment2d(100, evaluatedDs, 50, 10)
         logger.info("Found ${points.size} points to process")
         val scoreFutures = points.map { p ->
             executorService.submit(Callable<SelectionResult> { foldsEvaluator.getSelectionResult(dataSet, p, runStats) })
@@ -72,13 +74,12 @@ data class PointProcessingFinalResult2d(
 
 val twoDecimalPlaces = DecimalFormat(".##")
 fun calculateAllPointsWithEnrichment2d(startingEpsilon: Int,
-                                       dataSet: FeatureDataSet,
-                                       measures: List<KClass<out RelevanceMeasure>>,
+                                       dataSet: EvaluatedDataSet,
                                        cutSize: Int,
                                        zoom: Int): PointProcessingFinalResult2d {
     var prevEpsilon = startingEpsilon
     var prevPositions = calculateBitMap(0..prevEpsilon)
-    var (evaluatedData, cutsForAllPoints, currCutChangePositions, lastFeatureInAllCuts) = processAllPoints(prevPositions, prevEpsilon, dataSet, measures, cutSize)
+    var (evaluatedData, cutsForAllPoints, currCutChangePositions, lastFeatureInAllCuts) = processAllPoints(prevPositions, prevEpsilon, dataSet, cutSize)
     var prevCutChangePositions: List<Int>
     var prevLastFeatureInAllCuts = lastFeatureInAllCuts
     logToConsole { "Cut change positions: $currCutChangePositions" }
@@ -88,7 +89,7 @@ fun calculateAllPointsWithEnrichment2d(startingEpsilon: Int,
         prevCutChangePositions = currCutChangePositions
 
         val (newEpsilon, newPositions) = getNewPositions(prevEpsilon, prevPositions, prevCutChangePositions, zoom)
-        val newResult = processAllPoints(newPositions, newEpsilon, dataSet, measures, cutSize)
+        val newResult = processAllPoints(newPositions, newEpsilon, dataSet, cutSize)
 
         evaluatedData = newResult.evaluatedData
         cutsForAllPoints = newResult.cutsForAllPoints
@@ -123,15 +124,14 @@ private fun getNewPositions(prevEpsilon: Int, prevPositions: RoaringBitmap, prev
 
 private fun processAllPoints(positions: RoaringBitmap,
                              epsilon: Int,
-                             dataSet: FeatureDataSet,
-                             measures: List<KClass<out RelevanceMeasure>>,
+                             dataSet: EvaluatedDataSet,
                              cutSize: Int
 ): PointProcessingResult2d {
     // begin first stage (before enrichment)
     logToConsole { "Started the processing" }
     logToConsole { "${positions.cardinality} points to calculate measures on" }
     val angles = positions.map { getAngle(epsilon, it) }
-    val chunkSize = getChunkSize(dataSet, measures)
+    val chunkSize = getChunkSize(dataSet)
     val cutsForAllPoints = ArrayList<RoaringBitmap>(angles.size)
     val evaluatedData = ArrayList<DoubleArray>(angles.size)
     val lastFeatureInAllCuts = IntArray(angles.size)
@@ -139,7 +139,7 @@ private fun processAllPoints(positions: RoaringBitmap,
             .forEach { cut ->
                 logToConsole { "Processing chunk of ${cut.size} points" }
                 val pointsInProjectiveCoords = cut.map { getPointOnUnitSphere(it) }
-                val (evaluatedDataChunk, cutsForAllPointsChunk, lastFeatureInAllCutsChunk) = processAllPointsChunk(pointsInProjectiveCoords, dataSet, measures, cutSize)
+                val (evaluatedDataChunk, cutsForAllPointsChunk, lastFeatureInAllCutsChunk) = processAllPointsChunk(pointsInProjectiveCoords, dataSet, cutSize)
                 System.arraycopy(lastFeatureInAllCutsChunk, 0, lastFeatureInAllCuts, evaluatedData.size, lastFeatureInAllCutsChunk.size)
                 cutsForAllPoints.addAll(cutsForAllPointsChunk)
                 evaluatedData.addAll(evaluatedDataChunk)
@@ -164,14 +164,13 @@ fun calculateBitMap(bitsToSet: Iterable<Int>): RoaringBitmap {
 }
 
 fun processAllPointsChunk(xData: List<Point>,
-                          dataSet: FeatureDataSet,
-                          measures: List<KClass<out RelevanceMeasure>>,
+                          dataSet: EvaluatedDataSet,
                           cutSize: Int)
         : Triple<List<DoubleArray>, List<RoaringBitmap>, IntArray> {
     if (xData[0].coordinates.size != 2) {
         throw IllegalArgumentException("Only two-dimensioned points are supported")
     }
-    val evaluatedData = getEvaluatedData(xData, dataSet, measures)
+    val evaluatedData = evaluatePoints(xData, dataSet)
     val range = Array(evaluatedData[0].size, { it })
     val lastFeatureInAllCuts = IntArray(evaluatedData.size)
     val cutsForAllPoints = evaluatedData
@@ -192,7 +191,7 @@ fun processAllPointsFastOld(xData: List<Point>,
     if (xData[0].coordinates.size != 2) {
         throw IllegalArgumentException("Only two-dimensioned points are supported")
     }
-    val evaluatedData = getEvaluatedData(xData, dataSet, measures)
+    val evaluatedData = evaluatePoints(xData, dataSet, measures)
     val range = Array(evaluatedData[0].size, { it })
     val evaluatedDataWithNumbers = evaluatedData.map { Pair(it, range.clone()) }
     val rawCutsForAllPoints = evaluatedDataWithNumbers
@@ -266,14 +265,15 @@ class SpacePoint(val point: IntArray) : Iterable<Int>, Comparable<SpacePoint> {
 
 const val DOUBLE_SIZE = 8
 
-private fun getChunkSize(dataSet: FeatureDataSet, measures: List<KClass<out RelevanceMeasure>>): Int {
-    val numberOfFeatures = dataSet.features.size
+private fun getChunkSize(dataSet: EvaluatedDataSet): Int {
+    val numberOfFeatures = dataSet[0].size
+    val numberOfMeasures = dataSet.size
     logToConsole { "Number of features: $numberOfFeatures" }
     val allocatedMemory = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()
     val presumableFreeMemory = Runtime.getRuntime().maxMemory() - allocatedMemory
 
     logToConsole { "Available memory: ${presumableFreeMemory / 1024 / 1024} mb" }
-    val calculatedChunkSize = (presumableFreeMemory / DOUBLE_SIZE / numberOfFeatures / measures.size).toInt()
+    val calculatedChunkSize = (presumableFreeMemory / DOUBLE_SIZE / numberOfFeatures / numberOfMeasures).toInt()
     logToConsole { "Calculated chunk size: $calculatedChunkSize" }
     logToConsole { "Chunk size to use: $calculatedChunkSize" }
     return calculatedChunkSize
@@ -281,17 +281,16 @@ private fun getChunkSize(dataSet: FeatureDataSet, measures: List<KClass<out Rele
 
 
 fun processAllPointsHd(xDataRaw: List<SpacePoint>,
-                       dataSet: FeatureDataSet,
-                       measures: List<KClass<out RelevanceMeasure>>,
+                       dataSet: EvaluatedDataSet,
                        epsilon: Int,
                        cutSize: Int)
         : Map<SpacePoint, RoaringBitmap> {
     val cutsForAllPoints = HashMap<SpacePoint, RoaringBitmap>(xDataRaw.size)
-    val chunkSize = getChunkSize(dataSet, measures) // to ensure computation is filled in memory
+    val chunkSize = getChunkSize(dataSet) // to ensure computation is filled in memory
     xDataRaw.chunked(chunkSize)
             .forEach {
                 logToConsole { "Processing chunk of ${it.size} points" }
-                processAllPointsHdChunk(it, epsilon, dataSet, measures, cutSize)
+                processAllPointsHdChunk(it, epsilon, dataSet, cutSize)
                         .forEachIndexed { index, set ->
                             cutsForAllPoints[it[index]] = set
                         }
@@ -301,13 +300,12 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
 
 private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
                                     epsilon: Int,
-                                    dataSet: FeatureDataSet,
-                                    measures: List<KClass<out RelevanceMeasure>>,
+                                    dataSet: EvaluatedDataSet,
                                     cutSize: Int)
         : List<RoaringBitmap> {
     val angles = xDataRaw.map { getAngle(epsilon, it) }
     val xData = angles.map { getPointOnUnitSphere(it) }
-    val evaluatedData = getEvaluatedData(xData, dataSet, measures)
+    val evaluatedData = evaluatePoints(xData, dataSet)
     val featureNumbers = Array(evaluatedData[0].size, { it })
     return evaluatedData
             .map { featureMeasures ->

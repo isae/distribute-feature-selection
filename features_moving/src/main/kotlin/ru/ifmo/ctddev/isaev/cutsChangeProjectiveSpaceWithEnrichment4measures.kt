@@ -15,6 +15,7 @@ private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCri
 
 private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
+private val evaluatedDataSet = evaluateDataSet(dataSet, measures)
 
 private data class PointProcessingResult(
         val cutsForAllPoints: Map<SpacePoint, RoaringBitmap>,
@@ -178,7 +179,7 @@ private fun processAllPoints(intPoints: Collection<SpacePoint>, epsilon: Int): P
     // begin first stage (before enrichment)
     logToConsole { "Started the processing" }
     logToConsole { "${intPoints.size} points to calculate measures on" }
-    val cutsForAllPoints = processAllPointsHd(intPoints.toList(), dataSet, measures, epsilon, cutSize)
+    val cutsForAllPoints = processAllPointsHd(intPoints.toList(), evaluatedDataSet, epsilon, cutSize)
     logToConsole { "Evaluated data, calculated cutting line and cuts for all points" }
     val cutChangePositions = calculateCutChanges(cutsForAllPoints)
     logToConsole { "Found ${cutChangePositions.size} cut change positions (aka points to try)" }

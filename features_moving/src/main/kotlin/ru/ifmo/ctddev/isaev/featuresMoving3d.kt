@@ -17,7 +17,7 @@ import org.jzy3d.plot3d.rendering.canvas.Quality
 import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
-import ru.ifmo.ctddev.isaev.space.getEvaluatedData
+import ru.ifmo.ctddev.isaev.space.evaluatePoints
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -44,7 +44,7 @@ fun main(args: Array<String>) {
     val measures = listOf(VDM::class, SpearmanRankCorrelation::class, SymmetricUncertainty::class)
     val featuresToProcess = 0.rangeTo(50).toSet()//setOf(0, 5, 9)
     val xyData = listOf(Point(1.0, 0.0, 0.0), Point(0.0, 1.0, 0.0), Point(0.0, 0.0, 1.0))
-    val data = getEvaluatedData(xyData, dataSet, measures, featuresToProcess)
+    val data = evaluatePoints(xyData, dataSet, measures, featuresToProcess)
     val planes = calculatePlanes(data)
     val allIntersections = 0.until(planes.size).flatMap { i ->
         0.until(i).mapNotNull { j -> planes[i].intersect(planes[j]) }

@@ -49,18 +49,32 @@ fun getFeaturePositions(pos: Int,
 
 typealias Matrix = List<List<Double>>
 
-fun getEvaluatedData(xData: List<Point>,
-                     dataSet: FeatureDataSet,
-                     measureClasses: List<KClass<out RelevanceMeasure>>
-): List<DoubleArray> {
-    val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)// [number of measures x number of features]
-    return xData.map { point -> evaluateTransponedDataSet(point, valuesForEachMeasure) }
+typealias EvaluatedDataSet = List<DoubleArray>
+
+fun evaluateDataSet(dataSet: FeatureDataSet,
+                    measureClasses: List<KClass<out RelevanceMeasure>>
+): EvaluatedDataSet {
+    return DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)
 }
 
-fun getEvaluatedData(xData: List<Point>,
-                     dataSet: FeatureDataSet,
-                     measureClasses: List<KClass<out RelevanceMeasure>>,
-                     position: Int
+fun evaluatePoints(xData: List<Point>,
+                   ds: EvaluatedDataSet
+): List<DoubleArray> {
+    return xData.map { point -> evaluatePoint(point, ds) }
+}
+
+fun evaluatePoints(xData: List<Point>,
+                   dataSet: FeatureDataSet,
+                   measureClasses: List<KClass<out RelevanceMeasure>>
+): List<DoubleArray> {
+    val valuesForEachMeasure = evaluateDataSet(dataSet, measureClasses)// [number of measures x number of features]
+    return xData.map { point -> evaluatePoint(point, valuesForEachMeasure) }
+}
+
+fun evaluatePoints(xData: List<Point>,
+                   dataSet: FeatureDataSet,
+                   measureClasses: List<KClass<out RelevanceMeasure>>,
+                   position: Int
 ): List<Double> {
     val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)// [number of measures x number of features]
     val measuresForEachFeature = 0.until(dataSet.features.size).map { i -> valuesForEachMeasure.map { it[i] } } // [number of features x number of measures]
@@ -70,10 +84,10 @@ fun getEvaluatedData(xData: List<Point>,
             }
 }
 
-fun getEvaluatedData(xData: List<Point>,
-                     dataSet: FeatureDataSet,
-                     measureClasses: List<KClass<out RelevanceMeasure>>,
-                     positions: Set<Int>
+fun evaluatePoints(xData: List<Point>,
+                   dataSet: FeatureDataSet,
+                   measureClasses: List<KClass<out RelevanceMeasure>>,
+                   positions: Set<Int>
 ): List<DoubleArray> {
     val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)// [number of measures x number of features]
     val measuresForEachFeature = 0.until(dataSet.features.size).map { i -> valuesForEachMeasure.map { it[i] } } // [number of features x number of measures]
@@ -88,8 +102,8 @@ fun <T> calculateTime(block: () -> T): Pair<Long, T> {
     return Pair(System.currentTimeMillis() - start, result)
 }
 
-fun evaluateTransponedDataSet(measureCosts: Point,
-                              valuesForEachMeasure: List<DoubleArray> // [number of measures x number of features]
+fun evaluatePoint(measureCosts: Point,
+                  valuesForEachMeasure: List<DoubleArray> // [number of measures x number of features]
 ): DoubleArray {
     val result = DoubleArray(valuesForEachMeasure[0].size)
     valuesForEachMeasure[0].indices.forEach { i ->

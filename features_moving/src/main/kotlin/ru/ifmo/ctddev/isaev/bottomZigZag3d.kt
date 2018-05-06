@@ -16,7 +16,8 @@ import org.jzy3d.plot3d.rendering.canvas.Quality
 import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
-import ru.ifmo.ctddev.isaev.space.getEvaluatedData
+import ru.ifmo.ctddev.isaev.space.evaluateDataSet
+import ru.ifmo.ctddev.isaev.space.evaluatePoints
 import ru.ifmo.ctddev.isaev.space.getFeaturePositions
 import ru.ifmo.ctddev.isaev.space.logToConsole
 import java.util.*
@@ -53,7 +54,8 @@ fun main(args: Array<String>) {
         Point(c1, c2, 1 - c1 - c2)
     }
     logToConsole { "Found ${xyData.size} points" }
-    val evaluatedData = getEvaluatedData(xyData, dataSet, measures)
+    val evaluatedDs = evaluateDataSet(dataSet, measures)
+    val evaluatedData = evaluatePoints(xyData, evaluatedDs)
     logToConsole { "Evaluated all data" }
     val range = Array(evaluatedData[0].size, { it })
     val evaluatedDataWithNumbers = evaluatedData.map { Pair(it, range.clone()) }
