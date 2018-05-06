@@ -1,10 +1,5 @@
 package ru.ifmo.ctddev.isaev
 
-import org.knowm.xchart.BitmapEncoder
-import org.knowm.xchart.SwingWrapper
-import org.knowm.xchart.XYChart
-import org.knowm.xchart.XYChartBuilder
-import org.knowm.xchart.style.markers.None
 import org.locationtech.jts.geom.*
 import org.locationtech.jts.triangulate.IncrementalDelaunayTriangulator
 import org.locationtech.jts.triangulate.quadedge.QuadEdgeSubdivision
@@ -12,16 +7,10 @@ import org.locationtech.jts.triangulate.quadedge.Vertex
 import org.roaringbitmap.RoaringBitmap
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
-import ru.ifmo.ctddev.isaev.space.calculateAllPointsWithEnrichment2d
 import ru.ifmo.ctddev.isaev.space.evaluateDataSet
-import ru.ifmo.ctddev.isaev.space.getFeaturePositions
 import ru.ifmo.ctddev.isaev.space.logToConsole
-import java.awt.BasicStroke
-import java.awt.Color
-import java.time.LocalDateTime
-import kotlin.math.cos
-import kotlin.math.pow
-import kotlin.math.sin
+import ru.ifmo.ctddev.isaev.space.processPoint
+import java.util.*
 
 
 /**
@@ -32,6 +21,7 @@ private val measures = listOf(SpearmanRankCorrelation::class, VDM::class)
 private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
 private val evaluatedDs = evaluateDataSet(dataSet, measures)
+val range = Array(evaluatedDs[0].size, { it })
 
 /* val geomFactory = GeometryFactory()
   val trgBuilder = DelaunayTriangulationBuilder()
@@ -44,121 +34,71 @@ private val evaluatedDs = evaluateDataSet(dataSet, measures)
   val triangles = trgBuilder.getTriangles(geomFactory)*/
 fun main(args: Array<String>) {
     val envelope = Envelope(Coordinate(-1.0, -1.0), Coordinate(2.0, 2.0))
-    val subDiv = QuadEdgeSubdivision(envelope, 0.000001)
-    val incDelaunay = IncrementalDelaunayTriangulator(subDiv)
-    incDelaunay.insertSite(Vertex(0.0, 0.0))
-    incDelaunay.insertSite(Vertex(0.0, 1.0))
-    incDelaunay.insertSite(Vertex(1.0, 0.0))
-    incDelaunay.insertSite(Vertex(1.0, 1.0))
-    val cache = HashMap<Point, RoaringBitmap>()
-    do {
-        val smthChanged = performEnrichment(incDelaunay)
-    } while (smthChanged)
+    val subDiv = QuadEdgeSubdivision(envelope, 1E-6)
+    val delaunay = IncrementalDelaunayTriangulator(subDiv)
+    delaunay.insertSite(Vertex(0.0, 0.0))
+    delaunay.insertSite(Vertex(0.0, 1.0))
+    delaunay.insertSite(Vertex(1.0, 0.0))
+    delaunay.insertSite(Vertex(1.0, 1.0))
+    val pointCache = TreeMap<Point, RoaringBitmap>()
     val geomFact = GeometryFactory()
+    val range = Array(evaluatedDs[0].size, { it })
+    var beforeEnrichment = 0
+    var afterEnrichment = 0
+    do {
+        beforeEnrichment = afterEnrichment
+        afterEnrichment = performEnrichment(delaunay, pointCache, geomFact, subDiv)
+    } while (beforeEnrichment != afterEnrichment)
+
+    val pointsToTry = pointCache.keys
+    println("Found ${pointsToTry.size} points to try with enrichment")
+    //pointsToTry.forEach { println(it) }
+}
+
+fun performEnrichment(delaunay: IncrementalDelaunayTriangulator,
+                      cache: TreeMap<Point, RoaringBitmap>,
+                      geomFact: GeometryFactory,
+                      subDiv: QuadEdgeSubdivision): Int {
     val trianglesGeom = subDiv.getTriangles(geomFact) as GeometryCollection
     val allTriangles = 0.until(trianglesGeom.numGeometries)
             .map { trianglesGeom.getGeometryN(it) }
             .map { Triangle(it.coordinates[0], it.coordinates[1], it.coordinates[2]) }
-    val f = true
+    allTriangles.onEach {
+        val p0 = Point.fromRawCoords(it.p0.x, it.p0.y)
+        val cut0 = cache.computeIfAbsent(p0, { processPoint(it, evaluatedDs, cutSize, range) })
+        val p1 = Point.fromRawCoords(it.p1.x, it.p1.y)
+        val cut1 = cache.computeIfAbsent(p1, { processPoint(it, evaluatedDs, cutSize, range) })
+        val p2 = Point.fromRawCoords(it.p2.x, it.p2.y)
+        val cut2 = cache.computeIfAbsent(p2, { processPoint(it, evaluatedDs, cutSize, range) })
 
-    val (evaluatedData, cutsForAllPoints, cutChangePositions, pointsToTry, angles, lastFeatureInAllCuts) =
-            calculateAllPointsWithEnrichment2d(100, evaluatedDs, cutSize, 2)
-    println("Found ${pointsToTry.size} points to try with enrichment")
-    println(cutChangePositions)
-    pointsToTry.forEach { println(it) }
+        val cut01 = cut0.clone()
+        cut01.andNot(cut1)
+        val cut12 = cut1.clone()
+        cut12.andNot(cut2)
+        val cut02 = cut0.clone()
+        cut02.andNot(cut2)
 
-    val features = getFeaturesToDraw(cutsForAllPoints, evaluatedData)
-
-    val chartBuilder = XYChartBuilder()
-            .width(1024)
-            .height(768)
-            .xAxisTitle("Measure Proportion (${measures[0].simpleName} to ${measures[1].simpleName})")
-            .yAxisTitle("Ensemble feature measure")
-    val chart = XYChart(chartBuilder)
-    drawSemiSphere(chart)
-    drawAxisX(chart)
-    drawAxisY(chart)
-    val xDataForFeatures = angles.map { cos(it) }
-    features.forEachIndexed { index, doubles ->
-        val yDataForFeature = doubles.zip(angles)
-                .map { (d, angle) ->
-                    sin(angle) * d // y coord by definition of sinus
-                }
-        chart.addSeries("Feature $index", xDataForFeatures, yDataForFeature)
-                .apply {
-                    this.marker = None()
-                    this.lineStyle = BasicStroke(1.0f)
-                }
+        val center = getCenter(p0, p1, p2)
+        val centerCut = cache.computeIfAbsent(center, { processPoint(it, evaluatedDs, cutSize, range) })
+        if (centerCut != cut0 && centerCut != cut1 && centerCut != cut2) {
+            /*  if (allTriangles.size > 20000) {
+                  logToConsole { "Cut 0 equals to cut 1: ${cut0 == cut1} $cut01" }
+                  logToConsole { "Cut 1 equals to cut 2: ${cut1 == cut2} $cut12" }
+                  logToConsole { "Cut 0 equals to cut 2: ${cut0 == cut2} $cut02" }
+              }*/
+            delaunay.insertSite(Vertex(center.coordinates[0], center.coordinates[1]))
+        } else {
+            //logToConsole { "Something is equal to something" }
+        }
     }
-    //TODO restore cutting line data from other sources (value of last cut feature measure in each point)
-    val cuttingLineDataToDraw = lastFeatureInAllCuts.mapIndexed { i, f ->
-        val angle = angles[i]
-        val d = evaluatedData[i][f]
-        sin(angle) * d // y coord by definition of sinus
-    }
-    chart.addSeries("Bottom front", xDataForFeatures, cuttingLineDataToDraw).apply {
-        this.marker = None()
-        this.lineColor = Color.BLACK
-        this.lineStyle = BasicStroke(3.0f)
-
-    }
-    drawChart(chart)
+    logToConsole { "Finished iteration: found ${allTriangles.size} polygons" }
+    return allTriangles.size
 }
 
-fun performEnrichment(delaunay: IncrementalDelaunayTriangulator): Boolean {
-    return false
-}
-
-private fun drawAxisY(chart: XYChart) {
-    chart.addSeries("Y", doubleArrayOf(0.0, 0.0), doubleArrayOf(0.0, 1.05)).apply {
-        this.lineColor = Color.BLACK
-        this.marker = None()
-        this.lineStyle = BasicStroke(2.0f)
+fun getCenter(vararg points: Point): Point {
+    val coords = DoubleArray(points[0].coordinates.size)
+    coords.indices.forEach { i ->
+        coords[i] = points.map { it.coordinates[i] }.sum() / points.size
     }
-}
-
-private fun drawAxisX(chart: XYChart) {
-    chart.addSeries("X", doubleArrayOf(-1.05, 1.05), doubleArrayOf(0.0, 0.0)).apply {
-        this.lineColor = Color.BLACK
-        this.marker = None()
-        this.lineStyle = BasicStroke(2.0f)
-    }
-}
-
-private fun drawSemiSphere(chart: XYChart) {
-    val epsilon = 1000
-    val semiSphereXData = 0.rangeTo(epsilon).map { -1 + (2 * it).toDouble() / epsilon }
-    chart.addSeries("Sphere",
-            semiSphereXData,
-            semiSphereXData.map { Math.sqrt(1 - it.pow(2)) }
-    ).apply {
-        this.lineColor = Color.BLACK
-        this.marker = None()
-        this.lineStyle = BasicStroke(3.0f)
-    }
-}
-
-private fun getFeaturesToDraw(cutsForAllPoints: List<RoaringBitmap>, evaluatedData: List<DoubleArray>): List<DoubleArray> {
-    val sometimesInCut = cutsForAllPoints
-            .flatMap { it }
-            .toSet()
-    logToConsole { "Sometimes in cut: ${sometimesInCut.size} features" }
-    val alwaysInCut = sometimesInCut.filter { featureNum ->
-        cutsForAllPoints.all { it.contains(featureNum) }
-    }
-    logToConsole { "Always in cut: ${alwaysInCut.size} features: $alwaysInCut" }
-    val needToProcess = sometimesInCut - alwaysInCut
-    logToConsole { "Need to process: ${needToProcess.size} features" }
-
-    fun feature(i: Int) = getFeaturePositions(i, evaluatedData)
-
-    return needToProcess.map { feature(it) }
-}
-
-private fun drawChart(chart: XYChart) {
-    logToConsole { "Finished calculations; visualizing..." }
-    SwingWrapper(chart).displayChart()
-    logToConsole { "Finished visualization" }
-
-    BitmapEncoder.saveBitmapWithDPI(chart, "./charts/Test_Chart_${LocalDateTime.now()}", BitmapEncoder.BitmapFormat.PNG, 200);
+    return Point.fromRawCoords(*coords)
 }

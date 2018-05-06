@@ -49,7 +49,7 @@ fun getFeaturePositions(pos: Int,
 
 typealias Matrix = List<List<Double>>
 
-typealias EvaluatedDataSet = List<DoubleArray>
+typealias EvaluatedDataSet = List<DoubleArray>// [number of measures x number of features]
 
 fun evaluateDataSet(dataSet: FeatureDataSet,
                     measureClasses: List<KClass<out RelevanceMeasure>>
@@ -67,7 +67,7 @@ fun evaluatePoints(xData: List<Point>,
                    dataSet: FeatureDataSet,
                    measureClasses: List<KClass<out RelevanceMeasure>>
 ): List<DoubleArray> {
-    val valuesForEachMeasure = evaluateDataSet(dataSet, measureClasses)// [number of measures x number of features]
+    val valuesForEachMeasure = evaluateDataSet(dataSet, measureClasses)
     return xData.map { point -> evaluatePoint(point, valuesForEachMeasure) }
 }
 
@@ -103,7 +103,7 @@ fun <T> calculateTime(block: () -> T): Pair<Long, T> {
 }
 
 fun evaluatePoint(measureCosts: Point,
-                  valuesForEachMeasure: List<DoubleArray> // [number of measures x number of features]
+                  valuesForEachMeasure: EvaluatedDataSet // [number of measures x number of features]
 ): DoubleArray {
     val result = DoubleArray(valuesForEachMeasure[0].size)
     valuesForEachMeasure[0].indices.forEach { i ->

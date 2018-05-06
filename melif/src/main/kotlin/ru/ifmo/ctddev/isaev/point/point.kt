@@ -11,7 +11,8 @@ import java.util.stream.IntStream
  */
 open class Point : Comparable<Point> {
     companion object {
-        const val EPSILON = 0.00001
+        const val EPSILON = 1E-6
+        val ZERO_RANGE = (-EPSILON).rangeTo(EPSILON)
         fun fromRawCoords(vararg coordinates: Double): Point {
             return Point(true, *coordinates)
         }
@@ -32,7 +33,10 @@ open class Point : Comparable<Point> {
         this.coordinates = coordinates.clone()
         modifyCoordinates.accept(this.coordinates)
         val modulus = DoubleStream.of(*coordinates).sum()
-        IntStream.range(0, coordinates.size).forEach { i -> this.coordinates[i] /= modulus } // normalization
+        if (!ZERO_RANGE.contains(modulus)) {
+            IntStream.range(0, coordinates.size)
+                    .forEach { i -> this.coordinates[i] /= modulus } // normalization
+        }
         this.generation = generation
     }
 
@@ -49,7 +53,10 @@ open class Point : Comparable<Point> {
         modifyCoordinates(coordinates)
         //double modulus = Math.sqrt(DoubleStream.of(coordinates).map(d -> d * d).sum());
         val modulus = DoubleStream.of(*coordinates).sum()
-        IntStream.range(0, coordinates.size).forEach { i -> this.coordinates[i] /= modulus } // normalization
+        if (!ZERO_RANGE.contains(modulus)) {
+            IntStream.range(0, coordinates.size)
+                    .forEach { i -> this.coordinates[i] /= modulus } // normalization
+        }
         this.generation = point.generation + 1
     }
 

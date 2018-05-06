@@ -183,6 +183,25 @@ fun processAllPointsChunk(xData: List<Point>,
     return Triple(evaluatedData, cutsForAllPoints, lastFeatureInAllCuts)
 }
 
+fun processPoint(point: Point,
+                 dataSet: EvaluatedDataSet,
+                 cutSize: Int)
+        : RoaringBitmap {
+    val range = Array(dataSet[0].size, { it })
+    return processPoint(point, dataSet, cutSize, range)
+}
+
+fun processPoint(point: Point,
+                 dataSet: EvaluatedDataSet,
+                 cutSize: Int,
+                 range: Array<Int>)
+        : RoaringBitmap {
+    val featureMeasures = evaluatePoint(point, dataSet)
+    val comparator = kotlin.Comparator<Int> { o1, o2 -> compareValuesBy(o1, o2, { -featureMeasures[it] }) }
+    Arrays.sort(range, comparator)
+    return calculateBitMap(range.take(cutSize))
+}
+
 fun processAllPointsFastOld(xData: List<Point>,
                             dataSet: FeatureDataSet,
                             measures: List<KClass<out RelevanceMeasure>>,
