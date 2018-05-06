@@ -1,5 +1,9 @@
 package ru.ifmo.ctddev.isaev.space
 
+import org.locationtech.jts.geom.*
+import org.locationtech.jts.triangulate.IncrementalDelaunayTriangulator
+import org.locationtech.jts.triangulate.quadedge.QuadEdgeSubdivision
+import org.locationtech.jts.triangulate.quadedge.Vertex
 import org.roaringbitmap.RoaringBitmap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -34,8 +38,32 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
     fun run(): RunStats {
         val runStats = RunStats(config, dataSet, javaClass.simpleName)
         logger.info("Started {} at {}", javaClass.simpleName, runStats.startTime)
-        val (_, _, _, points, _, _) =
-                calculateAllPointsWithEnrichment2d(100, evaluatedDs, 50, 10)
+        val points: List<Point>
+        val cutSize = (config.foldsEvaluator.dataSetFilter as? PreferredSizeFilter)?.preferredSize ?: 50
+        when (config.measures.size) {
+            2 -> {
+                val (_, _, _, rawPoints, _, _) =
+                        calculateAllPointsWithEnrichment2d(100, evaluatedDs, cutSize, 10)
+                points = rawPoints
+            }
+            else -> {
+                val range = Array(evaluatedDs[0].size, { it })
+                val maxCoord = 1.0
+                val envelope = Envelope(Coordinate(0.0, 0.0), Coordinate(maxCoord, maxCoord))
+                val subDiv = QuadEdgeSubdivision(envelope, 1E-6)
+                val delaunay = IncrementalDelaunayTriangulator(subDiv)
+                delaunay.insertSite(Vertex(0.0, maxCoord))
+                delaunay.insertSite(Vertex(maxCoord, 0.0))
+                delaunay.insertSite(Vertex(maxCoord, maxCoord))
+                val pointCache = MapCache()
+                val geomFact = GeometryFactory()
+                do {
+                    val isChanged = performDelaunayEnrichment(evaluatedDs, delaunay, pointCache, geomFact, maxCoord, range, subDiv, cutSize)
+                } while (isChanged)
+                points = pointCache.getAll().toList()
+            }
+        }
+
         logger.info("Found ${points.size} points to process")
         val scoreFutures = points.map { p ->
             executorService.submit(Callable<SelectionResult> { foldsEvaluator.getSelectionResult(dataSet, p, runStats) })
@@ -54,6 +82,75 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
         executorService.shutdown()
         return runStats
     }
+}
+
+fun getCenter(p0: Coordinate, p1: Coordinate, p2: Coordinate): Coordinate {
+    return Coordinate(
+            (p0.x + p1.x + p2.x) / 3,
+            (p0.y + p1.y + p2.y) / 3
+    )
+}
+
+interface CutCache {
+
+    fun compute(point: Point, function: (Point) -> RoaringBitmap): RoaringBitmap
+
+    fun getAll(): Collection<Point>
+}
+
+class MapCache : CutCache {
+    private val cache = TreeMap<Point, RoaringBitmap>()
+
+    override fun getAll(): Collection<Point> = cache.keys
+    override fun compute(point: Point, function: (Point) -> RoaringBitmap): RoaringBitmap {
+        return cache.computeIfAbsent(point, function)
+    }
+}
+
+class NopCache : CutCache {
+    override fun getAll(): Collection<Point> = emptyList()
+
+    override fun compute(point: Point, function: (Point) -> RoaringBitmap): RoaringBitmap {
+        return function(point)
+    }
+}
+
+fun performDelaunayEnrichment(evaluatedDs: EvaluatedDataSet,
+                              delaunay: IncrementalDelaunayTriangulator,
+                              cache: CutCache,
+                              geomFact: GeometryFactory,
+                              maxCoord: Double,
+                              range: Array<Int>,
+                              subDiv: QuadEdgeSubdivision,
+                              cutSize: Int): Boolean {
+
+    fun process(coord: Coordinate, cache: CutCache): RoaringBitmap {
+        val point = Point(coord.x, coord.y, maxCoord) //conversion from homogeneous to euclidean
+        return cache.compute(point, { processPoint(it, evaluatedDs, cutSize, range) })
+    }
+
+    val trianglesGeom = subDiv.getTriangles(geomFact) as GeometryCollection
+    val allTriangles = 0.until(trianglesGeom.numGeometries)
+            .map { trianglesGeom.getGeometryN(it) }
+            .map { Triangle(it.coordinates[0], it.coordinates[1], it.coordinates[2]) }
+    var isChanged = false
+    allTriangles.onEach {
+        val p0 = it.p0
+        val cut0 = process(p0, cache)
+        val p1 = it.p1
+        val cut1 = process(p1, cache)
+        val p2 = it.p2
+        val cut2 = process(p2, cache)
+
+        val center = getCenter(p0, p1, p2)
+        val centerCut = process(center, cache)
+        if (centerCut != cut0 && centerCut != cut1 && centerCut != cut2) {
+            delaunay.insertSite(Vertex(center.x, center.y))
+            isChanged = true
+        }
+    }
+    logToConsole { "Finished iteration: found ${allTriangles.size} polygons" }
+    return isChanged
 }
 
 private data class PointProcessingResult2d(
