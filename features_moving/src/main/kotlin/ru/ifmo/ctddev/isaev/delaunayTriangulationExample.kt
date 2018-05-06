@@ -15,8 +15,8 @@ import java.awt.event.MouseEvent
 import java.awt.event.WindowAdapter
 import java.awt.event.WindowEvent
 
-const val WIDTH = 1024
-const val HEIGHT = 768
+const val WIDTH = 700
+const val HEIGHT = 700
 /**
  * @author iisaev
  */
@@ -30,15 +30,11 @@ private val COLOR_TRIANGLE_BORDER = Color(241, 241, 121)
 
 private val COLOR_BACKGROUND = Color(47, 47, 47)
 
-private val envelope = Envelope(Coordinate(-0.0, -0.0), Coordinate(WIDTH.toDouble(), HEIGHT.toDouble()))
-
-private val subDiv = QuadEdgeSubdivision(envelope, 1E-6)
-
-private val geometryFactory = GeometryFactory()
-
-private val delaunayTriangulator = IncrementalDelaunayTriangulator(subDiv)
-
-class DelaunayTriangulationExample : GLEventListener, MouseAdapter() {
+class DelaunayTriangulationExample(envelope: Envelope,
+                                   private val subDiv: QuadEdgeSubdivision,
+                                   private val geometryFactory: GeometryFactory,
+                                   private val delaunay: IncrementalDelaunayTriangulator
+) : GLEventListener, MouseAdapter() {
 
 
     override fun init(drawable: GLAutoDrawable) {
@@ -133,11 +129,11 @@ class DelaunayTriangulationExample : GLEventListener, MouseAdapter() {
 
     override fun mousePressed(e: MouseEvent) {
         val p = e.point
-        delaunayTriangulator!!.insertSite(Vertex(p.x.toDouble(), p.y.toDouble()))
+        delaunay.insertSite(Vertex(p.x.toDouble(), p.y.toDouble()))
     }
 }
 
-fun main(args: Array<String>) {
+fun visualizeDelaunay(envelope: Envelope, subDiv: QuadEdgeSubdivision, geometryFactory: GeometryFactory, delaunay: IncrementalDelaunayTriangulator) {
     val frame = Frame("Delaunay Triangulation Example")
     frame.isResizable = false
 
@@ -147,7 +143,7 @@ fun main(args: Array<String>) {
 
     val canvas = GLCanvas(caps)
 
-    val ex = DelaunayTriangulationExample()
+    val ex = DelaunayTriangulationExample(envelope, subDiv, geometryFactory, delaunay)
     canvas.addGLEventListener(ex)
     canvas.preferredSize = DIMENSION
     canvas.addMouseListener(ex)
@@ -168,4 +164,13 @@ fun main(args: Array<String>) {
     frame.isVisible = true
     frame.pack()
     animator.start()
+}
+
+fun main(args: Array<String>) {
+
+    val envelope = Envelope(Coordinate(-0.0, -0.0), Coordinate(WIDTH.toDouble(), HEIGHT.toDouble()))
+    val subDiv = QuadEdgeSubdivision(envelope, 1E-6)
+    val geometryFactory = GeometryFactory()
+    val delaunay = IncrementalDelaunayTriangulator(subDiv)
+    visualizeDelaunay(envelope, subDiv, geometryFactory, delaunay)
 }
