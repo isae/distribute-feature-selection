@@ -13,12 +13,11 @@ import java.util.*
  * @author iisaev
  */
 
-
-private val LOGGER = LoggerFactory.getLogger("pqVsFs")
+private val LOGGER = LoggerFactory.getLogger("pqVsFs3d")
 
 fun main(args: Array<String>) {
     File("results.txt").printWriter().use { out ->
-        EnumSet.of(KnownDatasets.GDS4901).forEach {
+        EnumSet.allOf(KnownDatasets::class.java).forEach {
             try {
                 val dataSet = it.read()
                 val res = processDataSet(dataSet)
@@ -30,28 +29,6 @@ fun main(args: Array<String>) {
         }
     }
 }
-/*fun main(args: Array<String>) {
-    val dataSet = KnownDatasets.ARIZONA1.read()
-    val order = 0.until(dataSet.getInstanceCount()).shuffled()
-    val algorithmConfig = AlgorithmConfig(
-            0.001,
-            SequentalEvaluator(
-                    Classifiers.SVM,
-                    PreferredSizeFilter(50),
-                    OrderSplitter(10, order),
-                    F1Score()
-            ),
-            listOf(VDM::class, SpearmanRankCorrelation::class)
-    )
-    val (fullSpaceTime, fullSpaceStats) = calculateTime {
-        FullSpaceScanner(algorithmConfig, dataSet, 4)
-                .run()
-    }
-    LOGGER.info("""
-        FS: processed ${fullSpaceStats.visitedPoints} points in ${fullSpaceTime / 1000} seconds, 
-        best result is ${fullSpaceStats.bestResult.score} in point ${fullSpaceStats.bestResult.point}
-        """)
-}*/
 
 private fun processDataSet(dataSet: FeatureDataSet): ComparisonResult {
     val order = 0.until(dataSet.getInstanceCount()).shuffled()

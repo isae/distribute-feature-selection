@@ -58,7 +58,7 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
                 val pointCache = MapCache()
                 val geomFact = GeometryFactory()
                 do {
-                    val isChanged = performDelaunayEnrichment(evaluatedDs, delaunay, pointCache, geomFact, maxCoord, range, subDiv, cutSize)
+                    val isChanged = performDelaunayEnrichment(evaluatedDs, delaunay, pointCache, geomFact, range, subDiv, cutSize)
                 } while (isChanged)
                 points = pointCache.getAll().toList()
             }
@@ -115,19 +115,18 @@ class NopCache : CutCache {
     }
 }
 
+fun process(coord: Coordinate, cache: CutCache, evaluatedDs: EvaluatedDataSet, cutSize: Int, range: Array<Int>): RoaringBitmap {
+    val point = Point(coord.x, coord.y, 1.0) //conversion from homogeneous to euclidean
+    return cache.compute(point, { processPoint(it, evaluatedDs, cutSize, range) })
+}
+
 fun performDelaunayEnrichment(evaluatedDs: EvaluatedDataSet,
                               delaunay: IncrementalDelaunayTriangulator,
                               cache: CutCache,
                               geomFact: GeometryFactory,
-                              maxCoord: Double,
                               range: Array<Int>,
                               subDiv: QuadEdgeSubdivision,
                               cutSize: Int): Boolean {
-
-    fun process(coord: Coordinate, cache: CutCache): RoaringBitmap {
-        val point = Point(coord.x, coord.y, maxCoord) //conversion from homogeneous to euclidean
-        return cache.compute(point, { processPoint(it, evaluatedDs, cutSize, range) })
-    }
 
     val trianglesGeom = subDiv.getTriangles(geomFact) as GeometryCollection
     val allTriangles = 0.until(trianglesGeom.numGeometries)
@@ -136,14 +135,14 @@ fun performDelaunayEnrichment(evaluatedDs: EvaluatedDataSet,
     var isChanged = false
     allTriangles.onEach {
         val p0 = it.p0
-        val cut0 = process(p0, cache)
+        val cut0 = process(p0, cache, evaluatedDs, cutSize, range)
         val p1 = it.p1
-        val cut1 = process(p1, cache)
+        val cut1 = process(p1, cache, evaluatedDs, cutSize, range)
         val p2 = it.p2
-        val cut2 = process(p2, cache)
+        val cut2 = process(p2, cache, evaluatedDs, cutSize, range)
 
         val center = getCenter(p0, p1, p2)
-        val centerCut = process(center, cache)
+        val centerCut = process(center, cache, evaluatedDs, cutSize, range)
         if (centerCut != cut0 && centerCut != cut1 && centerCut != cut2) {
             delaunay.insertSite(Vertex(center.x, center.y))
             isChanged = true

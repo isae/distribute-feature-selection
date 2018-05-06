@@ -19,22 +19,23 @@ import ru.ifmo.ctddev.isaev.space.performDelaunayEnrichment
 
 private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, SymmetricUncertainty::class)
 private const val cutSize = 50
-private val dataSet = KnownDatasets.DLBCL.read()
+private val dataSet = KnownDatasets.ARIZONA5.read()
 private val evaluatedDs = evaluateDataSet(dataSet, measures)
 val range = Array(evaluatedDs[0].size, { it })
 const val MAX = 700.0
 
 fun main(args: Array<String>) {
-    val envelope = Envelope(Coordinate(0.0, 0.0), Coordinate(MAX, MAX))
-    val subDiv = QuadEdgeSubdivision(envelope, 1E-6)
+    val tolerance = 1E-6
+    val envelope = Envelope(Coordinate(0.0, 0.0), Coordinate(1.0 / tolerance, 1.0 / tolerance))
+    val subDiv = QuadEdgeSubdivision(envelope, tolerance)
     val delaunay = IncrementalDelaunayTriangulator(subDiv)
-    delaunay.insertSite(Vertex(0.0, MAX))
-    delaunay.insertSite(Vertex(MAX, 0.0))
-    delaunay.insertSite(Vertex(MAX, MAX))
+    delaunay.insertSite(Vertex(1.0 / tolerance, 1.0))
+    delaunay.insertSite(Vertex(tolerance, 1.0 / tolerance))
+    delaunay.insertSite(Vertex(tolerance, tolerance))
     val pointCache = MapCache()
     val geomFact = GeometryFactory()
     do {
-        val isChanged = performDelaunayEnrichment(evaluatedDs, delaunay, pointCache, geomFact, MAX, range, subDiv, cutSize)
+        val isChanged = performDelaunayEnrichment(evaluatedDs, delaunay, pointCache, geomFact, range, subDiv, cutSize)
     } while (isChanged)
 
     val pointsToTry = pointCache.getAll()
