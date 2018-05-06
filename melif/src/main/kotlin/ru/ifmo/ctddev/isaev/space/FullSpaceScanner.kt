@@ -61,7 +61,7 @@ private data class PointProcessingResult2d(
         val lastFeatureInAllCuts: IntArray
 )
 
-public data class PointProcessingFinalResult2d(
+data class PointProcessingFinalResult2d(
         val evaluatedData: List<DoubleArray>,
         val cutsForAllPoints: List<RoaringBitmap>,
         val cutChangePositions: List<Int>,
@@ -147,7 +147,7 @@ private fun processAllPoints(positions: RoaringBitmap,
     logToConsole { "Evaluated data, calculated cutting line and cuts for all points" }
 
     val cutChangePositions = positions
-            .filterIndexed { i, pos -> i != 0 && cutsForAllPoints[i] != cutsForAllPoints[i - 1] }
+            .filterIndexed { i, _ -> i != 0 && cutsForAllPoints[i] != cutsForAllPoints[i - 1] }
     logToConsole { "Found ${cutChangePositions.size} points to try" }
 
     // end first stage (before enrichment)
