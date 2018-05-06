@@ -23,15 +23,6 @@ private val dataSet = KnownDatasets.DLBCL.read()
 private val evaluatedDs = evaluateDataSet(dataSet, measures)
 val range = Array(evaluatedDs[0].size, { it })
 
-/* val geomFactory = GeometryFactory()
-  val trgBuilder = DelaunayTriangulationBuilder()
-  trgBuilder.setSites(arrayListOf(
-          Coordinate(0.0, 0.0),
-          Coordinate(0.0, 1.0),
-          Coordinate(1.0, 0.0),
-          Coordinate(1.0, 1.0)
-  ))
-  val triangles = trgBuilder.getTriangles(geomFactory)*/
 fun main(args: Array<String>) {
     val envelope = Envelope(Coordinate(-1.0, -1.0), Coordinate(2.0, 2.0))
     val subDiv = QuadEdgeSubdivision(envelope, 1E-6)
@@ -43,12 +34,9 @@ fun main(args: Array<String>) {
     val pointCache = TreeMap<Point, RoaringBitmap>()
     val geomFact = GeometryFactory()
     val range = Array(evaluatedDs[0].size, { it })
-    var beforeEnrichment = 0
-    var afterEnrichment = 0
     do {
-        beforeEnrichment = afterEnrichment
-        afterEnrichment = performEnrichment(delaunay, pointCache, geomFact, subDiv)
-    } while (beforeEnrichment != afterEnrichment)
+        val isChanged = performEnrichment(delaunay, pointCache, geomFact, subDiv)
+    } while (isChanged)
 
     val pointsToTry = pointCache.keys
     println("Found ${pointsToTry.size} points to try with enrichment")
@@ -58,11 +46,12 @@ fun main(args: Array<String>) {
 fun performEnrichment(delaunay: IncrementalDelaunayTriangulator,
                       cache: TreeMap<Point, RoaringBitmap>,
                       geomFact: GeometryFactory,
-                      subDiv: QuadEdgeSubdivision): Int {
+                      subDiv: QuadEdgeSubdivision): Boolean {
     val trianglesGeom = subDiv.getTriangles(geomFact) as GeometryCollection
     val allTriangles = 0.until(trianglesGeom.numGeometries)
             .map { trianglesGeom.getGeometryN(it) }
             .map { Triangle(it.coordinates[0], it.coordinates[1], it.coordinates[2]) }
+    var isChanged = false
     allTriangles.onEach {
         val p0 = Point.fromRawCoords(it.p0.x, it.p0.y)
         val cut0 = cache.computeIfAbsent(p0, { processPoint(it, evaluatedDs, cutSize, range) })
@@ -81,18 +70,19 @@ fun performEnrichment(delaunay: IncrementalDelaunayTriangulator,
         val center = getCenter(p0, p1, p2)
         val centerCut = cache.computeIfAbsent(center, { processPoint(it, evaluatedDs, cutSize, range) })
         if (centerCut != cut0 && centerCut != cut1 && centerCut != cut2) {
-            /*  if (allTriangles.size > 20000) {
-                  logToConsole { "Cut 0 equals to cut 1: ${cut0 == cut1} $cut01" }
-                  logToConsole { "Cut 1 equals to cut 2: ${cut1 == cut2} $cut12" }
-                  logToConsole { "Cut 0 equals to cut 2: ${cut0 == cut2} $cut02" }
-              }*/
+            if (allTriangles.size > 20000) {
+                logToConsole { "Cut 0 equals to cut 1: ${cut0 == cut1} $cut01" }
+                logToConsole { "Cut 1 equals to cut 2: ${cut1 == cut2} $cut12" }
+                logToConsole { "Cut 0 equals to cut 2: ${cut0 == cut2} $cut02" }
+            }
             delaunay.insertSite(Vertex(center.coordinates[0], center.coordinates[1]))
+            isChanged = true
         } else {
             //logToConsole { "Something is equal to something" }
         }
     }
     logToConsole { "Finished iteration: found ${allTriangles.size} polygons" }
-    return allTriangles.size
+    return isChanged
 }
 
 fun getCenter(vararg points: Point): Point {
