@@ -130,7 +130,7 @@ fun getPointOnUnitSphere(angle: Double): Point {
 }
 
 // https://ru.wikipedia.org/wiki/Гиперсфера#Гиперсферические_координаты
-fun getPointOnUnitSphere(angles: DoubleArray): Point { //TODO: review for 
+fun getPointOnUnitSphereOld(angles: DoubleArray): Point { //TODO: review for 
     val result = DoubleArray(angles.size + 1, { 1.0 })
     val sines = DoubleArray(angles.size) //cache for faster computation 
     val cosines = DoubleArray(angles.size)
@@ -145,6 +145,24 @@ fun getPointOnUnitSphere(angles: DoubleArray): Point { //TODO: review for
     }
     1.until(result.size).forEach { i ->
         result[i] *= cosines[i - 1]
+    }
+    return Point.fromRawCoords(*result)
+}
+
+// https://keisan.casio.com/exec/system/1359534351
+fun getPointOnUnitSphere(angles: DoubleArray): Point { //TODO: review for
+    val result = DoubleArray(angles.size + 1, { 1.0 })
+    when (angles.size) {
+        1 -> {
+            result[0] = cos(angles[0])
+            result[1] = sin(angles[0])
+        }
+        2 -> {
+            result[0] = cos(angles[0]) * sin(angles[1])
+            result[1] = sin(angles[0]) * sin(angles[1])
+            result[2] = cos(angles[1])
+        }
+        else -> TODO("Not implemented conversion from sphere to cartesian for ${angles.size} dimensions")
     }
     return Point.fromRawCoords(*result)
 }

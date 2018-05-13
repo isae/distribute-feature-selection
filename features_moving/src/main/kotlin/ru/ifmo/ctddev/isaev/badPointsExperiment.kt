@@ -17,8 +17,8 @@ private val dataSet = KnownDatasets.DLBCL.read()
 private val evaluatedDataSet = evaluateDataSet(dataSet, measures)
 
 fun main(args: Array<String>) {
-    var lRaw = SpacePoint(intArrayOf(0, 1571317), 8388608)
-    var rRaw = SpacePoint(intArrayOf(0, 3142633), 16777216)
+    var lRaw = SpacePoint(intArrayOf(2, 1), 2)
+    var rRaw = SpacePoint(intArrayOf(536870912, 268435455), 536870912)
     do {
         println("Left: $lRaw")
         println("Right: $rRaw")

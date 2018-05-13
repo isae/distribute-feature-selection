@@ -115,11 +115,6 @@ class NopCache : CutCache {
     }
 }
 
-fun process(coord: Coordinate, cache: CutCache, evaluatedDs: EvaluatedDataSet, cutSize: Int, range: Array<Int>): RoaringBitmap {
-    val point = Point(coord.x, coord.y, 1.0) //conversion from homogeneous to euclidean
-    return cache.compute(point, { processPoint(it, evaluatedDs, cutSize, range) })
-}
-
 fun performDelaunayEnrichment(evaluatedDs: EvaluatedDataSet,
                               delaunay: IncrementalDelaunayTriangulator,
                               cache: CutCache,
@@ -128,6 +123,11 @@ fun performDelaunayEnrichment(evaluatedDs: EvaluatedDataSet,
                               subDiv: QuadEdgeSubdivision,
                               cutSize: Int): Boolean {
 
+    fun processInHomo(coord: Coordinate): RoaringBitmap {
+        val point = Point(coord.x, coord.y, 1.0) //conversion from homogeneous to euclidean
+        return cache.compute(point, { processPoint(it, evaluatedDs, cutSize, range) })
+    }
+
     val trianglesGeom = subDiv.getTriangles(geomFact) as GeometryCollection
     val allTriangles = 0.until(trianglesGeom.numGeometries)
             .map { trianglesGeom.getGeometryN(it) }
@@ -135,14 +135,14 @@ fun performDelaunayEnrichment(evaluatedDs: EvaluatedDataSet,
     var isChanged = false
     allTriangles.onEach {
         val p0 = it.p0
-        val cut0 = process(p0, cache, evaluatedDs, cutSize, range)
+        val cut0 = processInHomo(p0)
         val p1 = it.p1
-        val cut1 = process(p1, cache, evaluatedDs, cutSize, range)
+        val cut1 = processInHomo(p1)
         val p2 = it.p2
-        val cut2 = process(p2, cache, evaluatedDs, cutSize, range)
+        val cut2 = processInHomo(p2)
 
         val center = getCenter(p0, p1, p2)
-        val centerCut = process(center, cache, evaluatedDs, cutSize, range)
+        val centerCut = processInHomo(center)
         if (centerCut != cut0 && centerCut != cut1 && centerCut != cut2) {
             delaunay.insertSite(Vertex(center.x, center.y))
             isChanged = true
