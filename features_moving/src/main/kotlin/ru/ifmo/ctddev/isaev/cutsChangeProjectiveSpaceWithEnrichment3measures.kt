@@ -49,7 +49,7 @@ private val fullSpace = HashMap<Dimension, TreeMap<Coord, RowOfPoints>>()
         }
 
 
-private val cutsForAllPoints = TreeMap<SpacePoint, RoaringBitmap>() //TODO:hashmap is ok
+private val cutsForAllPoints = TreeMap<SpacePoint, RoaringBitmap>() //TODO:hashmap is ok?
 
 
 private fun calculateBasicPoints(): List<SpacePoint> {
@@ -128,6 +128,9 @@ fun calculateEnrichment(dim: Int): List<SpacePoint> {
             if (!point.eqToPrev[dim]) {
                 val prev = points.lower(point)
                 if (prev != null) {
+                    if (point.point[0] == 2 && point.point[1] == 1 && prev.point[0] == 16384 && prev.point[1] == 8191) {
+                        val f = true
+                    }
                     val prevCut = cutsForAllPoints[prev]!!
                     val currCut = cutsForAllPoints[point]!!
                     val diff = getDiff(prevCut, currCut, tempRoaringBitmap)
@@ -137,8 +140,8 @@ fun calculateEnrichment(dim: Int): List<SpacePoint> {
                     if (diff.cardinality > 1) {
                         if (prev.point[otherDim] == 0 && point.delta > (2.shl(8))) {
                         } else {
-                            val newPoint = inBetween(point, prev)
-                            logToConsole { "Found diff $diff between $point and $prev at point $newPoint" }
+                            val newPoint = inBetween(prev, point)
+                            logToConsole { "Found diff $diff between $point and $prev at point $newPoint; reverse diff is ${getDiff(currCut, prevCut, tempRoaringBitmap)}" }
                             result.add(newPoint)
                         }
                     } else {
@@ -150,6 +153,12 @@ fun calculateEnrichment(dim: Int): List<SpacePoint> {
     }
     logToConsole { "Calculated enrichment of size ${result.size} for dimension $dim; Found not changed: $notChanged; ratio: ${notChanged.toDouble() / result.size}" }
     return result
+}
+
+private fun getCurrentPoints(): List<SpacePoint> {
+    val points = cutsForAllPoints.keys
+            .filter { it.eqToPrev.all { !it } }
+    return points
 }
 
 private class Chart {
@@ -173,8 +182,7 @@ private class Chart {
 
     fun update() {
         Thread.sleep(1000)
-        val points = cutsForAllPoints.keys
-                .filter { it.eqToPrev.all { !it } }
+        val points = getCurrentPoints()
         val xData = points.map { it.point[0].toDouble() / it.delta }
         val yData = points.map { it.point[1].toDouble() / it.delta }
         logToConsole { "Current points: ${points.size}" }

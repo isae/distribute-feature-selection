@@ -464,12 +464,15 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
                        dataSet: EvaluatedDataSet,
                        cutSize: Int)
         : List<RoaringBitmap> {
+    if (xDataRaw.any { it.point[0] == 2 && it.point[1] == 1 && it.delta == 2 }) {
+        val f = true
+    }
     val angles = xDataRaw.map { getAngle(it) }
     val xData = angles.map { getPointOnUnitSphere(it) }
     val evaluatedData = evaluatePoints(xData, dataSet)
-    val featureNumbers = Array(evaluatedData[0].size, { it })
     return evaluatedData
             .map { featureMeasures ->
+                val featureNumbers = Array(evaluatedData[0].size, { it })
                 val comparator = kotlin.Comparator<Int> { o1, o2 -> compareValuesBy(o1, o2, { -featureMeasures[it] }) }
                 Arrays.sort(featureNumbers, comparator)
                 val cut = featureNumbers.take(cutSize)
@@ -503,7 +506,10 @@ inline fun logToConsole(msgGetter: () -> String) {
     println("${Duration.between(startTime, LocalDateTime.now()).toMillis()} ms: " + msgGetter())
 }
 
-fun inBetween(point: SpacePoint, prev: SpacePoint): SpacePoint {
+fun inBetween(prev: SpacePoint, point: SpacePoint): SpacePoint {
+    if (point <= prev) {
+        throw IllegalStateException("Invalid inBetween invocation")
+    }
     val curArr = point.point
     val curDelta = point.delta
     val prevArr = prev.point
