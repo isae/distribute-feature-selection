@@ -1,13 +1,16 @@
 package ru.ifmo.ctddev.isaev
 
+import org.knowm.xchart.SwingWrapper
+import org.knowm.xchart.XYChartBuilder
+import org.knowm.xchart.XYSeries
+import org.knowm.xchart.style.Styler
 import org.roaringbitmap.RoaringBitmap
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.*
 import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
-import kotlin.collections.HashSet
-import kotlin.math.max
 
 
 /**
@@ -38,22 +41,22 @@ typealias Dimension = Int
 
 typealias RowOfPoints = TreeSet<SpacePoint>
 
-private val fullSpace = HashMap<Dimension, HashMap<Coord, RowOfPoints>>()
+private val fullSpace = HashMap<Dimension, TreeMap<Coord, RowOfPoints>>()
         .apply {
             0.until(dimensionality).forEach { dim ->
-                putIfAbsent(dim, HashMap())
+                putIfAbsent(dim, TreeMap())
             }
         }
 
 
-private val cutsForAllPoints = HashMap<SpacePoint, RoaringBitmap>()
+private val cutsForAllPoints = TreeMap<SpacePoint, RoaringBitmap>() //TODO:hashmap is ok
 
 
-private fun calculateBasicPoints(): HashSet<SpacePoint> {
+private fun calculateBasicPoints(): List<SpacePoint> {
     if (dimensionality < 1) {
         throw IllegalStateException("Incorrect dimensionality: $dimensionality")
     }
-    val basicPoints = HashSet<SpacePoint>()
+    val basicPoints = ArrayList<SpacePoint>()
     basicPoints.add(SpacePoint(dimensionality))
     0.until(dimensionality).forEach {
         val zeros = IntArray(dimensionality)
@@ -66,7 +69,8 @@ private fun calculateBasicPoints(): HashSet<SpacePoint> {
 }
 
 fun main(args: Array<String>) {
-    val (cutsForAllPoints, pointsToTry) = processAllPointsWithEnrichment()
+    val chart = Chart()
+    val (cutsForAllPoints, pointsToTry) = processAllPointsWithEnrichment(chart)
     println("Found ${pointsToTry.size} points to try with enrichment")
     pointsToTry
             .sorted()
@@ -76,19 +80,20 @@ fun main(args: Array<String>) {
     }
 }
 
-private fun processAllPointsWithEnrichment(): PointProcessingFinalResult {
+private fun processAllPointsWithEnrichment(chart: Chart): PointProcessingFinalResult {
     var enrichmentDim = -1
     var currentEnrichment = calculateBasicPoints()
-    while (!currentEnrichment.isEmpty()) {
-        val pointsToCalculate = currentEnrichment.toList()
-        val cutsForEnrichment = processAllPointsHd(pointsToCalculate, evaluatedDataSet, cutSize)
+    do {
+        val cutsForEnrichment = processAllPointsHd(currentEnrichment, evaluatedDataSet, cutSize)
         addEnrichmentToSpace(currentEnrichment)
-        pointsToCalculate.forEachIndexed { i, point ->
-            cutsForAllPoints[point] = cutsForEnrichment[i]
-        }
+        val beforeEnrichment = cutsForAllPoints.size
+        currentEnrichment.forEachIndexed { i, point -> cutsForAllPoints.putIfAbsent(point, cutsForEnrichment[i]) }
+        val afterEnrichment = cutsForAllPoints.size
+        chart.update()
         enrichmentDim = (enrichmentDim + 1) % dimensionality
-        currentEnrichment = calculateEnrichment(enrichmentDim)
-    }
+        currentEnrichment = calculateEnrichment(0)
+        logToConsole { "Current enrichment: ${currentEnrichment.toList()}" }
+    } while (currentEnrichment.isNotEmpty())
 
     val anglesToTry = cutsForAllPoints.keys.map { getAngle(it) }
     val pointsToTry = anglesToTry.map { getPointOnUnitSphere(it) }
@@ -111,10 +116,10 @@ fun addEnrichmentToSpace(currentEnrichment: Collection<SpacePoint>) {
 
 val tempRoaringBitmap = RoaringBitmap()
 
-fun calculateEnrichment(dim: Int): HashSet<SpacePoint> {
+fun calculateEnrichment(dim: Int): List<SpacePoint> {
     val dimension = fullSpace[dim]!!
     val otherDim = 1 - dim
-    val result = HashSet<SpacePoint>()
+    val result = ArrayList<SpacePoint>()
     var notChanged = 0
     dimension.forEach { coord, points ->
         points.forEach { point ->
@@ -124,47 +129,48 @@ fun calculateEnrichment(dim: Int): HashSet<SpacePoint> {
                 val currCut = cutsForAllPoints[point]!!
                 val diff = getDiff(prevCut, currCut, tempRoaringBitmap)
                 if (diff.cardinality > 1) {
-                    val newPoint = inBetween(point, prev, otherDim)
-                    result.add(newPoint)
+                    if (prev.point[otherDim] == 0 && point.delta > (2.shl(8))) {
+                    } else {
+                        val newPoint = inBetween(point, prev)
+                        logToConsole { "Found diff $diff between $point and $prev at point $newPoint" }
+                        result.add(newPoint)
+                    }
                 } else {
                     ++notChanged
                 }
             }
         }
     }
-
     logToConsole { "Calculated enrichment of size ${result.size} for dimension $dim; Found not changed: $notChanged; ratio: ${notChanged.toDouble() / result.size}" }
     return result
 }
 
-private fun inBetween(point: SpacePoint, prev: SpacePoint, dim: Int): SpacePoint {
-    val curArr = point.point
-    val curDelta = point.delta
-    val prevArr = prev.point
-    val prevDelta = prev.delta
+private class Chart {
+    // Create Chart
+    val chart = XYChartBuilder().width(800).height(600).build().apply {
+        addSeries("data", doubleArrayOf(0.0), doubleArrayOf(0.0))
 
-    val newArr = curArr.clone()
-    var newDelta: Int
+        // Customize Chart
+        styler.defaultSeriesRenderStyle = XYSeries.XYSeriesRenderStyle.Scatter
+        styler.isChartTitleVisible = false
+        styler.isLegendVisible = false
+        styler.legendPosition = Styler.LegendPosition.InsideSW
+        styler.markerSize = 5
+    }!!
 
-    val commonDivisor = max(curDelta, prevDelta)
-    if (curDelta != commonDivisor) {
-        val multiplier = commonDivisor / curDelta // all deltas are powers of 2
-        newDelta = commonDivisor
-        newArr.indices.forEach { newArr[it] *= multiplier }
-    } else {
-        newDelta = curDelta
+
+    // Show it
+    val sw = SwingWrapper(chart).apply {
+        displayChart()
     }
 
-    val sumForDim = newArr[dim] + prevArr[dim]
-    if (sumForDim % 2 == 0) {
-        newArr[dim] = sumForDim / 2
-    } else {
-        newArr.indices.forEach {
-            newArr[it] *= 2
-        }
-        newArr[dim] = sumForDim
-        newDelta *= 2
+    fun update() {
+        Thread.sleep(1000)
+        val xData = cutsForAllPoints.keys.map { it.point[0].toDouble() / it.delta }
+        val yData = cutsForAllPoints.keys.map { it.point[1].toDouble() / it.delta }
+        logToConsole { "Current points: ${cutsForAllPoints.size}" }
+        chart.updateXYSeries("data", xData, yData, null)
+        sw.repaintChart()
     }
 
-    return SpacePoint(newArr, newDelta)
 }

@@ -329,11 +329,11 @@ fun processAllPointsFastOld(xData: List<Point>,
 
 fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
 fun lcm(a: Int, b: Int): Int {
-    val mul = a * b
+    val mul = a.toLong() * b
     if (mul < 0) {
         throw IllegalStateException("Overflow!")
     }
-    return mul / gcd(a, b)
+    return (mul / gcd(a, b)).toInt()
 }
 
 fun getDiff(prevCut: RoaringBitmap, currCut: RoaringBitmap, tempMap: RoaringBitmap): RoaringBitmap {
@@ -364,8 +364,8 @@ data class Coord(private val num: Int,
     }
 }
 
-class SpacePoint(val point: IntArray,
-                 val delta: Int) : Comparable<SpacePoint> {
+data class SpacePoint(val point: IntArray,
+                      val delta: Int) : Comparable<SpacePoint> {
     // wrapper for int array for proper hashcode and compareTo implementation
     override fun compareTo(other: SpacePoint): Int {
         if (point.size != other.point.size) {
@@ -483,4 +483,29 @@ val startTime = LocalDateTime.now()!!
 
 inline fun logToConsole(msgGetter: () -> String) {
     println("${Duration.between(startTime, LocalDateTime.now()).toMillis()} ms: " + msgGetter())
+}
+
+fun inBetween(point: SpacePoint, prev: SpacePoint): SpacePoint {
+    val curArr = point.point
+    val curDelta = point.delta
+    val prevArr = prev.point
+    val prevDelta = prev.delta
+
+    val newArr = curArr.clone()
+    val newDelta: Int
+
+    val commonDivisor = lcm(curDelta, prevDelta)
+    val mulForCurr = commonDivisor / curDelta // all deltas are powers of 2
+    val mulForPrev = commonDivisor / prevDelta // all deltas are powers of 2
+
+    newArr.indices.forEach { newArr[it] = curArr[it] * mulForCurr + prevArr[it] * mulForPrev }
+    if (newArr.all { it % 2 == 0 }) {
+        newArr.indices.forEach { newArr[it] /= 2 }
+        val commonGcd = newArr.map { gcd(it, commonDivisor) }.reduce { o1, o2 -> gcd(o1, o2) }
+        newArr.indices.forEach { newArr[it] /= commonGcd }
+        newDelta = commonDivisor / commonGcd
+    } else {
+        newDelta = commonDivisor * 2
+    }
+    return SpacePoint(newArr, newDelta)
 }
