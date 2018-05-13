@@ -8,7 +8,7 @@ import ru.ifmo.ctddev.isaev.space.*
  * @author iisaev
  */
 
-//private val measures = listOf(SpearmanRankCorrelation::class, VDM::class)
+//private val measures = listOf(VDM::class, FitCriterion::class)
 private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class)
 //private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class, SymmetricUncertainty::class)
 
@@ -17,6 +17,8 @@ private val dataSet = KnownDatasets.DLBCL.read()
 private val evaluatedDataSet = evaluateDataSet(dataSet, measures)
 
 fun main(args: Array<String>) {
+    /* var lRaw = SpacePoint(intArrayOf(545), 2048)
+     var rRaw = SpacePoint(intArrayOf( 1091), 4096)*/
     var lRaw = SpacePoint(intArrayOf(2048, 545), 2048)
     var rRaw = SpacePoint(intArrayOf(4096, 1091), 4096)
     do {
@@ -44,7 +46,7 @@ fun main(args: Array<String>) {
         }
         println("Diff since $firstDiffPos; l: ${lCut.drop(firstDiffPos)}")
         println("Diff since $firstDiffPos; r: ${rCut.drop(firstDiffPos)}")
-        lCut.forEachIndexed { i, f ->
+        /*lCut.forEachIndexed { i, f ->
             if (rCut[i] != f) {
                 val placeInR = rCut.indexOfFirst { it == f }
                 if (placeInR == -1) {
@@ -53,12 +55,14 @@ fun main(args: Array<String>) {
                     println("Feature $f: moved from $i to $placeInR")
                 }
             }
-        }
+        }*/
         val targetDiff: List<Int>
         if (lDiff.isEmpty()) {
+            println("Going to the right")
             targetDiff = rDiff
             lRaw = mRaw
         } else {
+            println("Going to the left")
             targetDiff = lDiff
             rRaw = mRaw
         }
