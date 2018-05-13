@@ -283,8 +283,7 @@ fun processPoint(point: Point,
                  dataSet: EvaluatedDataSet,
                  cutSize: Int)
         : RoaringBitmap {
-    val range = Array(dataSet[0].size, { it })
-    return processPoint(point, dataSet, cutSize, range)
+    return processPoint(point, dataSet, cutSize, Array(dataSet[0].size, { it }))
 }
 
 fun processPoint(point: Point,
@@ -292,10 +291,25 @@ fun processPoint(point: Point,
                  cutSize: Int,
                  range: Array<Int>)
         : RoaringBitmap {
+    return calculateBitMap(processPointGetWholeCut(point, dataSet, cutSize, range))
+}
+
+fun processPointGetWholeCut(point: Point,
+                            dataSet: EvaluatedDataSet,
+                            cutSize: Int)
+        : List<Int> {
+    return processPointGetWholeCut(point, dataSet, cutSize, Array(dataSet[0].size, { it }))
+}
+
+fun processPointGetWholeCut(point: Point,
+                            dataSet: EvaluatedDataSet,
+                            cutSize: Int,
+                            range: Array<Int>)
+        : List<Int> {
     val featureMeasures = evaluatePoint(point, dataSet)
     val comparator = kotlin.Comparator<Int> { o1, o2 -> compareValuesBy(o1, o2, { -featureMeasures[it] }) }
     Arrays.sort(range, comparator)
-    return calculateBitMap(range.take(cutSize))
+    return range.take(cutSize)
 }
 
 fun processAllPointsFastOld(xData: List<Point>,
@@ -344,6 +358,7 @@ fun getDiff(prevCut: RoaringBitmap, currCut: RoaringBitmap, tempMap: RoaringBitm
 }
 
 fun getDiff(prevCut: RoaringBitmap, currCut: RoaringBitmap) = getDiff(prevCut, currCut, RoaringBitmap())
+fun getDiff(prevCut: List<Int>, currCut: List<Int>) = prevCut.filter { !currCut.contains(it) }
 
 data class Coord(private val num: Int,
                  private val denom: Int) : Comparable<Coord> {
@@ -366,6 +381,8 @@ data class Coord(private val num: Int,
 
 data class SpacePoint(val point: IntArray,
                       val delta: Int) : Comparable<SpacePoint> {
+    val eqToPrev = BooleanArray(point.size)
+
     // wrapper for int array for proper hashcode and compareTo implementation
     override fun compareTo(other: SpacePoint): Int {
         if (point.size != other.point.size) {
@@ -455,7 +472,8 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
             .map { featureMeasures ->
                 val comparator = kotlin.Comparator<Int> { o1, o2 -> compareValuesBy(o1, o2, { -featureMeasures[it] }) }
                 Arrays.sort(featureNumbers, comparator)
-                return@map calculateBitMap(featureNumbers.take(cutSize))
+                val cut = featureNumbers.take(cutSize)
+                return@map calculateBitMap(cut)
             } //max first
 }
 

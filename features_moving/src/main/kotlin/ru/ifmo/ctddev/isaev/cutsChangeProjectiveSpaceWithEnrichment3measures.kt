@@ -95,7 +95,9 @@ private fun processAllPointsWithEnrichment(chart: Chart): PointProcessingFinalRe
         logToConsole { "Current enrichment: ${currentEnrichment.toList()}" }
     } while (currentEnrichment.isNotEmpty())
 
-    val anglesToTry = cutsForAllPoints.keys.map { getAngle(it) }
+    val anglesToTry = cutsForAllPoints.keys
+            .filter { it.eqToPrev.all { !it } }
+            .map { getAngle(it) }
     val pointsToTry = anglesToTry.map { getPointOnUnitSphere(it) }
 
     return PointProcessingFinalResult(
@@ -123,20 +125,25 @@ fun calculateEnrichment(dim: Int): List<SpacePoint> {
     var notChanged = 0
     dimension.forEach { coord, points ->
         points.forEach { point ->
-            val prev = points.lower(point)
-            if (prev != null) {
-                val prevCut = cutsForAllPoints[prev]!!
-                val currCut = cutsForAllPoints[point]!!
-                val diff = getDiff(prevCut, currCut, tempRoaringBitmap)
-                if (diff.cardinality > 1) {
-                    if (prev.point[otherDim] == 0 && point.delta > (2.shl(8))) {
-                    } else {
-                        val newPoint = inBetween(point, prev)
-                        logToConsole { "Found diff $diff between $point and $prev at point $newPoint" }
-                        result.add(newPoint)
+            if (!point.eqToPrev[dim]) {
+                val prev = points.lower(point)
+                if (prev != null) {
+                    val prevCut = cutsForAllPoints[prev]!!
+                    val currCut = cutsForAllPoints[point]!!
+                    val diff = getDiff(prevCut, currCut, tempRoaringBitmap)
+                    if (diff.cardinality == 0) {
+                        point.eqToPrev[dim] = true
                     }
-                } else {
-                    ++notChanged
+                    if (diff.cardinality > 1) {
+                        if (prev.point[otherDim] == 0 && point.delta > (2.shl(8))) {
+                        } else {
+                            val newPoint = inBetween(point, prev)
+                            logToConsole { "Found diff $diff between $point and $prev at point $newPoint" }
+                            result.add(newPoint)
+                        }
+                    } else {
+                        ++notChanged
+                    }
                 }
             }
         }
@@ -166,9 +173,11 @@ private class Chart {
 
     fun update() {
         Thread.sleep(1000)
-        val xData = cutsForAllPoints.keys.map { it.point[0].toDouble() / it.delta }
-        val yData = cutsForAllPoints.keys.map { it.point[1].toDouble() / it.delta }
-        logToConsole { "Current points: ${cutsForAllPoints.size}" }
+        val points = cutsForAllPoints.keys
+                .filter { it.eqToPrev.all { !it } }
+        val xData = points.map { it.point[0].toDouble() / it.delta }
+        val yData = points.map { it.point[1].toDouble() / it.delta }
+        logToConsole { "Current points: ${points.size}" }
         chart.updateXYSeries("data", xData, yData, null)
         sw.repaintChart()
     }

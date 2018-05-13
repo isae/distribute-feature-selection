@@ -21,7 +21,7 @@ private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, Symmet
 private const val cutSize = 50
 private val dataSet = KnownDatasets.ARIZONA5.read()
 private val evaluatedDs = evaluateDataSet(dataSet, measures)
-val range = Array(evaluatedDs[0].size, { it })
+private val range = Array(evaluatedDs[0].size, { it })
 const val MAX = 700.0
 
 fun main(args: Array<String>) {
