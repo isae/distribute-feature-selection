@@ -326,19 +326,56 @@ fun processAllPointsFastOld(xData: List<Point>,
     return Triple(evaluatedData, cuttingLineY, cutsForAllPoints)
 }
 
-class SpacePoint(val point: IntArray) : Iterable<Int>, Comparable<SpacePoint> {
+
+fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
+fun lcm(a: Int, b: Int): Int {
+    val mul = a * b
+    if (mul < 0) {
+        throw IllegalStateException("Overflow!")
+    }
+    return mul / gcd(a, b)
+}
+
+fun getDiff(prevCut: RoaringBitmap, currCut: RoaringBitmap, tempMap: RoaringBitmap): RoaringBitmap {
+    tempMap.clear()
+    tempMap.or(prevCut)
+    tempMap.andNot(currCut)
+    return tempMap
+}
+
+fun getDiff(prevCut: RoaringBitmap, currCut: RoaringBitmap) = getDiff(prevCut, currCut, RoaringBitmap())
+
+data class Coord(private val num: Int,
+                 private val denom: Int) : Comparable<Coord> {
+    override fun compareTo(other: Coord): Int {
+        val commonDenom = lcm(denom, other.denom)
+        return (num * (commonDenom / denom)).compareTo(other.num * (commonDenom / other.denom))
+    }
+
+    companion object {
+        fun from(rawNum: Int, rawDenom: Int): Coord {
+            val gcd = gcd(rawNum, rawDenom)
+            return Coord(rawNum / gcd, rawDenom / gcd)
+        }
+    }
+
+    override fun toString(): String {
+        return "$num/$denom"
+    }
+}
+
+class SpacePoint(val point: IntArray,
+                 val delta: Int) : Comparable<SpacePoint> {
     // wrapper for int array for proper hashcode and compareTo implementation
     override fun compareTo(other: SpacePoint): Int {
-        val first = point
-        val second = other.point
-        if (first.size != second.size) {
+        if (point.size != other.point.size) {
             throw IllegalStateException("Trying to compare invalid points")
         }
-        for (i in first.indices) {
-            if (first[i] < second[i]) {
+        for (i in point.indices) {
+            if (Coord.from(point[i], delta) < Coord.from(other.point[i], other.delta)) {
                 return -1
             }
-            if (first[i] > second[i]) {
+            if (Coord.from(point[i], delta) > Coord.from(other.point[i], other.delta)) {
                 return 1
             }
         }
@@ -346,10 +383,12 @@ class SpacePoint(val point: IntArray) : Iterable<Int>, Comparable<SpacePoint> {
     }
 
 
-    override fun iterator(): Iterator<Int> {
-        return point.iterator()
-    }
+    constructor(size: Int) : this(IntArray(size), 1)
 
+    fun clone(): SpacePoint = SpacePoint(point.clone(), delta)
+    val size: Int = point.size
+    override fun toString(): String = Arrays.toString(point) + "/" + delta
+    fun indices(): IntRange = point.indices
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -357,25 +396,16 @@ class SpacePoint(val point: IntArray) : Iterable<Int>, Comparable<SpacePoint> {
         other as SpacePoint
 
         if (!Arrays.equals(point, other.point)) return false
+        if (delta != other.delta) return false
 
         return true
     }
 
     override fun hashCode(): Int {
-        return Arrays.hashCode(point)
+        var result = Arrays.hashCode(point)
+        result = 31 * result + delta
+        return result
     }
-
-    constructor(size: Int) : this(IntArray(size))
-
-    operator fun set(index: Int, value: Int) {
-        point[index] = value
-    }
-
-    fun clone(): SpacePoint = SpacePoint(point.clone())
-    val size: Int = point.size
-    operator fun get(coord: Int): Int = point[coord]
-    override fun toString(): String = Arrays.toString(point)
-    fun indices(): IntRange = point.indices
 }
 
 const val DOUBLE_SIZE = 8
@@ -395,17 +425,17 @@ private fun getChunkSize(dataSet: EvaluatedDataSet): Int {
 }
 
 
-fun processAllPointsHd(xDataRaw: List<SpacePoint>,
-                       dataSet: EvaluatedDataSet,
-                       epsilon: Int,
-                       cutSize: Int)
+fun processAllPointsHdChinked(xDataRaw: List<SpacePoint>,
+                              dataSet: EvaluatedDataSet,
+                              epsilon: Int,
+                              cutSize: Int)
         : Map<SpacePoint, RoaringBitmap> {
     val cutsForAllPoints = HashMap<SpacePoint, RoaringBitmap>(xDataRaw.size)
-    val chunkSize = getChunkSize(dataSet) // to ensure computation is filled in memory
+    val chunkSize = getChunkSize(dataSet) // to ensure computation fits inti memory
     xDataRaw.chunked(chunkSize)
             .forEach {
                 logToConsole { "Processing chunk of ${it.size} points" }
-                processAllPointsHdChunk(it, epsilon, dataSet, cutSize)
+                processAllPointsHd(it, dataSet, cutSize)
                         .forEachIndexed { index, set ->
                             cutsForAllPoints[it[index]] = set
                         }
@@ -413,12 +443,11 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
     return cutsForAllPoints
 }
 
-private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
-                                    epsilon: Int,
-                                    dataSet: EvaluatedDataSet,
-                                    cutSize: Int)
+fun processAllPointsHd(xDataRaw: List<SpacePoint>,
+                       dataSet: EvaluatedDataSet,
+                       cutSize: Int)
         : List<RoaringBitmap> {
-    val angles = xDataRaw.map { getAngle(epsilon, it) }
+    val angles = xDataRaw.map { getAngle(it) }
     val xData = angles.map { getPointOnUnitSphere(it) }
     val evaluatedData = evaluatePoints(xData, dataSet)
     val featureNumbers = Array(evaluatedData[0].size, { it })
@@ -431,21 +460,21 @@ private fun processAllPointsHdChunk(xDataRaw: List<SpacePoint>,
 }
 
 
-const val MAX_ANGLE = Math.PI //TODO: investigate why GDS4901 does not work with processing from PI to -PI/2
+const val MAX_ANGLE = Math.PI / 2 //TODO: investigate why GDS4901 does not work with processing from PI to -PI/2
 
 const val MIN_ANGLE = 0 //-Math.PI / 2
 
 const val ANGLE_RANGE = MAX_ANGLE - MIN_ANGLE
 
-fun getAngle(epsilon: Int, x: Int): Double {
-    val fractionOfPi = ANGLE_RANGE / epsilon
-    return MAX_ANGLE - (fractionOfPi * x)
+fun getAngle(delta: Int, x: Int): Double {
+    val fractionOfPi = ANGLE_RANGE / delta
+    return MIN_ANGLE + (fractionOfPi * x)
 }
 
-fun getAngle(epsilon: Int, xs: SpacePoint): DoubleArray {
+fun getAngle(xs: SpacePoint): DoubleArray {
     val result = DoubleArray(xs.size)
-    xs.forEachIndexed { i, x ->
-        result[i] = getAngle(epsilon, x)
+    xs.point.forEachIndexed { i, x ->
+        result[i] = getAngle(xs.delta, x)
     }
     return result
 }
