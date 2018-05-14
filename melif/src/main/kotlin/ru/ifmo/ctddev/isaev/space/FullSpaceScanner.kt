@@ -507,9 +507,6 @@ inline fun logToConsole(msgGetter: () -> String) {
 }
 
 fun inBetween(prev: SpacePoint, point: SpacePoint): SpacePoint {
-    if (point <= prev) {
-        throw IllegalStateException("Invalid inBetween invocation")
-    }
     val curArr = point.point
     val curDelta = point.delta
     val prevArr = prev.point
