@@ -2,6 +2,7 @@ package ru.ifmo.ctddev.isaev
 
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
 import ru.ifmo.ctddev.isaev.space.*
+import java.util.*
 
 
 /**
@@ -24,12 +25,12 @@ fun main(args: Array<String>) {
     do {
         println("Left: $lRaw")
         println("Right: $rRaw")
-        val mRaw = inBetween(lRaw, rRaw)
+        val mRaw = lRaw.inBetween(rRaw)
         val left = getPointOnUnitSphere(getAngle(lRaw))
         val langles = getAngle(lRaw)
-        //println("Left angles: ${Arrays.toString(langles)}")
+        println("Left angles: ${Arrays.toString(langles)}")
         val rangles = getAngle(rRaw)
-        //println("Right angles: ${Arrays.toString(rangles)}")
+        println("Right angles: ${Arrays.toString(rangles)}")
         val right = getPointOnUnitSphere(rangles)
         val middle = getPointOnUnitSphere(getAngle(mRaw))
         val lCut = processPointGetWholeCut(left, evaluatedDataSet, cutSize)

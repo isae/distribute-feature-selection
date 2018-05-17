@@ -137,7 +137,7 @@ fun calculateEnrichment(dim: Int): List<SpacePoint> {
                     if (diff.cardinality > 1) {
                         if (prev.point[otherDim] == 0L && point.delta > (2.shl(8))) {
                         } else {
-                            val newPoint = inBetween(prev, point)
+                            val newPoint = prev.inBetween(point)
                             logToConsole { "Found diff $diff between $point and $prev at point $newPoint; reverse diff is ${getDiff(currCut, prevCut, tempRoaringBitmap)}" }
                             result.add(newPoint)
                         }

@@ -342,17 +342,37 @@ fun processAllPointsFastOld(xData: List<Point>,
 }
 
 
+fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
 fun gcd(a: Long, b: Long): Long = if (b == 0L) a else gcd(b, a % b)
-fun gcd(a: BigInteger, b: BigInteger): BigInteger {
-    return if (b.compareTo(BigInteger.ZERO) == 0) a else gcd(b, a % b)
+fun gcd(a: BigInteger, b: BigInteger): BigInteger = if (b.compareTo(BigInteger.ZERO) == 0) a else gcd(b, a % b)
+
+fun lcm(a: Int, b: Int): Int {
+    val mul = a * b
+    if (mul <= 0) {
+        val mul2 = a.toLong() * b
+        val result = (mul2 / gcd(a.toLong(), b.toLong())).toInt()
+        if (result <= 0) {
+            throw IllegalStateException("Overflow!")
+        } else {
+            return result
+        }
+    }
+    return (mul / gcd(a, b))
 }
 
 fun lcm(a: Long, b: Long): Long {
-    val lcm = lcm(BigInteger.valueOf(a), BigInteger.valueOf(b)).toLong()
-    if (lcm < 0L) {
-        throw IllegalStateException("Overflow!")
+    val mul = a * b
+    if (mul <= 0) {
+        val aBig = BigInteger.valueOf(a)
+        val bBig = BigInteger.valueOf(b)
+        val mulBig = aBig.multiply(bBig)
+        val result = (mulBig / gcd(aBig, bBig)).toLong()
+        if (result <= 0) {
+            throw IllegalArgumentException("Overflow")
+        }
+        return result
     }
-    return lcm
+    return (mul / gcd(a, b))
 }
 
 fun lcm(a: BigInteger, b: BigInteger): BigInteger {
@@ -434,6 +454,31 @@ data class SpacePoint(val point: LongArray,
         return result
     }
 
+    fun inBetween(point: SpacePoint): SpacePoint {
+        val curArr = point.point
+        val curDelta = point.delta
+        val prevArr = this.point
+        val prevDelta = this.delta
+
+        val newArr = curArr.clone()
+        val newDelta: Long
+
+        val commonDivisor = lcm(curDelta, prevDelta)
+        val mulForCurr = commonDivisor / curDelta // all deltas are powers of 2
+        val mulForPrev = commonDivisor / prevDelta // all deltas are powers of 2
+
+        newArr.indices.forEach { newArr[it] = curArr[it] * mulForCurr + prevArr[it] * mulForPrev }
+        if (newArr.all { it % 2L == 0L }) {
+            newArr.indices.forEach { newArr[it] /= 2L }
+            val commonGcd = newArr.map { gcd(it, commonDivisor) }.reduce { o1, o2 -> gcd(o1, o2) }
+            newArr.indices.forEach { newArr[it] /= commonGcd }
+            newDelta = commonDivisor / commonGcd
+        } else {
+            newDelta = commonDivisor * 2
+        }
+        return SpacePoint(newArr, newDelta)
+    }
+
 }
 
 const val DOUBLE_SIZE = 8
@@ -512,29 +557,4 @@ val startTime = LocalDateTime.now()!!
 
 inline fun logToConsole(msgGetter: () -> String) {
     println("${Duration.between(startTime, LocalDateTime.now()).toMillis()} ms: " + msgGetter())
-}
-
-fun inBetween(prev: SpacePoint, point: SpacePoint): SpacePoint {
-    val curArr = point.point
-    val curDelta = point.delta
-    val prevArr = prev.point
-    val prevDelta = prev.delta
-
-    val newArr = curArr.clone()
-    val newDelta: Long
-
-    val commonDivisor = lcm(curDelta, prevDelta)
-    val mulForCurr = commonDivisor / curDelta // all deltas are powers of 2
-    val mulForPrev = commonDivisor / prevDelta // all deltas are powers of 2
-
-    newArr.indices.forEach { newArr[it] = curArr[it] * mulForCurr + prevArr[it] * mulForPrev }
-    if (newArr.all { it % 2L == 0L }) {
-        newArr.indices.forEach { newArr[it] /= 2L }
-        val commonGcd = newArr.map { gcd(it, commonDivisor) }.reduce { o1, o2 -> gcd(o1, o2) }
-        newArr.indices.forEach { newArr[it] /= commonGcd }
-        newDelta = commonDivisor / commonGcd
-    } else {
-        newDelta = commonDivisor * 2
-    }
-    return SpacePoint(newArr, newDelta)
 }
