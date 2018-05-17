@@ -26,7 +26,7 @@ fun main(args: Array<String>) {
     val dataSet = KnownDatasets.DLBCL.read()
 
     logToConsole { "Started the processing" }
-    val angles = 0.rangeTo(epsilon).map { getAngle(epsilon, it) }
+    val angles = 0.rangeTo(epsilon).map { getAngle(epsilon.toLong(), it.toLong()) }
     logToConsole { "Angles: $angles" }
     val pointsInProjectiveCoords = angles.map { getPointOnUnitSphere(it) }
     logToConsole { "${pointsInProjectiveCoords.size} points to calculate measures on" }
@@ -56,14 +56,14 @@ fun main(args: Array<String>) {
             .map { it.first }
     val pointsToTry = lastFeatureInCutSwitchPositions
             .map {
-                val angle = getAngle(epsilon, it)
+                val angle = getAngle(epsilon.toLong(), it.toLong())
                 getPointOnUnitSphere(angle)
             }
     println(pointsToTry)
 
     val bottomFrontOfCuttingRule = lastFeatureInCutSwitchPositions
             .map {
-                val angle = getAngle(epsilon, it)
+                val angle = getAngle(epsilon.toLong(), it.toLong())
                 val d = cuttingLineY[it]
                 sin(angle) * d
             }

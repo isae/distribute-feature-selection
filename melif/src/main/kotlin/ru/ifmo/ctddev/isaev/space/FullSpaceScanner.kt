@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import ru.ifmo.ctddev.isaev.*
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.results.RunStats
+import java.math.BigInteger
 import java.text.DecimalFormat
 import java.time.Duration
 import java.time.LocalDateTime
@@ -195,7 +196,7 @@ fun calculateAllPointsWithEnrichment2d(startingEpsilon: Int,
         prevPositions = newPositions
         prevLastFeatureInAllCuts = newResult.lastFeatureInAllCuts
     } while (currCutChangePositions.size != prevCutChangePositions.size)
-    val anglesToTry = currCutChangePositions.map { getAngle(prevEpsilon, it) }
+    val anglesToTry = currCutChangePositions.map { getAngle(prevEpsilon.toLong(), it.toLong()) }
     val pointsToTry = anglesToTry.map { getPointOnUnitSphere(it) }
 
     return PointProcessingFinalResult2d(
@@ -203,7 +204,7 @@ fun calculateAllPointsWithEnrichment2d(startingEpsilon: Int,
             cutsForAllPoints,
             currCutChangePositions,
             pointsToTry,
-            prevPositions.map { getAngle(prevEpsilon, it) },
+            prevPositions.map { getAngle(prevEpsilon.toLong(), it.toLong()) },
             prevLastFeatureInAllCuts
     )
 }
@@ -226,7 +227,7 @@ private fun processAllPoints(positions: RoaringBitmap,
     // begin first stage (before enrichment)
     logToConsole { "Started the processing" }
     logToConsole { "${positions.cardinality} points to calculate measures on" }
-    val angles = positions.map { getAngle(epsilon, it) }
+    val angles = positions.map { getAngle(epsilon.toLong(), it.toLong()) }
     val chunkSize = getChunkSize(dataSet)
     val cutsForAllPoints = ArrayList<RoaringBitmap>(angles.size)
     val evaluatedData = ArrayList<DoubleArray>(angles.size)
@@ -341,13 +342,22 @@ fun processAllPointsFastOld(xData: List<Point>,
 }
 
 
-fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
-fun lcm(a: Int, b: Int): Int {
-    val mul = a.toLong() * b
-    if (mul < 0) {
+fun gcd(a: Long, b: Long): Long = if (b == 0L) a else gcd(b, a % b)
+fun gcd(a: BigInteger, b: BigInteger): BigInteger {
+    return if (b.compareTo(BigInteger.ZERO) == 0) a else gcd(b, a % b)
+}
+
+fun lcm(a: Long, b: Long): Long {
+    val lcm = lcm(BigInteger.valueOf(a), BigInteger.valueOf(b)).toLong()
+    if (lcm < 0L) {
         throw IllegalStateException("Overflow!")
     }
-    return (mul / gcd(a, b)).toInt()
+    return lcm
+}
+
+fun lcm(a: BigInteger, b: BigInteger): BigInteger {
+    val mul = a * b
+    return (mul / gcd(a, b))
 }
 
 fun getDiff(prevCut: RoaringBitmap, currCut: RoaringBitmap, tempMap: RoaringBitmap): RoaringBitmap {
@@ -360,15 +370,15 @@ fun getDiff(prevCut: RoaringBitmap, currCut: RoaringBitmap, tempMap: RoaringBitm
 fun getDiff(prevCut: RoaringBitmap, currCut: RoaringBitmap) = getDiff(prevCut, currCut, RoaringBitmap())
 fun getDiff(prevCut: List<Int>, currCut: List<Int>) = prevCut.filter { !currCut.contains(it) }
 
-data class Coord(private val num: Int,
-                 private val denom: Int) : Comparable<Coord> {
+data class Coord(private val num: Long,
+                 private val denom: Long) : Comparable<Coord> {
     override fun compareTo(other: Coord): Int {
         val commonDenom = lcm(denom, other.denom)
         return (num * (commonDenom / denom)).compareTo(other.num * (commonDenom / other.denom))
     }
 
     companion object {
-        fun from(rawNum: Int, rawDenom: Int): Coord {
+        fun from(rawNum: Long, rawDenom: Long): Coord {
             val gcd = gcd(rawNum, rawDenom)
             return Coord(rawNum / gcd, rawDenom / gcd)
         }
@@ -379,8 +389,8 @@ data class Coord(private val num: Int,
     }
 }
 
-data class SpacePoint(val point: IntArray,
-                      val delta: Int) : Comparable<SpacePoint> {
+data class SpacePoint(val point: LongArray,
+                      val delta: Long) : Comparable<SpacePoint> {
     val eqToPrev = BooleanArray(point.size)
 
     // wrapper for int array for proper hashcode and compareTo implementation
@@ -400,7 +410,7 @@ data class SpacePoint(val point: IntArray,
     }
 
 
-    constructor(size: Int) : this(IntArray(size), 1)
+    constructor(size: Int) : this(LongArray(size), 1)
 
     fun clone(): SpacePoint = SpacePoint(point.clone(), delta)
     val size: Int = point.size
@@ -420,9 +430,10 @@ data class SpacePoint(val point: IntArray,
 
     override fun hashCode(): Int {
         var result = Arrays.hashCode(point)
-        result = 31 * result + delta
+        result = 31 * result + delta.hashCode()
         return result
     }
+
 }
 
 const val DOUBLE_SIZE = 8
@@ -464,9 +475,6 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
                        dataSet: EvaluatedDataSet,
                        cutSize: Int)
         : List<RoaringBitmap> {
-    if (xDataRaw.any { it.point[0] == 2 && it.point[1] == 1 && it.delta == 2 }) {
-        val f = true
-    }
     val angles = xDataRaw.map { getAngle(it) }
     val xData = angles.map { getPointOnUnitSphere(it) }
     val evaluatedData = evaluatePoints(xData, dataSet)
@@ -487,7 +495,7 @@ const val MIN_ANGLE = 0 //-Math.PI / 2
 
 const val ANGLE_RANGE = MAX_ANGLE - MIN_ANGLE
 
-fun getAngle(delta: Int, x: Int): Double {
+fun getAngle(delta: Long, x: Long): Double {
     val fractionOfPi = ANGLE_RANGE / delta
     return MIN_ANGLE + (fractionOfPi * x)
 }
@@ -513,15 +521,15 @@ fun inBetween(prev: SpacePoint, point: SpacePoint): SpacePoint {
     val prevDelta = prev.delta
 
     val newArr = curArr.clone()
-    val newDelta: Int
+    val newDelta: Long
 
     val commonDivisor = lcm(curDelta, prevDelta)
     val mulForCurr = commonDivisor / curDelta // all deltas are powers of 2
     val mulForPrev = commonDivisor / prevDelta // all deltas are powers of 2
 
     newArr.indices.forEach { newArr[it] = curArr[it] * mulForCurr + prevArr[it] * mulForPrev }
-    if (newArr.all { it % 2 == 0 }) {
-        newArr.indices.forEach { newArr[it] /= 2 }
+    if (newArr.all { it % 2L == 0L }) {
+        newArr.indices.forEach { newArr[it] /= 2L }
         val commonGcd = newArr.map { gcd(it, commonDivisor) }.reduce { o1, o2 -> gcd(o1, o2) }
         newArr.indices.forEach { newArr[it] /= commonGcd }
         newDelta = commonDivisor / commonGcd
