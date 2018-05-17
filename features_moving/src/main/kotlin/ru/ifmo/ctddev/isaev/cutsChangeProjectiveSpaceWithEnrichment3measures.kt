@@ -1,5 +1,7 @@
 package ru.ifmo.ctddev.isaev
 
+import org.apfloat.Apcomplex
+import org.apfloat.Aprational
 import org.knowm.xchart.SwingWrapper
 import org.knowm.xchart.XYChartBuilder
 import org.knowm.xchart.XYSeries
@@ -41,7 +43,7 @@ typealias Dimension = Int
 
 typealias RowOfPoints = TreeSet<SpacePoint>
 
-private val fullSpace = HashMap<Dimension, TreeMap<Coord, RowOfPoints>>()
+private val fullSpace = HashMap<Dimension, TreeMap<Aprational, RowOfPoints>>()
         .apply {
             0.until(dimensionality).forEach { dim ->
                 putIfAbsent(dim, TreeMap())
@@ -109,7 +111,7 @@ private fun processAllPointsWithEnrichment(chart: Chart?): PointProcessingFinalR
 fun addEnrichmentToSpace(currentEnrichment: Collection<SpacePoint>) {
     currentEnrichment.forEach { point ->
         0.until(dimensionality).forEach { dim ->
-            val coord = Coord.from(point.point[dim], point.delta)
+            val coord = point.point[dim]
             fullSpace[dim]?.putIfAbsent(coord, TreeSet())
             fullSpace[dim]?.get(coord)?.add(point)
         }
@@ -135,7 +137,7 @@ fun calculateEnrichment(dim: Int): List<SpacePoint> {
                         point.eqToPrev[dim] = true
                     }
                     if (diff.cardinality > 1) {
-                        if (prev.point[otherDim] == 0L && point.delta > (2.shl(8))) {
+                        if (prev.point[otherDim] == Apcomplex.ZERO && point.point[0].denominator().toInt() > (2.shl(8))) {
                         } else {
                             val newPoint = prev.inBetween(point)
                             logToConsole { "Found diff $diff between $point and $prev at point $newPoint; reverse diff is ${getDiff(currCut, prevCut, tempRoaringBitmap)}" }
@@ -180,8 +182,8 @@ private class Chart {
     fun update() {
         Thread.sleep(1000)
         val points = getCurrentPoints()
-        val xData = points.map { it.point[0].toDouble() / it.delta }
-        val yData = points.map { it.point[1].toDouble() / it.delta }
+        val xData = points.map { it.point[0].toDouble() }
+        val yData = points.map { it.point[1].toDouble() }
         logToConsole { "Current points: ${points.size}" }
         chart.updateXYSeries("data", xData, yData, null)
         sw.repaintChart()

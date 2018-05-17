@@ -1,5 +1,8 @@
 package ru.ifmo.ctddev.isaev.space
 
+import org.apfloat.Apcomplex
+import org.apfloat.Apfloat
+import org.apfloat.ApfloatMath
 import ru.ifmo.ctddev.isaev.DataSetEvaluator
 import ru.ifmo.ctddev.isaev.FeatureDataSet
 import ru.ifmo.ctddev.isaev.RelevanceMeasure
@@ -102,6 +105,18 @@ fun <T> calculateTime(block: () -> T): Pair<Long, T> {
     return Pair(System.currentTimeMillis() - start, result)
 }
 
+fun evaluatePoint(measureCosts: ExactPoint,
+                  valuesForEachMeasure: EvaluatedDataSet // [number of measures x number of features]
+): Array<Apfloat> {
+    val result = Array<Apfloat>(valuesForEachMeasure[0].size, { Apcomplex.ZERO })
+    valuesForEachMeasure[0].indices.forEach { i ->
+        result[i] = measureCosts.coordinates.indices //TODO: map is slow
+                .map { measureCosts.coordinates[it] * Apfloat(valuesForEachMeasure[it][i], 16) }
+                .reduce { acc, apfloat -> acc + apfloat }
+    }
+    return result
+}
+
 fun evaluatePoint(measureCosts: Point,
                   valuesForEachMeasure: EvaluatedDataSet // [number of measures x number of features]
 ): DoubleArray {
@@ -165,4 +180,24 @@ fun getPointOnUnitSphere(angles: DoubleArray): Point { //TODO: review for
         else -> TODO("Not implemented conversion from sphere to cartesian for ${angles.size} dimensions")
     }
     return Point.fromRawCoords(*result)
+}
+
+class ExactPoint(val coordinates: Array<Apfloat>)
+
+// https://keisan.casio.com/exec/system/1359534351
+fun getPointOnUnitSphere(angles: Array<Apfloat>): ExactPoint { //TODO: review for
+    val result = Array<Apfloat>(angles.size + 1, { Apfloat.ONE })
+    when (angles.size) {
+        1 -> {
+            result[0] = ApfloatMath.cos(angles[0])
+            result[1] = ApfloatMath.sin(angles[0])
+        }
+        2 -> {
+            result[0] = ApfloatMath.cos(angles[0]) * ApfloatMath.sin(angles[1])
+            result[1] = ApfloatMath.sin(angles[0]) * ApfloatMath.sin(angles[1])
+            result[2] = ApfloatMath.cos(angles[1])
+        }
+        else -> TODO("Not implemented conversion from sphere to cartesian for ${angles.size} dimensions")
+    }
+    return ExactPoint(result)
 }

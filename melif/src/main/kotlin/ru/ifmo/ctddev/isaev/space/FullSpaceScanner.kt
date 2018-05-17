@@ -1,5 +1,8 @@
 package ru.ifmo.ctddev.isaev.space
 
+import org.apfloat.Apfloat
+import org.apfloat.Apint
+import org.apfloat.Aprational
 import org.locationtech.jts.geom.*
 import org.locationtech.jts.triangulate.IncrementalDelaunayTriangulator
 import org.locationtech.jts.triangulate.quadedge.QuadEdgeSubdivision
@@ -19,6 +22,8 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
+import kotlin.math.PI
+import kotlin.math.max
 import kotlin.reflect.KClass
 
 /**
@@ -302,6 +307,24 @@ fun processPointGetWholeCut(point: Point,
     return processPointGetWholeCut(point, dataSet, cutSize, Array(dataSet[0].size, { it }))
 }
 
+fun processPointGetWholeCut(point: ExactPoint,
+                            dataSet: EvaluatedDataSet,
+                            cutSize: Int)
+        : List<Int> {
+    return processPointGetWholeCut(point, dataSet, cutSize, Array(dataSet[0].size, { it }))
+}
+
+fun processPointGetWholeCut(point: ExactPoint,
+                            dataSet: EvaluatedDataSet,
+                            cutSize: Int,
+                            range: Array<Int>)
+        : List<Int> {
+    val featureMeasures = evaluatePoint(point, dataSet)
+    val comparator = kotlin.Comparator<Int> { o1, o2 -> compareValuesBy(o1, o2, { -featureMeasures[it] }) }
+    Arrays.sort(range, comparator)
+    return range.take(cutSize)
+}
+
 fun processPointGetWholeCut(point: Point,
                             dataSet: EvaluatedDataSet,
                             cutSize: Int,
@@ -390,27 +413,7 @@ fun getDiff(prevCut: RoaringBitmap, currCut: RoaringBitmap, tempMap: RoaringBitm
 fun getDiff(prevCut: RoaringBitmap, currCut: RoaringBitmap) = getDiff(prevCut, currCut, RoaringBitmap())
 fun getDiff(prevCut: List<Int>, currCut: List<Int>) = prevCut.filter { !currCut.contains(it) }
 
-data class Coord(private val num: Long,
-                 private val denom: Long) : Comparable<Coord> {
-    override fun compareTo(other: Coord): Int {
-        val commonDenom = lcm(denom, other.denom)
-        return (num * (commonDenom / denom)).compareTo(other.num * (commonDenom / other.denom))
-    }
-
-    companion object {
-        fun from(rawNum: Long, rawDenom: Long): Coord {
-            val gcd = gcd(rawNum, rawDenom)
-            return Coord(rawNum / gcd, rawDenom / gcd)
-        }
-    }
-
-    override fun toString(): String {
-        return "$num/$denom"
-    }
-}
-
-data class SpacePoint(val point: LongArray,
-                      val delta: Long) : Comparable<SpacePoint> {
+data class SpacePoint(val point: Array<Aprational>) : Comparable<SpacePoint> {
     val eqToPrev = BooleanArray(point.size)
 
     // wrapper for int array for proper hashcode and compareTo implementation
@@ -419,23 +422,42 @@ data class SpacePoint(val point: LongArray,
             throw IllegalStateException("Trying to compare invalid points")
         }
         for (i in point.indices) {
-            if (Coord.from(point[i], delta) < Coord.from(other.point[i], other.delta)) {
+            if (point[i] < other.point[i]) {
                 return -1
             }
-            if (Coord.from(point[i], delta) > Coord.from(other.point[i], other.delta)) {
+            if (point[i] > other.point[i]) {
                 return 1
             }
         }
         return 0
     }
 
+    companion object {
+        val TWO = Aprational(Apint(2L))
+    }
 
-    constructor(size: Int) : this(LongArray(size), 1)
+    constructor(size: Int) : this(0.until(size).map { Aprational(Apint.ZERO) }.toTypedArray())
 
-    fun clone(): SpacePoint = SpacePoint(point.clone(), delta)
+    constructor(nums: LongArray, denom: Long) : this(nums.map { Aprational(Apint(it), Apint(denom)) }.toTypedArray())
+
+    fun clone(): SpacePoint = SpacePoint(point.clone())
     val size: Int = point.size
-    override fun toString(): String = Arrays.toString(point) + "/" + delta
+    override fun toString(): String = Arrays.toString(point)
     fun indices(): IntRange = point.indices
+
+
+    fun inBetween(point: SpacePoint): SpacePoint {
+        val curArr = point.point
+        val prevArr = this.point
+
+        return SpacePoint(
+                curArr.indices.map {
+                    (curArr[it] + prevArr[it]) / TWO
+                }
+                        .toTypedArray()
+        )
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -443,42 +465,16 @@ data class SpacePoint(val point: LongArray,
         other as SpacePoint
 
         if (!Arrays.equals(point, other.point)) return false
-        if (delta != other.delta) return false
+        if (!Arrays.equals(eqToPrev, other.eqToPrev)) return false
 
         return true
     }
 
     override fun hashCode(): Int {
         var result = Arrays.hashCode(point)
-        result = 31 * result + delta.hashCode()
+        result = 31 * result + Arrays.hashCode(eqToPrev)
         return result
     }
-
-    fun inBetween(point: SpacePoint): SpacePoint {
-        val curArr = point.point
-        val curDelta = point.delta
-        val prevArr = this.point
-        val prevDelta = this.delta
-
-        val newArr = curArr.clone()
-        val newDelta: Long
-
-        val commonDivisor = lcm(curDelta, prevDelta)
-        val mulForCurr = commonDivisor / curDelta // all deltas are powers of 2
-        val mulForPrev = commonDivisor / prevDelta // all deltas are powers of 2
-
-        newArr.indices.forEach { newArr[it] = curArr[it] * mulForCurr + prevArr[it] * mulForPrev }
-        if (newArr.all { it % 2L == 0L }) {
-            newArr.indices.forEach { newArr[it] /= 2L }
-            val commonGcd = newArr.map { gcd(it, commonDivisor) }.reduce { o1, o2 -> gcd(o1, o2) }
-            newArr.indices.forEach { newArr[it] /= commonGcd }
-            newDelta = commonDivisor / commonGcd
-        } else {
-            newDelta = commonDivisor * 2
-        }
-        return SpacePoint(newArr, newDelta)
-    }
-
 }
 
 const val DOUBLE_SIZE = 8
@@ -538,23 +534,62 @@ const val MAX_ANGLE = Math.PI / 2 //TODO: investigate why GDS4901 does not work 
 
 const val MIN_ANGLE = 0 //-Math.PI / 2
 
+fun minAngleExact(precision: Long) = Apfloat(0L, precision)
+
+fun maxAngleExact(precision: Long) = Apfloat(PI, precision) / Apfloat(2L, precision)
+
+fun angleRangeExact(precision: Long) = maxAngleExact(precision) - minAngleExact(precision)
+
+
 const val ANGLE_RANGE = MAX_ANGLE - MIN_ANGLE
 
 fun getAngle(delta: Long, x: Long): Double {
+    BigInteger.ZERO + BigInteger.ZERO
     val fractionOfPi = ANGLE_RANGE / delta
     return MIN_ANGLE + (fractionOfPi * x)
+}
+
+fun getAngle(x: Aprational): Double {
+    return MIN_ANGLE + (x.toDouble() * ANGLE_RANGE)
+}
+
+fun getExactAngle(x: Aprational): Apfloat {
+    val precision = max(
+            x.denominator().toString(true).length.toLong() + 5,
+            15
+    )
+    return x * angleRangeExact(precision) + minAngleExact(precision) // order!
 }
 
 fun getAngle(xs: SpacePoint): DoubleArray {
     val result = DoubleArray(xs.size)
     xs.point.forEachIndexed { i, x ->
-        result[i] = getAngle(xs.delta, x)
+        result[i] = getAngle(x)
     }
     return result
 }
+
+fun getExactAngle(xs: SpacePoint): Array<Apfloat> = Array(xs.size, { getExactAngle(xs.point[it]) })
 
 val startTime = LocalDateTime.now()!!
 
 inline fun logToConsole(msgGetter: () -> String) {
     println("${Duration.between(startTime, LocalDateTime.now()).toMillis()} ms: " + msgGetter())
 }
+
+operator fun Aprational.plus(other: Aprational): Aprational = this.add(other)
+
+operator fun Aprational.times(other: Aprational): Aprational = this.multiply(other)
+operator fun Aprational.div(other: Aprational): Aprational = this.divide(other)
+
+
+operator fun Apfloat.minus(other: Apfloat): Apfloat = this.subtract(other)
+
+operator fun Apfloat.plus(other: Apfloat): Apfloat = this.add(other)
+
+operator fun Apfloat.div(other: Apfloat): Apfloat = this.divide(other)
+
+
+operator fun Apfloat.times(other: Apfloat): Apfloat = this.multiply(other)
+
+operator fun Apfloat.unaryMinus(): Apfloat = this.negate()
