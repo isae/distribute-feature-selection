@@ -464,11 +464,10 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
                        dataSet: EvaluatedDataSet,
                        cutSize: Int)
         : List<RoaringBitmap> {
-    if (xDataRaw.any { it.point[0] == 2 && it.point[1] == 1 && it.delta == 2 }) {
-        val f = true
-    }
     val angles = xDataRaw.map { getAngle(it) }
     val xData = angles.map { getPointOnUnitSphere(it) }
+    /* val xData = xDataRaw.map { Point(it.point[0].toDouble() / it.delta, it.point[1].toDouble() / it.delta, 1.0) }*/
+
     val evaluatedData = evaluatePoints(xData, dataSet)
     return evaluatedData
             .map { featureMeasures ->

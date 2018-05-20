@@ -1,6 +1,7 @@
 package ru.ifmo.ctddev.isaev
 
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
+import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.*
 import kotlin.math.max
 
@@ -18,16 +19,13 @@ private val dataSet = KnownDatasets.DLBCL.read()
 private val evaluatedDataSet = evaluateDataSet(dataSet, measures)
 
 fun main(args: Array<String>) {
-    /* var lRaw = SpacePoint(intArrayOf(545), 2048)
-     var rRaw = SpacePoint(intArrayOf( 1091), 4096)*/
-    var lRaw = SpacePoint(intArrayOf(2048, 545), 2048)
-    var rRaw = SpacePoint(intArrayOf(4096, 1091), 4096)
+    var lRaw = SpacePoint(intArrayOf(0, 19), 64)
+    var rRaw = SpacePoint(intArrayOf(0, 39), 128)
     do {
         val mRaw = inBetween(lRaw, rRaw)
-        val left = getPointOnUnitSphere(getAngle(lRaw))
-        val angles = getAngle(rRaw)
-        val right = getPointOnUnitSphere(angles)
-        val middle = getPointOnUnitSphere(getAngle(mRaw))
+        val left = Point.fromRawCoords(lRaw.point[0].toDouble() / lRaw.delta, lRaw.point[1].toDouble() / lRaw.delta, 1.0)
+        val right = Point.fromRawCoords(rRaw.point[0].toDouble() / rRaw.delta, rRaw.point[1].toDouble() / rRaw.delta, 1.0)
+        val middle = Point.fromRawCoords(mRaw.point[0].toDouble() / mRaw.delta, mRaw.point[1].toDouble() / mRaw.delta, 1.0)
         val maxes = left.coordinates.zip(right.coordinates).map { (o1, o2) -> max(o1, o2) }
         val projMaxes = lRaw.point.zip(rRaw.point).map { (o1, o2) -> max(o1, o2) }
         println("Left: ${lRaw.point.mapIndexed { i, f -> f - projMaxes[i] }} -> " +
@@ -40,12 +38,12 @@ fun main(args: Array<String>) {
         //println("Lcut: $lCut")
         //println("Mcut: $mCut")
         //println("Rcut: $rCut")
-        //println("Diff between left and right: ${getDiff(lCut, rCut)}")
-        //println("Diff between right and left: ${getDiff(rCut, lCut)}")
+        println("Diff between left and right: ${getDiff(lCut, rCut)}")
+        println("Diff between right and left: ${getDiff(rCut, lCut)}")
         val lDiff = getDiff(lCut, mCut)
-        //println("Diff between left and middle: $lDiff")
+        println("Diff between left and middle: $lDiff")
         val rDiff = getDiff(mCut, rCut)
-        //println("Diff between middle and right: $rDiff")
+        println("Diff between middle and right: $rDiff")
         val firstDiffPos = lCut.indices.first {
             lCut[it] != rCut[it]
         }
@@ -63,11 +61,11 @@ fun main(args: Array<String>) {
         }*/
         val targetDiff: List<Int>
         if (lDiff.isEmpty()) {
-            //println("Going to the right")
+            println("Going to the right")
             targetDiff = rDiff
             lRaw = mRaw
         } else {
-            //println("Going to the left")
+            println("Going to the left")
             targetDiff = lDiff
             rRaw = mRaw
         }
