@@ -8,21 +8,21 @@ import org.jzy3d.chart.factories.AWTChartComponentFactory
 import org.jzy3d.colors.Color
 import org.jzy3d.colors.ColorMapper
 import org.jzy3d.colors.colormaps.ColorMapWhiteBlue
-import org.jzy3d.maths.BoundingBox3d
-import org.jzy3d.maths.Coord3d
-import org.jzy3d.maths.Range
-import org.jzy3d.maths.Rectangle
+import org.jzy3d.maths.*
 import org.jzy3d.plot3d.builder.Builder
 import org.jzy3d.plot3d.builder.Mapper
 import org.jzy3d.plot3d.primitives.AbstractDrawable
 import org.jzy3d.plot3d.primitives.LineStrip
 import org.jzy3d.plot3d.primitives.Point
+import org.jzy3d.plot3d.primitives.textured.DrawableTexture
 import org.jzy3d.plot3d.rendering.canvas.Quality
 import org.jzy3d.plot3d.rendering.scene.Graph
+import org.jzy3d.plot3d.rendering.textures.BufferedImageTexture
+import org.jzy3d.plot3d.text.drawable.DrawableTextTexture
+import org.jzy3d.plot3d.text.drawable.TextImageRenderer
 import ru.ifmo.ctddev.isaev.space.getPointOnUnitSphere
+import java.awt.Font
 import java.awt.event.KeyEvent
-import kotlin.math.cos
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 
@@ -44,37 +44,22 @@ fun main(args: Array<String>) {
         override fun keyPressed(e: KeyEvent) {
             if (e.isShiftDown) {
                 when (e.keyCode) {
-                    KeyEvent.VK_LEFT -> {
-                        theta -= 0.01
-                        updateDrawables(chart, false)
-                    }
-                    KeyEvent.VK_RIGHT -> {
-                        theta += 0.01
-                        updateDrawables(chart, false)
-                    }
-                    KeyEvent.VK_UP -> {
-                        phi -= 0.01
-                        updateDrawables(chart, false)
-                    }
-                    KeyEvent.VK_DOWN -> {
-                        phi += 0.01
-                        updateDrawables(chart, false)
-                    }
+                    KeyEvent.VK_LEFT -> theta -= 0.01
+                    KeyEvent.VK_RIGHT -> theta += 0.01
+                    KeyEvent.VK_UP -> phi -= 0.01
+                    KeyEvent.VK_DOWN -> phi += 0.01
                 }
+                updateDrawables(chart)
             }
         }
     })
 }
 
-private fun updateDrawables(chart: Chart, firstTime: Boolean) {
+private fun updateDrawables(chart: Chart) {
     drawablesByPoint.forEach { chart.removeDrawable(it, false) }
     drawablesByPoint = getDrawablesByPoint(theta, phi)
     chart.addDrawable(drawablesByPoint, false)
     chart.view.setBoundManual(BoundingBox3d(0.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f))
-    println("Current coordinates: phi = $phi, theta = $theta conversion from [$theta, $phi] to ${getPointOnUnitSphere(doubleArrayOf(theta, phi))}")
-    /* if (!firstTime) {
-         chart.render()
-     }*/
 }
 
 private fun m(mapper: (Double, Double) -> Double): Mapper {
@@ -97,7 +82,7 @@ private class ProjectiveToEuclidean : AbstractAnalysis() {
         chart = AWTChartComponentFactory.chart(Quality.Advanced, getCanvasType())
         val graph = chart.scene.graph
         drawBasics(graph)
-        updateDrawables(chart, true)
+        updateDrawables(chart)
     }
 
     private fun drawBasics(graph: Graph) {
@@ -121,28 +106,40 @@ private class ProjectiveToEuclidean : AbstractAnalysis() {
 
 
 private fun getDrawablesByPoint(theta: Double, phi: Double): List<AbstractDrawable> {
-    val pointOnSphere = getPointOnSphere(phi, theta)
+    val cartesian = getPointOnUnitSphere(doubleArrayOf(theta, phi))
+    val pointOnSphere = Coord3d(cartesian.coordinates[0], cartesian.coordinates[1], cartesian.coordinates[2])
+    println("Current coordinates: phi = $phi, theta = $theta conversion from [$theta, $phi] to $cartesian")
     val pointOnX = Coord3d(pointOnSphere.x, 0.0f, 0.0f)
     val pointOnY = Coord3d(0.0f, pointOnSphere.y, 0.0f)
     val pointOnZ = Coord3d(0.0f, 0.0f, pointOnSphere.z)
     val lineFromOrigin = getLineFromOrigin(pointOnSphere, Color.RED, 3.0)
+    
+    fun makeMapping(dim: Coord2d): List<Coord2d> {
+        return DrawableTexture.getManualTextureMapping(dim.x, dim.y, dim.x / 2.0f, dim.y / 2.0f)
+    }
+
+    val xDescr = DrawableTextTexture(makeImage(pointOnSphere.x), PlaneAxis.X, pointOnSphere.x, makeMapping(Coord2d(0.1f, 0.1f)), Color.BLACK).apply{
+        
+    }
+
+    val yDescr = DrawableTextTexture(makeImage(pointOnSphere.y), PlaneAxis.Y, pointOnSphere.y, makeMapping(Coord2d(0.1f, 0.1f)), Color.BLACK).apply{
+
+    }
+
+    val zDescr = DrawableTextTexture(makeImage(pointOnSphere.z), PlaneAxis.Z, pointOnSphere.z, makeMapping(Coord2d(0.1f, 0.1f)), Color.BLACK).apply{
+
+    }
+
     return listOf(
             lineFromOrigin,
             getLine(pointOnSphere, pointOnX, Color.RED, 1.0),
+            xDescr,
             getLine(pointOnSphere, pointOnY, Color.RED, 1.0),
-            getLine(pointOnSphere, pointOnZ, Color.RED, 1.0)
+            yDescr,
+            getLine(pointOnSphere, pointOnZ, Color.RED, 1.0),
+            zDescr
     )
 }
-
-
-private fun getPointOnSphere(phi: Double, theta: Double): Coord3d {
-    return Coord3d(
-            cos(theta) * sin(phi),
-            sin(theta) * sin(phi),
-            cos(phi)
-    )
-}
-
 
 private fun getLineFromOrigin(coord: Coord3d, color: Color, width: Double): LineStrip {
     return getLine(Coord3d.ORIGIN, coord, color, width)
@@ -155,4 +152,9 @@ private fun getLine(from: Coord3d, to: Coord3d, color: Color, width: Double): Li
             }
     result.setWidth(width.toFloat())
     return result
+}
+
+fun makeImage(text: Number): BufferedImageTexture {
+    val font = Font("Serif", Font.BOLD, 12)
+    return TextImageRenderer(text.toString(), font).image
 }
