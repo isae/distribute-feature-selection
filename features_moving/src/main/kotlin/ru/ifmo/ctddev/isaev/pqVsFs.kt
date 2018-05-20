@@ -53,7 +53,7 @@ fun main(args: Array<String>) {
         """)
 }*/
 
-data class ComparisonResult(
+internal data class ComparisonResult(
         val pqVisited: Long,
         val pqTime: Long,
         val pqScore: Double,

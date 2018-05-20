@@ -30,10 +30,10 @@ private val COLOR_TRIANGLE_BORDER = Color(241, 241, 121)
 
 private val COLOR_BACKGROUND = Color(47, 47, 47)
 
-class DelaunayTriangulationExample(envelope: Envelope,
-                                   private val subDiv: QuadEdgeSubdivision,
-                                   private val geometryFactory: GeometryFactory,
-                                   private val delaunay: IncrementalDelaunayTriangulator
+private class DelaunayTriangulationExample(envelope: Envelope,
+                                           private val subDiv: QuadEdgeSubdivision,
+                                           private val geometryFactory: GeometryFactory,
+                                           private val delaunay: IncrementalDelaunayTriangulator
 ) : GLEventListener, MouseAdapter() {
 
 
@@ -133,7 +133,7 @@ class DelaunayTriangulationExample(envelope: Envelope,
     }
 }
 
-fun visualizeDelaunay(envelope: Envelope, subDiv: QuadEdgeSubdivision, geometryFactory: GeometryFactory, delaunay: IncrementalDelaunayTriangulator) {
+internal fun visualizeDelaunay(envelope: Envelope, subDiv: QuadEdgeSubdivision, geometryFactory: GeometryFactory, delaunay: IncrementalDelaunayTriangulator) {
     val frame = Frame("Delaunay Triangulation Example")
     frame.isResizable = false
 

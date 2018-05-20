@@ -21,7 +21,7 @@ import kotlin.collections.HashMap
 private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class)
 //private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class, SymmetricUncertainty::class)
 
-val dimensionality = measures.size - 1
+private val dimensionality = measures.size - 1
 
 private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
@@ -39,7 +39,7 @@ private data class PointProcessingFinalResult(
 
 typealias Dimension = Int
 
-typealias RowOfPoints = TreeSet<SpacePoint>
+private typealias RowOfPoints = TreeSet<SpacePoint>
 
 private val fullSpace = HashMap<Dimension, TreeMap<Coord, RowOfPoints>>()
         .apply {
@@ -106,7 +106,7 @@ private fun processAllPointsWithEnrichment(chart: Chart): PointProcessingFinalRe
     )
 }
 
-fun addEnrichmentToSpace(currentEnrichment: Collection<SpacePoint>) {
+private fun addEnrichmentToSpace(currentEnrichment: Collection<SpacePoint>) {
     currentEnrichment.forEach { point ->
         0.until(dimensionality).forEach { dim ->
             val coord = Coord.from(point.point[dim], point.delta)
@@ -118,7 +118,7 @@ fun addEnrichmentToSpace(currentEnrichment: Collection<SpacePoint>) {
 
 val tempRoaringBitmap = RoaringBitmap()
 
-fun calculateEnrichment(dim: Int): List<SpacePoint> {
+private fun calculateEnrichment(dim: Int): List<SpacePoint> {
     val dimension = fullSpace[dim]!!
     val otherDim = 1 - dim
     val result = ArrayList<SpacePoint>()

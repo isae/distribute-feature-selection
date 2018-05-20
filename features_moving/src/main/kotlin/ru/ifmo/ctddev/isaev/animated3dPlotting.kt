@@ -20,7 +20,7 @@ fun main(args: Array<String>) {
     AnalysisLauncher.open(KotlinSurfaceDemo())
 }
 
-class KotlinSurfaceDemo : AbstractAnalysis() {
+private class KotlinSurfaceDemo : AbstractAnalysis() {
 
     override fun init() {
         // Define a function to plot

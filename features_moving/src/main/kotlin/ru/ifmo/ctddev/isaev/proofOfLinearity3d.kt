@@ -42,7 +42,7 @@ fun main(args: Array<String>) {
     AnalysisLauncher.open(ProofOfLinearity(forDraw))
 }
 
-class ProofOfLinearity(val forDraw: Map<Pair<Int, Int>, Double>) : AbstractAnalysis() {
+private class ProofOfLinearity(val forDraw: Map<Pair<Int, Int>, Double>) : AbstractAnalysis() {
 
     override fun init() {
         // Define a function to plot

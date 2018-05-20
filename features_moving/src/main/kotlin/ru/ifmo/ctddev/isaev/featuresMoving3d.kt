@@ -58,7 +58,7 @@ fun main(args: Array<String>) {
     AnalysisLauncher.open(PointsScene(pointsToTry))
 }
 
-fun calculatePlanes(data: List<DoubleArray>): List<Plane> {
+internal fun calculatePlanes(data: List<DoubleArray>): List<Plane> {
     return 0.until(data[0].size)
             .map {
                 Plane(
@@ -132,7 +132,7 @@ private class PointsScene(private val pointsToTry: List<Point3d>) : AbstractAnal
     }
 }
 
-fun calculatePoints(it: Intersection3d): List<Point3d> {
+internal fun calculatePoints(it: Intersection3d): List<Point3d> {
     val p1 = it.line.p1
     val p2 = it.line.p2
     val xMin = Math.min(p1.x, p2.x)
@@ -157,13 +157,13 @@ fun calculatePoints(it: Intersection3d): List<Point3d> {
     return result
 }
 
-class Point3d(val x: Double, val y: Double, val z: Double)
+internal class Point3d(val x: Double, val y: Double, val z: Double)
 
-class Line3d(val p1: Point3d, val p2: Point3d)
+internal class Line3d(val p1: Point3d, val p2: Point3d)
 
-class Intersection3d(val plane1: Plane, val plane2: Plane, val line: Line3d)
+internal class Intersection3d(val plane1: Plane, val plane2: Plane, val line: Line3d)
 
-class Plane {
+internal class Plane {
     private val a: Double
     private val b: Double
     private val c: Double
