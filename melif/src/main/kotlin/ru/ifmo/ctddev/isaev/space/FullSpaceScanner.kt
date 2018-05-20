@@ -226,15 +226,15 @@ private fun processAllPoints(positions: RoaringBitmap,
     // begin first stage (before enrichment)
     logToConsole { "Started the processing" }
     logToConsole { "${positions.cardinality} points to calculate measures on" }
-    val angles = positions.map { getAngle(epsilon, it) }
+    //val angles = positions.map { getAngle(epsilon, it) }
     val chunkSize = getChunkSize(dataSet)
-    val cutsForAllPoints = ArrayList<RoaringBitmap>(angles.size)
-    val evaluatedData = ArrayList<DoubleArray>(angles.size)
-    val lastFeatureInAllCuts = IntArray(angles.size)
-    angles.chunked(chunkSize)
+    val cutsForAllPoints = ArrayList<RoaringBitmap>(positions.cardinality)
+    val evaluatedData = ArrayList<DoubleArray>(positions.cardinality)
+    val lastFeatureInAllCuts = IntArray(positions.cardinality)
+    positions.chunked(chunkSize)
             .forEach { cut ->
                 logToConsole { "Processing chunk of ${cut.size} points" }
-                val pointsInProjectiveCoords = cut.map { getPointOnUnitSphere(it) }
+                val pointsInProjectiveCoords = cut.map { Point.fromRawCoords(it.toDouble() / epsilon, 1.0) }
                 val (evaluatedDataChunk, cutsForAllPointsChunk, lastFeatureInAllCutsChunk) = processAllPointsChunk(pointsInProjectiveCoords, dataSet, cutSize)
                 System.arraycopy(lastFeatureInAllCutsChunk, 0, lastFeatureInAllCuts, evaluatedData.size, lastFeatureInAllCutsChunk.size)
                 cutsForAllPoints.addAll(cutsForAllPointsChunk)
@@ -243,7 +243,7 @@ private fun processAllPoints(positions: RoaringBitmap,
     logToConsole { "Evaluated data, calculated cutting line and cuts for all points" }
 
     val cutChangePositions = positions
-            .filterIndexed { i, _ -> i != 0 && cutsForAllPoints[i] != cutsForAllPoints[i - 1] }
+            .filterIndexed { i, _ -> i != 0 && getDiff(cutsForAllPoints[i - 1], cutsForAllPoints[i]).cardinality > 0 }
     logToConsole { "Found ${cutChangePositions.size} points to try" }
 
     // end first stage (before enrichment)

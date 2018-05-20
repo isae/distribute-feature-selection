@@ -23,7 +23,7 @@ import kotlin.math.sin
  * @author iisaev
  */
 
-private val measures = listOf(SpearmanRankCorrelation::class, VDM::class)
+private val measures = listOf(VDM::class, FitCriterion::class)
 private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
 private val evaluatedDs = evaluateDataSet(dataSet, measures)
