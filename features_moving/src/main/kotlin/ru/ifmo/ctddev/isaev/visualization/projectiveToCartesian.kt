@@ -113,23 +113,24 @@ private fun getDrawablesByPoint(theta: Double, phi: Double): List<AbstractDrawab
     val pointOnY = Coord3d(0.0f, pointOnSphere.y, 0.0f)
     val pointOnZ = Coord3d(0.0f, 0.0f, pointOnSphere.z)
     val lineFromOrigin = getLineFromOrigin(pointOnSphere, Color.RED, 3.0)
-    
+
     fun makeMapping(dim: Coord2d): List<Coord2d> {
         return DrawableTexture.getManualTextureMapping(dim.x, dim.y, dim.x / 2.0f, dim.y / 2.0f)
     }
 
-    val xDescr = DrawableTextTexture(makeImage(pointOnSphere.x), PlaneAxis.X, pointOnSphere.x, makeMapping(Coord2d(0.1f, 0.1f)), Color.BLACK).apply{
-        
+    val xDescr = DrawableTextTexture(makeImage(pointOnSphere.x), PlaneAxis.X, pointOnSphere.x, makeMapping(Coord2d(0.1f, 0.1f)), Color.BLACK).apply {
+        // ???
     }
 
-    val yDescr = DrawableTextTexture(makeImage(pointOnSphere.y), PlaneAxis.Y, pointOnSphere.y, makeMapping(Coord2d(0.1f, 0.1f)), Color.BLACK).apply{
-
+    val yDescr = DrawableTextTexture(makeImage(pointOnSphere.y), PlaneAxis.Y, pointOnSphere.y, makeMapping(Coord2d(0.1f, 0.1f)), Color.BLACK).apply {
+        // ???
     }
 
-    val zDescr = DrawableTextTexture(makeImage(pointOnSphere.z), PlaneAxis.Z, pointOnSphere.z, makeMapping(Coord2d(0.1f, 0.1f)), Color.BLACK).apply{
-
+    val zDescr = DrawableTextTexture(makeImage(pointOnSphere.z), PlaneAxis.Z, pointOnSphere.z, makeMapping(Coord2d(0.1f, 0.1f)), Color.BLACK).apply {
+        // ???
     }
 
+    val projectionOnXY = Coord3d(pointOnSphere.x, pointOnSphere.y, 0.0f)
     return listOf(
             lineFromOrigin,
             getLine(pointOnSphere, pointOnX, Color.RED, 1.0),
@@ -137,7 +138,11 @@ private fun getDrawablesByPoint(theta: Double, phi: Double): List<AbstractDrawab
             getLine(pointOnSphere, pointOnY, Color.RED, 1.0),
             yDescr,
             getLine(pointOnSphere, pointOnZ, Color.RED, 1.0),
-            zDescr
+            zDescr,
+            getLineFromOrigin(projectionOnXY, Color.RED, 1.0),
+            getLine(pointOnSphere, projectionOnXY, Color.RED, 1.0),
+            getLine(pointOnX, projectionOnXY, Color.RED, 1.0),
+            getLine(pointOnY, projectionOnXY, Color.RED, 1.0)
     )
 }
 
