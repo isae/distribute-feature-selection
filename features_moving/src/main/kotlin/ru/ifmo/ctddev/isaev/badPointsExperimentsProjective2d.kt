@@ -1,6 +1,7 @@
 package ru.ifmo.ctddev.isaev
 
 import ru.ifmo.ctddev.isaev.feature.measure.VDM
+import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.space.*
 import java.util.*
 
@@ -9,30 +10,24 @@ import java.util.*
  * @author iisaev
  */
 
-//private val measures = listOf(VDM::class, FitCriterion::class)
-private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class)
-//private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class, SymmetricUncertainty::class)
+private val measures = listOf(VDM::class, FitCriterion::class)
 
 private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
 private val evaluatedDataSet = evaluateDataSet(dataSet, measures)
 
 fun main(args: Array<String>) {
-    /* var lRaw = SpacePoint(longArrayOf(2048, 545), 2048) //old experiment, success
-     var rRaw = SpacePoint(longArrayOf(4096, 1091), 4096)*/
-    var lRaw = SpacePoint(intArrayOf(64, 45), 64) //new experiment, still no success
-    var rRaw = SpacePoint(intArrayOf(256, 181), 256)
+    var lRaw = SpacePoint(intArrayOf(19), 64)
+    var rRaw = SpacePoint(intArrayOf(39), 128)
     do {
         println("Left: $lRaw")
         println("Right: $rRaw")
         val mRaw = inBetween(lRaw, rRaw)
-        val left = getPointOnUnitSphere(getAngle(lRaw))
-        val langles = getAngle(lRaw)
-        println("Left angles: ${Arrays.toString(langles)}")
-        val rangles = getAngle(rRaw)
-        println("Riht angles: ${Arrays.toString(rangles)}")
-        val right = getPointOnUnitSphere(rangles)
-        val middle = getPointOnUnitSphere(getAngle(mRaw))
+        val left = Point.fromRawCoords(lRaw.point[0].toDouble() / lRaw.delta, 1.0)
+        val right = Point.fromRawCoords(rRaw.point[0].toDouble() / rRaw.delta, 1.0)
+        val middle = Point.fromRawCoords(mRaw.point[0].toDouble() / mRaw.delta, 1.0)
+        println("Left angles: ${Arrays.toString(left.coordinates)}")
+        println("Riht angles: ${Arrays.toString(right.coordinates)}")
         val lCut = processPointGetWholeCut(left, evaluatedDataSet, cutSize)
         val rCut = processPointGetWholeCut(right, evaluatedDataSet, cutSize)
         val mCut = processPointGetWholeCut(middle, evaluatedDataSet, cutSize)

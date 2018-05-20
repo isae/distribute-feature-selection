@@ -343,11 +343,11 @@ fun processAllPointsFastOld(xData: List<Point>,
 
 fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
 fun lcm(a: Int, b: Int): Int {
-    val mul = a.toLong() * b
-    if (mul < 0) {
+    val result = a.toLong() / gcd(a, b) * b
+    if (result < 0) {
         throw IllegalStateException("Overflow!")
     }
-    return (mul / gcd(a, b)).toInt()
+    return result.toInt()
 }
 
 fun getDiff(prevCut: RoaringBitmap, currCut: RoaringBitmap, tempMap: RoaringBitmap): RoaringBitmap {
