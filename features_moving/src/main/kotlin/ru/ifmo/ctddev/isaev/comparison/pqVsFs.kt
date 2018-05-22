@@ -47,7 +47,7 @@ fun main(args: Array<String>) {
                     OrderSplitter(10, order),
                     F1Score()
             ),
-            listOf(VDM::class, SpearmanRankCorrelation::class)
+            listOf(VDM(), SpearmanRankCorrelation())
     )
     val (fullSpaceTime, fullSpaceStats) = calculateTime {
         FullSpaceScanner(algorithmConfig, dataSet, 4)
@@ -82,7 +82,7 @@ private fun processDataSet(dataSet: FeatureDataSet): ComparisonResult2d {
                     OrderSplitter(10, order),
                     F1Score()
             ),
-            listOf(VDM::class, SpearmanRankCorrelation::class)
+            arrayOf(VDM(), SpearmanRankCorrelation())
     )
 
     val (reliefFTime, reliefFStats) = calculateTime {

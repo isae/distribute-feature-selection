@@ -23,7 +23,7 @@ import ru.ifmo.ctddev.isaev.space.evaluatePoints
 
 fun main(args: Array<String>) {
     val dataSet = KnownDatasets.ARIZONA5.read()
-    val measures = listOf(VDM::class, SpearmanRankCorrelation::class, SymmetricUncertainty::class)
+    val measures = arrayOf(VDM(), SpearmanRankCorrelation(), SymmetricUncertainty())
     //val n = 100
     val intValues = 0.rangeTo(100)
             .flatMap { x ->

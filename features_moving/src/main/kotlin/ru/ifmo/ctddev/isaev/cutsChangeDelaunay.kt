@@ -17,7 +17,7 @@ import ru.ifmo.ctddev.isaev.space.performDelaunayEnrichment
  * @author iisaev
  */
 
-private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, SymmetricUncertainty::class)
+private val measures = arrayOf(SpearmanRankCorrelation(), VDM(), SymmetricUncertainty())
 private const val cutSize = 50
 private val dataSet = KnownDatasets.ARIZONA5.read()
 private val evaluatedDs = evaluateDataSet(dataSet, measures)

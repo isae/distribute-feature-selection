@@ -10,7 +10,7 @@ import java.util.*
  * @author iisaev
  */
 
-private val measures = listOf(VDM::class, FitCriterion::class)
+private val measures = arrayOf(VDM(), FitCriterion())
 
 private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()

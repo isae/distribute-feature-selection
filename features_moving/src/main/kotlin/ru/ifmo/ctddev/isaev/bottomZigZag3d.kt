@@ -42,7 +42,7 @@ private fun randomColor() = colorMaps[random.nextInt(colorMaps.size)]
 
 fun main(args: Array<String>) {
     val dataSet = KnownDatasets.ARIZONA5.read()
-    val measures = listOf(VDM::class, SpearmanRankCorrelation::class, SymmetricUncertainty::class)
+    val measures = arrayOf(VDM(), SpearmanRankCorrelation(), SymmetricUncertainty())
     val intValues = 0.rangeTo(100)
             .flatMap { x ->
                 0.rangeTo(100 - x)

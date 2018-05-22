@@ -9,9 +9,9 @@ import java.util.*
  * @author iisaev
  */
 
-//private val measures = listOf(VDM::class, FitCriterion::class)
-private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class)
-//private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class, SymmetricUncertainty::class)
+//private val measures = listOf(VDM(), FitCriterion())
+private val measures = arrayOf(SpearmanRankCorrelation(), VDM(), FitCriterion())
+//private val measures = listOf(SpearmanRankCorrelation(), VDM(), FitCriterion(), SymmetricUncertainty())
 
 private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()

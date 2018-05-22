@@ -56,7 +56,7 @@ private fun processDataSet(dataSet: FeatureDataSet): ComparisonResult3d {
                     OrderSplitter(10, order),
                     F1Score()
             ),
-            listOf(VDM::class, SpearmanRankCorrelation::class, SymmetricUncertainty::class)
+            arrayOf(VDM(), SpearmanRankCorrelation(), SymmetricUncertainty())
     )
 
     val (fullSpaceTime, fullSpaceStats) = calculateTime {

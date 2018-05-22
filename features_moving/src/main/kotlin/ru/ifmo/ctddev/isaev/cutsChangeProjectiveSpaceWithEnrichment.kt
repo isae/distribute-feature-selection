@@ -23,7 +23,7 @@ import kotlin.math.sin
  * @author iisaev
  */
 
-private val measures = listOf(SpearmanRankCorrelation::class, VDM::class)
+private val measures = arrayOf(SpearmanRankCorrelation(), VDM())
 private const val cutSize = 50
 private val dataSet = KnownDatasets.DLBCL.read()
 private val evaluatedDs = evaluateDataSet(dataSet, measures)
@@ -40,7 +40,7 @@ fun main(args: Array<String>) {
     val chartBuilder = XYChartBuilder()
             .width(1024)
             .height(768)
-            .xAxisTitle("Measure Proportion (${measures[0].simpleName} to ${measures[1].simpleName})")
+            .xAxisTitle("Measure Proportion (${measures[0].javaClass.simpleName} to ${measures[1].javaClass.simpleName})")
             .yAxisTitle("Ensemble feature measure")
     val chart = XYChart(chartBuilder)
     drawSemiSphere(chart)

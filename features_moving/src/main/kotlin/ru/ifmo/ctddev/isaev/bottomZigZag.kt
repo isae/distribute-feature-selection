@@ -13,7 +13,6 @@ import java.awt.BasicStroke
 import java.awt.Color
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.reflect.KClass
 
 
 /**
@@ -21,7 +20,7 @@ import kotlin.reflect.KClass
  */
 
 fun main(args: Array<String>) {
-    val measures = listOf(SpearmanRankCorrelation::class, VDM::class)
+    val measures = arrayOf(SpearmanRankCorrelation(), VDM())
     val epsilon = 1000
     val cutSize = 50
     val dataSet = KnownDatasets.DLBCL.read()
@@ -65,7 +64,7 @@ fun main(args: Array<String>) {
     draw(measures, features, xData, bottomFrontOfCuttingRule, cuttingLineY)
 }
 
-private fun draw(measures: List<KClass<out RelevanceMeasure>>,
+private fun draw(measures: Array<out RelevanceMeasure>,
                  features: List<DoubleArray>,
                  xData: List<Point>,
                  intersections: List<LinePoint>,
@@ -73,7 +72,7 @@ private fun draw(measures: List<KClass<out RelevanceMeasure>>,
     val chartBuilder = XYChartBuilder()
             .width(1024)
             .height(768)
-            .xAxisTitle("Measure Proportion (${measures[0].simpleName} to ${measures[1].simpleName})")
+            .xAxisTitle("Measure Proportion (${measures[0].javaClass.simpleName} to ${measures[1].javaClass.simpleName})")
             .yAxisTitle("Ensemble feature measure")
     val chart = XYChart(chartBuilder)
     features.forEachIndexed({ index, line -> addLine("Feature $index", xData, line, chart) })

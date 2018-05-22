@@ -24,7 +24,7 @@ import kotlin.collections.ArrayList
  */
 
 fun main(args: Array<String>) {
-    val measures = listOf(VDM::class, SpearmanRankCorrelation::class)
+    val measures = arrayOf(VDM(), SpearmanRankCorrelation())
     val dataSet = KnownDatasets.ARIZONA5.read()
     //val n = 100
     //val xData = 0.rangeTo(n).map { (it.toDouble()) / n }
@@ -39,7 +39,7 @@ fun main(args: Array<String>) {
     val chartBuilder = XYChartBuilder()
             .width(1024)
             .height(768)
-            .xAxisTitle("Measure Proportion (${measures[0].simpleName} to ${measures[1].simpleName})")
+            .xAxisTitle("Measure Proportion (${measures[0].javaClass.simpleName} to ${measures[1].javaClass.simpleName})")
             .yAxisTitle("Ensemble feature measure")
     val chart = XYChart(chartBuilder)
     val featuresToTake = 50

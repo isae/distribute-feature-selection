@@ -7,7 +7,6 @@ import ru.ifmo.ctddev.isaev.point.Point
 import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
-import kotlin.reflect.KClass
 
 /**
  * @author iisaev
@@ -52,7 +51,7 @@ typealias Matrix = List<List<Double>>
 typealias EvaluatedDataSet = List<DoubleArray>// [number of measures x number of features]
 
 fun evaluateDataSet(dataSet: FeatureDataSet,
-                    measureClasses: List<KClass<out RelevanceMeasure>>
+                    measureClasses: Array<out RelevanceMeasure>
 ): EvaluatedDataSet {
     return DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)
 }
@@ -65,7 +64,7 @@ fun evaluatePoints(xData: List<Point>,
 
 fun evaluatePoints(xData: List<Point>,
                    dataSet: FeatureDataSet,
-                   measureClasses: List<KClass<out RelevanceMeasure>>
+                   measureClasses: Array<out RelevanceMeasure>
 ): List<DoubleArray> {
     val valuesForEachMeasure = evaluateDataSet(dataSet, measureClasses)
     return xData.map { point -> evaluatePoint(point, valuesForEachMeasure) }
@@ -73,7 +72,7 @@ fun evaluatePoints(xData: List<Point>,
 
 fun evaluatePoints(xData: List<Point>,
                    dataSet: FeatureDataSet,
-                   measureClasses: List<KClass<out RelevanceMeasure>>,
+                   measureClasses: Array<out RelevanceMeasure>,
                    position: Int
 ): List<Double> {
     val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)// [number of measures x number of features]
@@ -86,7 +85,7 @@ fun evaluatePoints(xData: List<Point>,
 
 fun evaluatePoints(xData: List<Point>,
                    dataSet: FeatureDataSet,
-                   measureClasses: List<KClass<out RelevanceMeasure>>,
+                   measureClasses: Array<out RelevanceMeasure>,
                    positions: Set<Int>
 ): List<DoubleArray> {
     val valuesForEachMeasure = DataSetEvaluator().evaluateMeasures(dataSet, measureClasses)// [number of measures x number of features]

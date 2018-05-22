@@ -21,7 +21,6 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
-import kotlin.reflect.KClass
 
 /**
  * @author iisaev
@@ -36,8 +35,6 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
 
     private val featureDataSet = dataSet.toFeatureSet()
 
-    private val evaluatedDs = evaluateDataSet(featureDataSet, config.measureClasses)
-
     fun run(): RunStats {
         val runStats = RunStats(config, dataSet, javaClass.simpleName)
         logger.info("Started {} at {}", javaClass.simpleName, runStats.startTime)
@@ -45,9 +42,18 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
         val cutSize = (config.foldsEvaluator.dataSetFilter as? PreferredSizeFilter)?.preferredSize ?: 50
         when (config.measures.size) {
             2 -> {
+                val evaluatedDs = evaluateDataSet(featureDataSet, config.measures)
                 val (_, _, _, rawPoints, _, _) =
                         calculateAllPointsWithEnrichment2d(2, evaluatedDs, cutSize, 2)
                 points = rawPoints
+            }
+            3 -> {
+                val evaluatedDsOnTwoMeasures = evaluateDataSet(featureDataSet, config.measures.take(2).toTypedArray())
+                val (_, _, _, points2d, _, _) =
+                        calculateAllPointsWithEnrichment2d(2, evaluatedDsOnTwoMeasures, cutSize, 2)
+                val points = ArrayList<Point>()
+                points2d.forEach { }
+                TODO("Not implemented")
             }
             else -> throw IllegalStateException("Unable to perform full space scan by ${config.measures.size} measures")
         }
@@ -302,7 +308,7 @@ fun processPointGetWholeCut(point: Point,
 
 fun processAllPointsFastOld(xData: List<Point>,
                             dataSet: FeatureDataSet,
-                            measures: List<KClass<out RelevanceMeasure>>,
+                            measures: Array<out RelevanceMeasure>,
                             cutSize: Int)
         : Triple<List<DoubleArray>, List<Int>, List<RoaringBitmap>> {
     if (xData[0].coordinates.size != 2) {
@@ -453,8 +459,8 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
                        cutSize: Int)
         : List<RoaringBitmap> {
     val angles = xDataRaw.map { getAngle(it) }
-    val xData = angles.map { getPointOnUnitSphere(it) }
-    /* val xData = xDataRaw.map { Point(it.point[0].toDouble() / it.delta, it.point[1].toDouble() / it.delta, 1.0) }*/
+    //val xData = angles.map { getPointOnUnitSphere(it) }
+    val xData = xDataRaw.map { Point(it.point[0].toDouble() / it.delta, it.point[1].toDouble() / it.delta, 1.0) }
 
     val evaluatedData = evaluatePoints(xData, dataSet)
     return evaluatedData

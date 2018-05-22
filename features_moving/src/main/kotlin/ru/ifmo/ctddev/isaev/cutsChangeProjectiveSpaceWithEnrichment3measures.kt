@@ -17,9 +17,9 @@ import kotlin.collections.HashMap
  * @author iisaev
  */
 
-//private val measures = listOf(SpearmanRankCorrelation::class, VDM::class)
-private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class)
-//private val measures = listOf(SpearmanRankCorrelation::class, VDM::class, FitCriterion::class, SymmetricUncertainty::class)
+//private val measures = listOf(SpearmanRankCorrelation(), VDM())
+private val measures = arrayOf(SpearmanRankCorrelation(), VDM(), FitCriterion())
+//private val measures = listOf(SpearmanRankCorrelation(), VDM(), FitCriterion(), SymmetricUncertainty())
 
 private val dimensionality = measures.size - 1
 

@@ -4,8 +4,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import ru.ifmo.ctddev.isaev.point.Point
 import java.util.*
-import kotlin.reflect.KClass
-import kotlin.reflect.full.createInstance
 
 /**
  * @author iisaev
@@ -23,7 +21,7 @@ class DataSetEvaluator(private val normMode: NormalizationMode) {
     constructor() : this(NormalizationMode.VALUE_BASED)
 
     private fun evaluateMeasuresHelper(original: FeatureDataSet,
-                                       measures: List<RelevanceMeasure>): List<DoubleArray> {
+                                       measures: Array<out RelevanceMeasure>): List<DoubleArray> {
         return measures.map { m ->
             val evaluated = m.evaluate(original)
             when (normMode) {
@@ -43,7 +41,7 @@ class DataSetEvaluator(private val normMode: NormalizationMode) {
         }
 
         val features = original.features
-        val valuesForEachMeasure = evaluateMeasuresHelper(original, measures.toList())
+        val valuesForEachMeasure = evaluateMeasuresHelper(original, measures)
         val ensembleMeasures = 0.until(features.size)
                 .map { i -> measureCosts.coordinates.zip(valuesForEachMeasure.map { it[i] }) }
                 .map { it.sumByDouble { (measureCost, measureValue) -> measureCost * measureValue } }
@@ -63,8 +61,8 @@ class DataSetEvaluator(private val normMode: NormalizationMode) {
     }
 
     fun evaluateMeasures(dataSet: FeatureDataSet,
-                         measures: List<KClass<out RelevanceMeasure>>): List<DoubleArray> {
-        return evaluateMeasuresHelper(dataSet, measures.map { k -> k.createInstance() })
+                         measures: Array<out RelevanceMeasure>): List<DoubleArray> {
+        return evaluateMeasuresHelper(dataSet, measures)
     }
 }
 
