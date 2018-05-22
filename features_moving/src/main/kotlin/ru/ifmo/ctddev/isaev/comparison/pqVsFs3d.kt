@@ -17,6 +17,8 @@ import java.util.*
 
 private val LOGGER = LoggerFactory.getLogger("pqVsFs3d")
 
+private val RANDOM = Random(0xBADFEED)
+
 private data class ComparisonResult3d(
         val pqVisited: Long,
         val pqTime: Long,
@@ -30,7 +32,7 @@ private data class ComparisonResult3d(
 
 fun main(args: Array<String>) {
     File("results.txt").printWriter().use { out ->
-        EnumSet.allOf(KnownDatasets::class.java).forEach {
+        EnumSet.of(KnownDatasets.DLBCL).forEach {
             try {
                 val dataSet = it.read()
                 val res = processDataSet(dataSet)
@@ -47,7 +49,7 @@ fun main(args: Array<String>) {
 }
 
 private fun processDataSet(dataSet: FeatureDataSet): ComparisonResult3d {
-    val order = 0.until(dataSet.getInstanceCount()).shuffled()
+    val order = 0.until(dataSet.getInstanceCount()).shuffled(RANDOM)
     val algorithmConfig = AlgorithmConfig(
             0.001,
             SequentalEvaluator(
@@ -67,7 +69,7 @@ private fun processDataSet(dataSet: FeatureDataSet): ComparisonResult3d {
         PriorityQueueMeLiF(algorithmConfig, dataSet, 4)
                 .run("PqMeLif", 100)
     }
-    
+
     LOGGER.info("""
           PQ: processed ${pqStats.visitedPoints} points in ${pqTime / 1000} seconds, 
           best result is ${pqStats.bestResult.score} in point ${pqStats.bestResult.point}

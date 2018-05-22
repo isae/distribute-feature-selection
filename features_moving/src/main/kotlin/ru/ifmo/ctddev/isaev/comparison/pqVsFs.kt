@@ -2,7 +2,7 @@ package ru.ifmo.ctddev.isaev.comparison
 
 import org.slf4j.LoggerFactory
 import ru.ifmo.ctddev.isaev.*
-import ru.ifmo.ctddev.isaev.feature.measure.VDM
+import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty
 import ru.ifmo.ctddev.isaev.melif.impl.PriorityQueueMeLiF
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.relieff.ReliefF
@@ -18,9 +18,11 @@ import java.util.*
 
 private val LOGGER = LoggerFactory.getLogger("pqVsFs")
 
+private val RANDOM = Random(0xBADFEED)
+
 fun main(args: Array<String>) {
-    File("results.txt").printWriter().use { out ->
-        EnumSet.of(KnownDatasets.ARIZONA5).forEach {
+    File("results_${System.currentTimeMillis()}.txt").printWriter().use { out ->
+        EnumSet.of(KnownDatasets.DLBCL).forEach {
             try {
                 val dataSet = it.read()
                 val res = processDataSet(dataSet)
@@ -73,7 +75,7 @@ private data class ComparisonResult2d(
 )
 
 private fun processDataSet(dataSet: FeatureDataSet): ComparisonResult2d {
-    val order = 0.until(dataSet.getInstanceCount()).shuffled()
+    val order = 0.until(dataSet.getInstanceCount()).shuffled(RANDOM)
     val algorithmConfig = AlgorithmConfig(
             0.001,
             SequentalEvaluator(
@@ -82,7 +84,7 @@ private fun processDataSet(dataSet: FeatureDataSet): ComparisonResult2d {
                     OrderSplitter(10, order),
                     F1Score()
             ),
-            arrayOf(VDM(), SpearmanRankCorrelation())
+            arrayOf(SpearmanRankCorrelation(), SymmetricUncertainty())
     )
 
     val (reliefFTime, reliefFStats) = calculateTime {

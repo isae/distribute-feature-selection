@@ -11,6 +11,7 @@ import org.roaringbitmap.RoaringBitmap
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import ru.ifmo.ctddev.isaev.*
+import ru.ifmo.ctddev.isaev.ensemble.EnsembleMeasure
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.results.RunStats
 import java.text.DecimalFormat
@@ -19,6 +20,7 @@ import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
@@ -38,30 +40,60 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
     fun run(): RunStats {
         val runStats = RunStats(config, dataSet, javaClass.simpleName)
         logger.info("Started {} at {}", javaClass.simpleName, runStats.startTime)
-        val points: List<Point>
+        val scoreFutures = ArrayList<Future<SelectionResult>>()
         val cutSize = (config.foldsEvaluator.dataSetFilter as? PreferredSizeFilter)?.preferredSize ?: 50
         when (config.measures.size) {
             2 -> {
                 val evaluatedDs = evaluateDataSet(featureDataSet, config.measures)
-                val (_, _, _, rawPoints, _, _) =
+                val (_, _, _, points, _, _) =
                         calculateAllPointsWithEnrichment2d(2, evaluatedDs, cutSize, 2)
-                points = rawPoints
+                logger.info("Found ${points.size} points to process")
+                scoreFutures.addAll(
+                        points.map { p ->
+                            executorService.submit(Callable<SelectionResult> { foldsEvaluator.getSelectionResult(dataSet, p, runStats, config.measures) })
+                        }
+                )
             }
             3 -> {
                 val evaluatedDsOnTwoMeasures = evaluateDataSet(featureDataSet, config.measures.take(2).toTypedArray())
                 val (_, _, _, points2d, _, _) =
                         calculateAllPointsWithEnrichment2d(2, evaluatedDsOnTwoMeasures, cutSize, 2)
-                val points = ArrayList<Point>()
-                points2d.forEach { }
-                TODO("Not implemented")
+                val points = ArrayList<List<Point>>()
+                val measures = ArrayList<Array<RelevanceMeasure>>()
+                var pointsCount = 0
+                logToConsole { "Found ${points2d.size} points to process in 2D" }
+                points2d.forEach {
+                    val measuresFor3d = arrayOf(
+                            EnsembleMeasure(
+                                    it.coordinates[0],
+                                    config.measures[0],
+                                    it.coordinates[1],
+                                    config.measures[1]
+                            ),
+                            config.measures[2]
+                    )
+                    val evaluatedDsFor3Measures = evaluateDataSet(featureDataSet, measuresFor3d)
+                    val (_, _, _, points3d, _, _) =
+                            calculateAllPointsWithEnrichment2d(2, evaluatedDsFor3Measures, cutSize, 2)
+                    points.add(points3d)
+                    pointsCount += points3d.size
+                    measures.add(measuresFor3d)
+                    logToConsole { "Found ${points3d.size} points to process in 3D for point $it" }
+                }
+                logToConsole { "Found $pointsCount points to process in 3d space" }
+                points.indices.forEach {
+                    val curPoints = points[it]
+                    val curMeasures = measures[it]
+                    scoreFutures.addAll(
+                            curPoints.map { p ->
+                                executorService.submit(Callable<SelectionResult> { foldsEvaluator.getSelectionResult(dataSet, p, runStats, curMeasures) })
+                            }
+                    )
+                }
             }
             else -> throw IllegalStateException("Unable to perform full space scan by ${config.measures.size} measures")
         }
 
-        logger.info("Found ${points.size} points to process")
-        val scoreFutures = points.map { p ->
-            executorService.submit(Callable<SelectionResult> { foldsEvaluator.getSelectionResult(dataSet, p, runStats) })
-        }
         val scores: List<SelectionResult> = scoreFutures.map { it.get() }
 
         logger.info("Total scores: ")

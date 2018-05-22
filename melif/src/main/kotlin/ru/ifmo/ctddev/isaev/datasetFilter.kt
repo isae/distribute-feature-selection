@@ -53,7 +53,7 @@ class DataSetEvaluator(private val normMode: NormalizationMode) {
 
     fun evaluateFeatures(original: FeatureDataSet,
                          measureCosts: Point,
-                         measures: Array<RelevanceMeasure>
+                         measures: Array<out RelevanceMeasure>
     ): Sequence<EvaluatedFeature> {
         return evaluateMeasures(original, measureCosts, *measures)
                 .sortedBy { it.measure }
@@ -71,13 +71,13 @@ sealed class DataSetFilter {
     protected val logger: Logger = LoggerFactory.getLogger(this.javaClass)
 
     abstract fun filterDataSet(original: FeatureDataSet, measureCosts: Point,
-                               measures: Array<RelevanceMeasure>): FeatureDataSet
+                               measures: Array<out RelevanceMeasure>): FeatureDataSet
 }
 
 class PercentFilter(private val percents: Int) : DataSetFilter() {
 
     override fun filterDataSet(original: FeatureDataSet, measureCosts: Point,
-                               measures: Array<RelevanceMeasure>): FeatureDataSet {
+                               measures: Array<out RelevanceMeasure>): FeatureDataSet {
         val evaluatedFeatures = DataSetEvaluator().evaluateFeatures(original, measureCosts, measures).toList()
         val featureToSelect = (evaluatedFeatures.size.toDouble() * percents / 100).toInt()
         val filteredFeatures = ArrayList<Feature>(evaluatedFeatures.subList(0, featureToSelect))
@@ -93,7 +93,7 @@ class PreferredSizeFilter(val preferredSize: Int) : DataSetFilter() {
     }
 
     override fun filterDataSet(original: FeatureDataSet, measureCosts: Point,
-                               measures: Array<RelevanceMeasure>): FeatureDataSet {
+                               measures: Array<out RelevanceMeasure>): FeatureDataSet {
         val filteredFeatures = DataSetEvaluator().evaluateFeatures(original, measureCosts, measures)
                 .take(preferredSize)
         return FeatureDataSet(filteredFeatures.toList(), original.classes, original.name)
@@ -104,7 +104,7 @@ class PreferredSizeFilter(val preferredSize: Int) : DataSetFilter() {
 class WyrdCuttingRuleFilter : DataSetFilter() {
 
     override fun filterDataSet(original: FeatureDataSet, measureCosts: Point,
-                               measures: Array<RelevanceMeasure>): FeatureDataSet {
+                               measures: Array<out RelevanceMeasure>): FeatureDataSet {
         val filteredFeatures = DataSetEvaluator().evaluateFeatures(original, measureCosts, measures)
         val mean = filteredFeatures
                 .map({ it.measure })
