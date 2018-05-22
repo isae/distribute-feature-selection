@@ -61,16 +61,23 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
         return run("PqMeLiF", 75);
     }
 
+
     @Override
-    public RunStats run(@NotNull String name, @NotNull Point[] points, int latchSize) {
+    public RunStats run(@NotNull String name, @NotNull Point[] points, int pointsToVisit) {
+        return run(name, points, pointsToVisit, true);
+    }
+
+    public RunStats run(@NotNull String name, @NotNull Point[] ignored, int latchSize, boolean stopIfFoundOne) {
         RunStats runStats = new RunStats(config, dataSet, name);
         logger.info("Started {} at {}", name, runStats.getStartTime());
         CountDownLatch latch = new CountDownLatch(latchSize);
         final Supplier<Boolean> stopCondition = () -> {
             latch.countDown();
-            if (runStats.getBestResult() != null && Math.abs(runStats.getBestResult().getScore() - 1.0) < 0.0001) {
-                while (latch.getCount() != 0) {
-                    latch.countDown();
+            if (runStats.getBestResult() != null) {
+                if (stopIfFoundOne && Math.abs(runStats.getBestResult().getScore() - 1.0) < 0.0001) {
+                    while (latch.getCount() != 0) {
+                        latch.countDown();
+                    }
                 }
             }
             return latch.getCount() == 0;
@@ -134,7 +141,11 @@ public class PriorityQueueMeLiF extends FeatureSelectionAlgorithm implements MeL
     }
 
     public RunStats run(String name, int latchSize) {
-        return run(name, new Point[0], latchSize);
+        return run(name, new Point[0], latchSize, false);
+    }
+
+    public RunStats run(String name, int latchSize, boolean mustStopIfFoundOne) {
+        return run(name, new Point[0], latchSize, mustStopIfFoundOne);
     }
 
     public RunStats runUntilNoImproveOnLastN(String name, Point[] points, int untilStop) {

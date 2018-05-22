@@ -12,8 +12,4 @@ public interface MeLiF {
     RunStats run(@NotNull Point[] points);
 
     RunStats run(@NotNull String name, @NotNull Point[] points, int pointsToVisit);
-
-    default RunStats runUntilNoImproveOnLastN(String name, Point[] points, int lastN) {
-        throw new UnsupportedOperationException("Not implemented");
-    }
 }

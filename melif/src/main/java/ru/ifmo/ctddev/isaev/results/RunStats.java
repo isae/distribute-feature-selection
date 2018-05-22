@@ -1,5 +1,6 @@
 package ru.ifmo.ctddev.isaev.results;
 
+import org.jetbrains.annotations.NotNull;
 import ru.ifmo.ctddev.isaev.AlgorithmConfig;
 import ru.ifmo.ctddev.isaev.Classifiers;
 import ru.ifmo.ctddev.isaev.DataSet;
@@ -37,7 +38,7 @@ public class RunStats implements Comparable<RunStats> {
 
     private LocalDateTime finishTime;
 
-    public RunStats(AlgorithmConfig config, DataSet dataSet, String algorithmName) {
+    public RunStats(@NotNull AlgorithmConfig config, @NotNull DataSet dataSet, @NotNull String algorithmName) {
         this.measures = config.getMeasures();
         this.usedClassifier = config.getFoldsEvaluator().getClassifiers();
         this.dataSetName = dataSet.getName();

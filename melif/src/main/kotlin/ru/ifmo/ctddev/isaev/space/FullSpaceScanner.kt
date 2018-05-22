@@ -1,6 +1,9 @@
 package ru.ifmo.ctddev.isaev.space
 
-import org.locationtech.jts.geom.*
+import org.locationtech.jts.geom.Coordinate
+import org.locationtech.jts.geom.GeometryCollection
+import org.locationtech.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.Triangle
 import org.locationtech.jts.triangulate.IncrementalDelaunayTriangulator
 import org.locationtech.jts.triangulate.quadedge.QuadEdgeSubdivision
 import org.locationtech.jts.triangulate.quadedge.Vertex
@@ -43,25 +46,10 @@ class FullSpaceScanner(val config: AlgorithmConfig, val dataSet: DataSet, thread
         when (config.measures.size) {
             2 -> {
                 val (_, _, _, rawPoints, _, _) =
-                        calculateAllPointsWithEnrichment2d(100, evaluatedDs, cutSize, 10)
+                        calculateAllPointsWithEnrichment2d(2, evaluatedDs, cutSize, 2)
                 points = rawPoints
             }
-            else -> {
-                val range = Array(evaluatedDs[0].size, { it })
-                val maxCoord = 1.0
-                val envelope = Envelope(Coordinate(0.0, 0.0), Coordinate(maxCoord, maxCoord))
-                val subDiv = QuadEdgeSubdivision(envelope, 1E-6)
-                val delaunay = IncrementalDelaunayTriangulator(subDiv)
-                delaunay.insertSite(Vertex(0.0, maxCoord))
-                delaunay.insertSite(Vertex(maxCoord, 0.0))
-                delaunay.insertSite(Vertex(maxCoord, maxCoord))
-                val pointCache = MapCache()
-                val geomFact = GeometryFactory()
-                do {
-                    val isChanged = performDelaunayEnrichment(evaluatedDs, delaunay, pointCache, geomFact, range, subDiv, cutSize)
-                } while (isChanged)
-                points = pointCache.getAll().toList()
-            }
+            else -> throw IllegalStateException("Unable to perform full space scan by ${config.measures.size} measures")
         }
 
         logger.info("Found ${points.size} points to process")

@@ -22,7 +22,7 @@ abstract class FoldsEvaluator(val name: String,
 
     abstract fun getSelectionResult(dataSet: DataSet, point: Point, stats: RunStats): SelectionResult
 
-    protected fun getScore(dsPair: DataSetPair): Double {
+    public fun getScore(dsPair: DataSetPair): Double {
         val classifier = classifiers.newClassifier()
         val trained = classifier.train(dsPair.trainSet)
         val actual = trained.test(dsPair.testSet)
