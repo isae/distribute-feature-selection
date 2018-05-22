@@ -381,7 +381,7 @@ data class Coord(private val num: Int,
 
 data class SpacePoint(val point: IntArray,
                       val delta: Int) : Comparable<SpacePoint> {
-    val eqToPrev = BooleanArray(point.size)
+    var eqToPrev = false
 
     // wrapper for int array for proper hashcode and compareTo implementation
     override fun compareTo(other: SpacePoint): Int {

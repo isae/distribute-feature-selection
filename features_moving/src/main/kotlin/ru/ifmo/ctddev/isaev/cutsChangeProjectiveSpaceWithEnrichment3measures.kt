@@ -81,22 +81,39 @@ fun main(args: Array<String>) {
 }
 
 private fun processAllPointsWithEnrichment(chart: Chart): PointProcessingFinalResult {
-    var enrichmentDim = -1
     var currentEnrichment = calculateBasicPoints()
-    do {
-        val cutsForEnrichment = processAllPointsHd(currentEnrichment, evaluatedDataSet, cutSize)
-        addEnrichmentToSpace(currentEnrichment)
-        val beforeEnrichment = cutsForAllPoints.size
-        currentEnrichment.forEachIndexed { i, point -> cutsForAllPoints.putIfAbsent(point, cutsForEnrichment[i]) }
-        val afterEnrichment = cutsForAllPoints.size
-        chart.update()
-        enrichmentDim = (enrichmentDim + 1) % dimensionality
-        currentEnrichment = calculateEnrichment(0)
-        logToConsole { "Current enrichment: ${currentEnrichment.toList()}" }
-    } while (currentEnrichment.isNotEmpty())
+    val prevEnrichmentByDim = HashMap<Int, Int>()
+    //do {
+        var iterationsFor0 = 0 
+        do {
+            ++iterationsFor0
+            prevEnrichmentByDim[0] = currentEnrichment.size
+            val cutsForEnrichment = processAllPointsHd(currentEnrichment, evaluatedDataSet, cutSize)
+            addEnrichmentToSpace(currentEnrichment)
+            val beforeEnrichment = cutsForAllPoints.size
+            currentEnrichment.forEachIndexed { i, point -> cutsForAllPoints.putIfAbsent(point, cutsForEnrichment[i]) }
+            val afterEnrichment = cutsForAllPoints.size
+            chart.update()
+            currentEnrichment = calculateEnrichment(0)
+            logToConsole { "Current enrichment: ${currentEnrichment.toList()}" }
+        } while (prevEnrichmentByDim[0] != currentEnrichment.size)
+        var iterationsFor1 = 0
+        do {
+            ++iterationsFor1
+            prevEnrichmentByDim[1] = currentEnrichment.size
+            val cutsForEnrichment = processAllPointsHd(currentEnrichment, evaluatedDataSet, cutSize)
+            addEnrichmentToSpace(currentEnrichment)
+            val beforeEnrichment = cutsForAllPoints.size
+            currentEnrichment.forEachIndexed { i, point -> cutsForAllPoints.putIfAbsent(point, cutsForEnrichment[i]) }
+            val afterEnrichment = cutsForAllPoints.size
+            chart.update()
+            currentEnrichment = calculateEnrichment(1)
+            logToConsole { "Current enrichment: ${currentEnrichment.toList()}" }
+        } while (prevEnrichmentByDim[1] != currentEnrichment.size)
+    //} while (iterationsFor0 > 1 || iterationsFor1 > 1)
 
     val anglesToTry = cutsForAllPoints.keys
-            .filter { it.eqToPrev.all { !it } }
+            .filter { !it.eqToPrev }
             .map { getAngle(it) }
     val pointsToTry = anglesToTry.map { getPointOnUnitSphere(it) }
 
@@ -125,7 +142,7 @@ private fun calculateEnrichment(dim: Int): List<SpacePoint> {
     var notChanged = 0
     dimension.forEach { coord, points ->
         points.forEach { point ->
-            if (!point.eqToPrev[dim]) {
+            if (!point.eqToPrev) {
                 val prev = points.lower(point)
                 if (prev != null) {
                     if (point.point[0] == 2 && point.point[1] == 1 && prev.point[0] == 16384 && prev.point[1] == 8191) {
@@ -135,15 +152,15 @@ private fun calculateEnrichment(dim: Int): List<SpacePoint> {
                     val currCut = cutsForAllPoints[point]!!
                     val diff = getDiff(prevCut, currCut, tempRoaringBitmap)
                     if (diff.cardinality == 0) {
-                        point.eqToPrev[dim] = true
+                        point.eqToPrev = true
                     }
                     if (diff.cardinality > 1) {
-                        if (prev.point[otherDim] == 0 && point.delta > (2.shl(8))) {
-                        } else {
-                            val newPoint = inBetween(prev, point)
-                            logToConsole { "Found diff $diff between $point and $prev at point $newPoint; reverse diff is ${getDiff(currCut, prevCut, tempRoaringBitmap)}" }
-                            result.add(newPoint)
-                        }
+                        //if (prev.point[otherDim] == 0 && point.delta > (2.shl(8))) {
+                        //} else {
+                        val newPoint = inBetween(prev, point)
+                        logToConsole { "Found diff $diff between $point and $prev at point $newPoint; reverse diff is ${getDiff(currCut, prevCut, tempRoaringBitmap)}" }
+                        result.add(newPoint)
+                        //}
                     } else {
                         ++notChanged
                     }
@@ -155,10 +172,9 @@ private fun calculateEnrichment(dim: Int): List<SpacePoint> {
     return result
 }
 
-private fun getCurrentPoints(): List<SpacePoint> {
-    val points = cutsForAllPoints.keys
-            .filter { it.eqToPrev.all { !it } }
-    return points
+private fun getCurrentPoints(): Collection<SpacePoint> {
+    return cutsForAllPoints.keys
+            .filter { !it.eqToPrev }
 }
 
 private class Chart {
