@@ -252,16 +252,19 @@ private fun processAllPoints(positions: RoaringBitmap,
     // begin first stage (before enrichment)
     logToConsole { "Started the processing" }
     logToConsole { "${positions.cardinality} points to calculate measures on" }
-    val angles = positions.map { getAngle(epsilon, it) }
+    val points = positions.map {
+        val firstCoord = it.toDouble() / epsilon
+        val secondCoord = 1 - firstCoord
+        return@map Point.fromRawCoords(firstCoord, secondCoord)
+    }
     val chunkSize = getChunkSize(dataSet)
-    val cutsForAllPoints = ArrayList<RoaringBitmap>(angles.size)
-    val evaluatedData = ArrayList<DoubleArray>(angles.size)
-    val lastFeatureInAllCuts = IntArray(angles.size)
-    angles.chunked(chunkSize)
-            .forEach { cut ->
-                logToConsole { "Processing chunk of ${cut.size} points" }
-                val pointsInProjectiveCoords = cut.map { getPointOnUnitSphere(it) }
-                val (evaluatedDataChunk, cutsForAllPointsChunk, lastFeatureInAllCutsChunk) = processAllPointsChunk(pointsInProjectiveCoords, dataSet, cutSize)
+    val cutsForAllPoints = ArrayList<RoaringBitmap>(points.size)
+    val evaluatedData = ArrayList<DoubleArray>(points.size)
+    val lastFeatureInAllCuts = IntArray(points.size)
+    points.chunked(chunkSize)
+            .forEach { chunk ->
+                logToConsole { "Processing chunk of ${chunk.size} points" }
+                val (evaluatedDataChunk, cutsForAllPointsChunk, lastFeatureInAllCutsChunk) = processAllPointsChunk(chunk, dataSet, cutSize)
                 System.arraycopy(lastFeatureInAllCutsChunk, 0, lastFeatureInAllCuts, evaluatedData.size, lastFeatureInAllCutsChunk.size)
                 cutsForAllPoints.addAll(cutsForAllPointsChunk)
                 evaluatedData.addAll(evaluatedDataChunk)

@@ -3,6 +3,7 @@ package ru.ifmo.ctddev.isaev.comparison
 import org.slf4j.LoggerFactory
 import ru.ifmo.ctddev.isaev.*
 import ru.ifmo.ctddev.isaev.feature.measure.SymmetricUncertainty
+import ru.ifmo.ctddev.isaev.melif.impl.ParallelMeLiF
 import ru.ifmo.ctddev.isaev.melif.impl.PriorityQueueMeLiF
 import ru.ifmo.ctddev.isaev.point.Point
 import ru.ifmo.ctddev.isaev.relieff.ReliefF
@@ -18,15 +19,16 @@ import java.util.*
 
 private val LOGGER = LoggerFactory.getLogger("pqVsFs")
 
-private val RANDOM = Random(0xBADFEED)
+private val RANDOM = Random(0xBADDAD)
 
 fun main(args: Array<String>) {
     File("results_${System.currentTimeMillis()}.txt").printWriter().use { out ->
-        EnumSet.of(KnownDatasets.DLBCL).forEach {
+        EnumSet.allOf(KnownDatasets::class.java).forEach {
             try {
                 val dataSet = it.read()
                 val res = processDataSet(dataSet)
                 out.println("$it, " +
+                        "${res.mPlusTime}, ${res.mPlusScore}, " +
                         "${res.reliefFTime}, ${res.reliefFScore}, " +
                         "${res.pqVisited}, ${res.pqTime}, ${res.pqScore}, ${res.pqPoint}, " +
                         "${res.fsVisited}, ${res.fsTime}, ${res.fsScore}, ${res.fsPoint}" +
@@ -64,6 +66,8 @@ fun main(args: Array<String>) {
 private data class ComparisonResult2d(
         val reliefFTime: Long,
         val reliefFScore: Double,
+        val mPlusTime: Long,
+        val mPlusScore: Double,
         val pqVisited: Long,
         val pqTime: Long,
         val pqScore: Double,
@@ -102,9 +106,22 @@ private fun processDataSet(dataSet: FeatureDataSet): ComparisonResult2d {
                 .run("PqMeLif", pointsVisitedByFs, false)
     }
 
+    val (mPlusTime, mPlusStats) = calculateTime {
+        ParallelMeLiF(algorithmConfig, dataSet, 4)
+                .run("MeLif+", arrayOf(
+                        Point(1.0, 0.0),
+                        Point(0.0, 1.0)
+                ), false)
+    }
+
     LOGGER.info("""
           ReliefF: processed ${reliefFStats.visitedPoints} points in ${reliefFTime / 1000} seconds, 
           best result is ${reliefFStats.bestResult.score} in point ${reliefFStats.bestResult.point}
+          """)
+
+    LOGGER.info("""
+          MeLif+: processed ${mPlusStats.visitedPoints} points in ${mPlusTime / 1000} seconds, 
+          best result is ${mPlusStats.bestResult.score} in point ${mPlusStats.bestResult.point}
           """)
 
     LOGGER.info("""
@@ -118,6 +135,8 @@ private fun processDataSet(dataSet: FeatureDataSet): ComparisonResult2d {
     return ComparisonResult2d(
             reliefFTime / 1000,
             reliefFStats.bestResult.score,
+            mPlusTime / 1000,
+            mPlusStats.bestResult.score,
             pqStats.visitedPoints,
             pqTime / 1000,
             pqStats.bestResult.score,

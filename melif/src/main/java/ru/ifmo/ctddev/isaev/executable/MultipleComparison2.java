@@ -50,9 +50,9 @@ public class MultipleComparison2 extends Comparison {
         MDC.put("fileName", startTimeString + "/COMMON");
         Point[] points = new Point[] {
                 new Point(1.0, 0, 0, 0),
-                new Point(0, 1, 0, 0),
-                new Point(0, 0, 1, 0),
-                new Point(0, 0, 0, 1),
+                new Point(0.0, 1, 0, 0),
+                new Point(0.0, 0, 1, 0),
+                new Point(0.0, 0, 0, 1),
                 new Point(1.0, 1, 1, 1),
         };
         int testPercent = 20;

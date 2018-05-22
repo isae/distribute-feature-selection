@@ -63,7 +63,7 @@ public class ParallelMeLiF extends BasicMeLiF {
         logger.info("Started {} at {}", name, runStats.getStartTime());
         LOGGER.info("Started {} at {}", getClass().getSimpleName(), runStats.getStartTime());
         CountDownLatch pointsLatch = new CountDownLatch(points.length);
-        List<Future<SelectionResult>> scoreFutures = Arrays.asList(points).stream()
+        List<Future<SelectionResult>> scoreFutures = Arrays.stream(points)
                 .map(p -> executorService.submit(() -> {
                     SelectionResult result = performCoordinateDescend(p, runStats);
                     pointsLatch.countDown();

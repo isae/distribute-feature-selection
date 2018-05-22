@@ -20,7 +20,7 @@ class ReliefF(config: AlgorithmConfig, dataSet: DataSet) : FeatureSelectionAlgor
 
         val featuresSortedByReliefFValue = featureDataSet.features.indices
                 .map { it -> Pair(featureDataSet.features[it], reliefF.evaluateAttribute(it)) }
-                .sortedBy { (_, score) -> score }
+                .sortedBy { (_, score) -> -score }
         val selectedFeatures = featuresSortedByReliefFValue
                 .map { (f, _) -> f }
                 .take(50)
