@@ -58,13 +58,14 @@ private fun calculateBasicPoints(): List<SpacePoint> {
     }
     val basicPoints = ArrayList<SpacePoint>()
     basicPoints.add(SpacePoint(dimensionality))
-    0.until(dimensionality).forEach {
-        val zeros = IntArray(dimensionality)
-        zeros[it] = 1
-        basicPoints.add(SpacePoint(zeros, 1))
-    }
+    /* 0.until(dimensionality).forEach {
+         val zeros = IntArray(dimensionality)
+         zeros[it] = 1
+         basicPoints.add(SpacePoint(zeros, 1))
+     }*/
+    basicPoints.add(SpacePoint(intArrayOf(0, 1), 1))
     val ones = IntArray(dimensionality, { 1 })
-    basicPoints.add(SpacePoint(ones, 1))
+    //basicPoints.add(SpacePoint(ones, 1))
     return basicPoints
 }
 
@@ -128,23 +129,23 @@ private fun calculateEnrichment(dim: Int): List<SpacePoint> {
             if (!point.eqToPrev[dim]) {
                 val prev = points.lower(point)
                 if (prev != null) {
-                    if (point.point[0] == 2 && point.point[1] == 1 && prev.point[0] == 16384 && prev.point[1] == 8191) {
-                        val f = true
-                    }
                     val prevCut = cutsForAllPoints[prev]!!
                     val currCut = cutsForAllPoints[point]!!
-                    val diff = getDiff(prevCut, currCut, tempRoaringBitmap)
+                    val diff = getDiff(prevCut, currCut)
                     if (diff.cardinality == 0) {
+                        logToConsole { "Found zero diff between $prev and $point" }
                         point.eqToPrev[dim] = true
                     }
                     if (diff.cardinality > 1) {
                         if (prev.point[otherDim] == 0 && point.delta > (2.shl(8))) {
+                            logToConsole { "Skipped zero between $prev and $point" }
                         } else {
                             val newPoint = inBetween(prev, point)
                             logToConsole { "Found diff $diff between $point and $prev at point $newPoint; reverse diff is ${getDiff(currCut, prevCut, tempRoaringBitmap)}" }
                             result.add(newPoint)
                         }
                     } else {
+                        logToConsole { "Found zero or one diff between $prev and $point" }
                         ++notChanged
                     }
                 }

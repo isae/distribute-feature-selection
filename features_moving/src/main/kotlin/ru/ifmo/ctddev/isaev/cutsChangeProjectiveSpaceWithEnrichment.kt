@@ -30,7 +30,7 @@ private val evaluatedDs = evaluateDataSet(dataSet, measures)
 
 fun main(args: Array<String>) {
     val (evaluatedData, cutsForAllPoints, cutChangePositions, pointsToTry, angles, lastFeatureInAllCuts) =
-            calculateAllPointsWithEnrichment2d(100, evaluatedDs, cutSize, 2)
+            calculateAllPointsWithEnrichment2d(2, evaluatedDs, cutSize, 2)
     println("Found ${pointsToTry.size} points to try with enrichment")
     println(cutChangePositions)
     pointsToTry.forEach { println(it) }

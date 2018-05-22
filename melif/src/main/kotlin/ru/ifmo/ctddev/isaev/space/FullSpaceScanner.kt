@@ -190,7 +190,9 @@ fun calculateAllPointsWithEnrichment2d(startingEpsilon: Int,
         evaluatedData = newResult.evaluatedData
         cutsForAllPoints = newResult.cutsForAllPoints
         currCutChangePositions = newResult.cutChangePositions
-        logToConsole { "Cut change positions: ${currCutChangePositions.map { twoDecimalPlaces.format(it.toDouble() / (newEpsilon / startingEpsilon)) }}" }
+        logToConsole { "Cut change positions: $currCutChangePositions/$newEpsilon" }
+        val twicePrev = prevCutChangePositions.map { it * 2 }
+        logToConsole { "Difference:: ${currCutChangePositions.filter { !twicePrev.contains(it) }}" }
         prevEpsilon = newEpsilon
         prevPositions = newPositions
         prevLastFeatureInAllCuts = newResult.lastFeatureInAllCuts
@@ -235,6 +237,7 @@ private fun processAllPoints(positions: RoaringBitmap,
             .forEach { cut ->
                 logToConsole { "Processing chunk of ${cut.size} points" }
                 val pointsInProjectiveCoords = cut.map { Point.fromRawCoords(it.toDouble() / epsilon, 1.0) }
+                pointsInProjectiveCoords.forEach { println("Point to process: $it") }
                 val (evaluatedDataChunk, cutsForAllPointsChunk, lastFeatureInAllCutsChunk) = processAllPointsChunk(pointsInProjectiveCoords, dataSet, cutSize)
                 System.arraycopy(lastFeatureInAllCutsChunk, 0, lastFeatureInAllCuts, evaluatedData.size, lastFeatureInAllCutsChunk.size)
                 cutsForAllPoints.addAll(cutsForAllPointsChunk)
@@ -243,7 +246,20 @@ private fun processAllPoints(positions: RoaringBitmap,
     logToConsole { "Evaluated data, calculated cutting line and cuts for all points" }
 
     val cutChangePositions = positions
-            .filterIndexed { i, _ -> i != 0 && getDiff(cutsForAllPoints[i - 1], cutsForAllPoints[i]).cardinality > 0 }
+            .filterIndexed { i, _ ->
+                val diff: RoaringBitmap
+                if (i != 0) {
+                    val prevCut = cutsForAllPoints[i - 1]
+                    val currCut = cutsForAllPoints[i]
+                    diff = getDiff(prevCut, currCut)
+                    if (diff.cardinality > 0) {
+                        println("Found diff $diff between ${i-1} and $i")
+                    }
+                } else {
+                    diff = RoaringBitmap()
+                }
+                return@filterIndexed i != 0 && diff.cardinality > 0
+            }
     logToConsole { "Found ${cutChangePositions.size} points to try" }
 
     // end first stage (before enrichment)
@@ -465,8 +481,9 @@ fun processAllPointsHd(xDataRaw: List<SpacePoint>,
                        cutSize: Int)
         : List<RoaringBitmap> {
     val angles = xDataRaw.map { getAngle(it) }
-    val xData = angles.map { getPointOnUnitSphere(it) }
-    /* val xData = xDataRaw.map { Point(it.point[0].toDouble() / it.delta, it.point[1].toDouble() / it.delta, 1.0) }*/
+    //val xData = angles.map { getPointOnUnitSphere(it) }
+    val xData = xDataRaw.map { Point.fromRawCoords(it.point[0].toDouble() / it.delta, it.point[1].toDouble() / it.delta, 1.0) }
+    xData.forEach { println("Point to process: $it") }
 
     val evaluatedData = evaluatePoints(xData, dataSet)
     return evaluatedData

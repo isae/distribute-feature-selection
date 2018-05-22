@@ -12,12 +12,12 @@ import java.util.stream.Collectors;
 /**
  * @author iisaev
  */
-public abstract class CorrelationBasedMeasure extends RelevanceMeasure {
+abstract class CorrelationBasedMeasure extends RelevanceMeasure {
     CorrelationBasedMeasure(@NotNull Double minValue, @NotNull Double maxValue) {
         super(minValue, maxValue);
     }
 
-    protected class Distribution {
+    class Distribution {
         private int sum;
 
         private Map<Integer, Integer> distribution = new HashMap<>(); //value -> number of instances having it
@@ -30,14 +30,14 @@ public abstract class CorrelationBasedMeasure extends RelevanceMeasure {
             this.sum = sum;
         }
 
-        public Map<Integer, Integer> getDistribution() {
+        Map<Integer, Integer> getDistribution() {
             return distribution;
         }
 
-        public Distribution() {
+        Distribution() {
         }
 
-        public Distribution(int sum, Map<Integer, Integer> distribution) {
+        Distribution(int sum, Map<Integer, Integer> distribution) {
             this.sum = sum;
             this.distribution = distribution;
         }
