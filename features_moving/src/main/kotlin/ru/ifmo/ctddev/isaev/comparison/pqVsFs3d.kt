@@ -35,7 +35,7 @@ private data class ComparisonResult3d(
 
 fun main(args: Array<String>) {
     File("results3d_${System.currentTimeMillis()}.txt").printWriter().use { out ->
-        EnumSet.of(KnownDatasets.DLBCL).forEach {
+        KnownDatasets.values().forEach {
             try {
                 val dataSet = it.read()
                 val res = processDataSet(dataSet)

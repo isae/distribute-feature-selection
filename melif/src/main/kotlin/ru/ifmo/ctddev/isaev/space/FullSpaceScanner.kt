@@ -255,7 +255,7 @@ private fun processAllPoints(positions: RoaringBitmap,
     val points = positions.map {
         val firstCoord = it.toDouble() / epsilon
         val secondCoord = 1 - firstCoord
-        return@map Point.fromRawCoords(firstCoord, secondCoord)
+        return@map Point(firstCoord, secondCoord)
     }
     val chunkSize = getChunkSize(dataSet)
     val cutsForAllPoints = ArrayList<RoaringBitmap>(points.size)
